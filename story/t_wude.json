@@ -1,0 +1,11 @@
+{
+  "government": {
+    "name": "北港武德宮",
+    "address": "雲林縣北港鎮華勝路330號",
+    "image": "./images/wude.jpg",
+    "imageSource": "圖片來源：Wikimedia Commons (作者: Solomon203, CC BY-SA 4.0)"
+  },
+  "story": {
+    "localStory": "全台規模最大的武財神信仰發源地，主祀天官武財神趙公明。這裡最著名的地標是巨大的淡藍色「天庫」金爐，曾創下金氏世界紀錄。廟方融合傳統信仰與現代文創，不僅有精緻的財神文創周邊，還結合AI與咖啡廳，是傳統宗教現代化的絕佳典範。"
+  }
+}

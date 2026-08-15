@@ -1,0 +1,11 @@
+{
+  "government": {
+    "name": "北港朝天宮",
+    "address": "雲林縣北港鎮中山路178號",
+    "image": "./images/chaotian.jpg",
+    "imageSource": "圖片來源：Wikimedia Commons (創用 CC BY-SA 授權)"
+  },
+  "story": {
+    "localStory": "台灣媽祖總本山北港朝天宮主祀媽祖，俗呼「北有關渡媽，南有北港媽」。每年農曆三月，國家重要民俗「北港迓媽祖」熱鬧繞境，真人藝閣與炸虎爺是全台獨有的震撼體驗。廟宇建築本身就是一座壯麗的木雕與剪黏藝術博物館。"
+  }
+}
