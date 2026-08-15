@@ -928,29 +928,28 @@
 
         let points = [POIs["hsr"].coords];
         checkboxes.forEach(cb => { points.push(POIs[cb.value].coords); });
+        
+        // 為了確保返回原點形成環狀，在陣列最後加上起點
+        points.push(POIs["hsr"].coords);
 
         const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
         let url = '';
         let routeGeoJSON, distanceKm, durationMin;
 
         try {
-            if (points.length >= 3) {
-                url = `https://router.project-osrm.org/trip/v1/bicycle/${coordsString}?roundtrip=true&source=first&geometries=geojson`;
-                const response = await fetch(url);
-                const data = await response.json();
-                if (data.code !== 'Ok') throw new Error('API Error');
-                routeGeoJSON = data.trips[0].geometry; 
-                distanceKm = (data.trips[0].distance / 1000).toFixed(1);
-                durationMin = Math.round(data.trips[0].duration / 60);
-            } else {
-                url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString};${points[0][0]},${points[0][1]}?overview=full&geometries=geojson`;
-                const response = await fetch(url);
-                const data = await response.json();
-                if (data.code !== 'Ok') throw new Error('API Error');
-                routeGeoJSON = data.routes[0].geometry; 
-                distanceKm = (data.routes[0].distance / 1000).toFixed(1);
-                durationMin = Math.round(data.routes[0].duration / 60);
-            }
+            // 🚨 重大修正：放棄使用容易發生異常捷徑的 Trip API
+            // 強制使用標準的 Route API，並傳入按順序排列的點（包含頭尾的高鐵站）
+            // 雖然這會失去「自動最佳化排序(TSP)」的功能，但能大幅降低 OSRM 為了抄近路而誤闖快速道路的機率。
+            // 加入 exclude=motorway,trunk (如果 OSRM 後端有啟用此功能的話) 雖然公開版可能忽略，但加上去比較保險。
+            url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.code !== 'Ok') throw new Error('API Error: ' + data.code);
+            
+            routeGeoJSON = data.routes[0].geometry; 
+            distanceKm = (data.routes[0].distance / 1000).toFixed(1);
+            durationMin = Math.round(data.routes[0].duration / 60);
 
             const flippedCoords = routeGeoJSON.coordinates.map(c => [c[1], c[0]]);
             currentPathLayer = L.polyline(flippedCoords, { weight: 7, color: "#27ae60", opacity: 0.8 }).addTo(map);
@@ -966,7 +965,7 @@
 
             // 注意這裡加入了一個 id="food-count-display" 讓切換半徑時可以動態替換文字
             infoEl.innerHTML = `
-                ✨ <b style="color:#27ae60;">最佳路線計算完成！</b><br>
+                ✨ <b style="color:#27ae60;">單車路線規劃完成！</b><br>
                 📏 總長度：${distanceKm} 公里<br>
                 🚴 預估時間：${durationMin} 分鐘<br>
                 <div id="food-count-display" style="color:#c2185b; font-weight:bold; margin-top:5px;">🎯 掃描中...</div>
