@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -246,14 +246,17 @@
                 skipEmptyLines: true,
                 complete: (results) => {
                     loaded711Data = results.data.map(row => {
+                        // 建立輔助函式，支援 1, Y, True 等多種「有」的表達方式
+                        const checkYes = (val) => ['1', 'y', 'true', '是'].includes(String(val).toLowerCase().trim());
+                        
                         return {
                             // 智慧對應常見欄位名稱
-                            name: row['StoreName'] || row['店名'] || row['POIName'] || "7-ELEVEN",
+                            name: row['StoreName'] || row['店名'] || row['門市名稱'] || row['POIName'] || "7-ELEVEN",
                             lat: parseFloat(row['Y'] || row['Lat'] || row['緯度']),
                             lng: parseFloat(row['X'] || row['Lng'] || row['經度']),
-                            isToilet: row['isToilet'] || row['廁所'] || 'N',
-                            isDining: row['isDining'] || row['座位'] || 'N',
-                            isATM: row['isATM'] || row['提款機'] || 'N'
+                            isToilet: checkYes(row['isToilet'] || row['廁所'] || row['洗手間']),
+                            isDining: checkYes(row['isDining'] || row['座位'] || row['座位區'] || row['內用']),
+                            isATM: checkYes(row['isATM'] || row['提款機'] || row['ATM'])
                         };
                     }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
                     
@@ -278,9 +281,9 @@
                     
                     // 組合精緻的超商資訊卡
                     let featuresHtml = '';
-                    featuresHtml += (item.isDining === 'Y' || item.isDining === 'True') ? `<span class="service-card-tag tag-yes">✅ 座位區</span>` : `<span class="service-card-tag tag-no">❌ 座位區</span>`;
-                    featuresHtml += (item.isToilet === 'Y' || item.isToilet === 'True') ? `<span class="service-card-tag tag-yes">✅ 洗手間</span>` : `<span class="service-card-tag tag-no">❌ 洗手間</span>`;
-                    featuresHtml += (item.isATM === 'Y' || item.isATM === 'True') ? `<span class="service-card-tag tag-yes">✅ ATM</span>` : `<span class="service-card-tag tag-no">❌ ATM</span>`;
+                    featuresHtml += item.isDining ? `<span class="service-card-tag tag-yes">✅ 座位區</span>` : `<span class="service-card-tag tag-no">❌ 座位區</span>`;
+                    featuresHtml += item.isToilet ? `<span class="service-card-tag tag-yes">✅ 洗手間</span>` : `<span class="service-card-tag tag-no">❌ 洗手間</span>`;
+                    featuresHtml += item.isATM ? `<span class="service-card-tag tag-yes">✅ ATM</span>` : `<span class="service-card-tag tag-no">❌ ATM</span>`;
 
                     const popupContent = `
                         <div style="font-size:0.75rem; color:#00a651; font-weight:bold;">7-ELEVEN 門市</div>
