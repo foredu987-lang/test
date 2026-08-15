@@ -547,9 +547,11 @@
     </div>
 </div>
 
+<!-- ========================================================= -->
+<!-- 載入 Leaflet 等核心函式庫 (強制放於 body 底部) -->
+<!-- ========================================================= -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/leaflet-ant-path@1.3.0/dist/leaflet-ant-path.min.js"></script>
 
 <script>
     // 解決外部 CDN 遭阻擋導致地圖崩潰的安全封裝
@@ -562,16 +564,37 @@
         }
     }
 
-    const map = L.map('map', { zoomControl: false }).setView([23.73, 120.43], 12);
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-    
-    let mainLayerGroup = L.layerGroup().addTo(map);
-    let poiLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 14 }).addTo(mainLayerGroup);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    // 全域變數宣告
+    let map;
+    let mainLayerGroup;
+    let poiLayer;
+    let dynamicFoodLayer;
+
+    // 將所有 Leaflet 相關的初始化操作包在一個函數中，確保容器準備好再執行
+    function initializeMap() {
+        console.log("初始化地圖...");
+        // 1. 初始化地圖，設定中心點與縮放層級
+        map = L.map('map', { zoomControl: false }).setView([23.73, 120.43], 12);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        
+        // 2. 建立圖層群組
+        mainLayerGroup = L.layerGroup().addTo(map);
+        poiLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 14 }).addTo(mainLayerGroup);
+        dynamicFoodLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 }).addTo(mainLayerGroup);
+
+        // 3. 載入 OpenStreetMap 圖磚
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // 4. 確保地圖容器大小正確 (解決空白問題的關鍵)
+        setTimeout(() => { 
+            console.log("重新計算地圖大小...");
+            map.invalidateSize(); 
+            renderPOIs(); // 地圖準備好後再畫點
+        }, 500); 
+    }
 
     // 複製座標輔助功能
     window.copyCoordsHelper = function(lat, lng) {
@@ -663,32 +686,32 @@
         "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.5564, 23.6933], desc: "恩主公信仰中心" }
     };
 
-    // 渲染主要 POI 標記
-    Object.values(POIs).forEach(poi => {
-        let color = "var(--moovo-green)", iconHtml = "🚉";
-        if(poi.type === 'temple') { color = "var(--temple-red)"; iconHtml = "⛩️"; }
+    // 獨立出來的 POI 渲染函數，等待地圖準備好後呼叫
+    function renderPOIs() {
+        Object.values(POIs).forEach(poi => {
+            let color = "var(--moovo-green)", iconHtml = "🚉";
+            if(poi.type === 'temple') { color = "var(--temple-red)"; iconHtml = "⛩️"; }
 
-        const customIcon = L.divIcon({
-            html: `<div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); color: white;">${iconHtml}</div>`,
-            className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+            const customIcon = L.divIcon({
+                html: `<div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 3px 6px rgba(0,0,0,0.4); color: white;">${iconHtml}</div>`,
+                className: '', iconSize: [30, 30], iconAnchor: [15, 15]
+            });
+
+            const marker = L.marker([poi.coords[1], poi.coords[0]], { icon: customIcon }).addTo(poiLayer);
+            
+            marker.bindPopup(`
+                <div class="popup-tag" style="background:${color}">${poi.type === 'temple' ? '廟宇' : '交通站點'}</div><br>
+                <b>${poi.name}</b><br>
+                <div style="color: #FF9800; margin: 4px 0; font-size: 0.9rem;">★★★★★</div>
+                <button class="btn-view-more" onclick="StoryPOIManager.openPanel('${poi.id}', ${poi.coords[1]}, ${poi.coords[0]}, '${poi.name}', '${poi.type}')">【查看更多】</button>
+            `);
         });
-
-        const marker = L.marker([poi.coords[1], poi.coords[0]], { icon: customIcon }).addTo(poiLayer);
-        
-        marker.bindPopup(`
-            <div class="popup-tag" style="background:${color}">${poi.type === 'temple' ? '廟宇' : '交通站點'}</div><br>
-            <b>${poi.name}</b><br>
-            <div style="color: #FF9800; margin: 4px 0; font-size: 0.9rem;">★★★★★</div>
-            <button class="btn-view-more" onclick="StoryPOIManager.openPanel('${poi.id}', ${poi.coords[1]}, ${poi.coords[0]}, '${poi.name}', '${poi.type}')">【查看更多】</button>
-        `);
-    });
+    }
 
     let currentPathLayer = null;
     let currentRouteTurfLine = null;
     let currentScanRadius = 2.0; 
     let loaded100Bowls = [];
-    
-    let dynamicFoodLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 }).addTo(mainLayerGroup);
 
     // ★ 全域雷達半徑切換
     window.setScanRadius = function(radius) {
@@ -706,7 +729,7 @@
 
     // ★ 獨立的美食雷達掃描與渲染函數
     function scanAndRenderFood() {
-        if (!currentRouteTurfLine) return;
+        if (!currentRouteTurfLine || !dynamicFoodLayer) return;
         dynamicFoodLayer.clearLayers(); 
         
         let foundCount = 0;
@@ -770,9 +793,9 @@
     // 超商資料處理 (綁定 711.csv 與精準欄位名稱)
     // ==========================================
     const travelServices = {
-        convenience: createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 }),
-        toilet: createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 }),
-        water: createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 })
+        convenience: null,
+        toilet: null,
+        water: null
     };
 
     const serviceConfig = {
@@ -788,6 +811,12 @@
     const TravelServiceManager = {
         rawData: {},
         init: async function() {
+            // 初始化圖層 (延遲到這裡再建立，確保 map 已經準備好)
+            if(!map) return;
+            travelServices.convenience = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 });
+            travelServices.toilet = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 });
+            travelServices.water = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 });
+
             // 讀取 711.csv
             try {
                 const response = await fetch('711.csv');
@@ -806,14 +835,20 @@
                                 return ['1', 'Y', 'TRUE', '是'].includes(strVal);
                             };
 
-                            // ★ 綁定對照表中的真實欄位名稱 ★
+                            // ★ 擴充更多單車族實用的欄位解析 ★
                             return {
                                 name: row['POIName'] || row['店名'] || row['門市名稱'] || "7-ELEVEN",
                                 lat: parseFloat(row['Y'] || row['緯度'] || row['Lat']),
                                 lng: parseFloat(row['X'] || row['經度'] || row['Lng']),
                                 isToilet: hasService(row['02廁所']),
                                 isDining: hasService(row['04座位區']),
-                                isATM: hasService(row['03ATM'])
+                                isATM: hasService(row['03ATM']),
+                                isParking: hasService(row['01停車場']),
+                                isSlurpee: hasService(row['06思樂冰']),
+                                isIceCream: hasService(row['24雪淋霜淇淋']) || hasService(row['88酷聖石霜淇淋']),
+                                isToast: hasService(row['39原賞熱壓土司']),
+                                isSweetPotato: hasService(row['92現烤地瓜']) || hasService(row['22現蒸地瓜']),
+                                isGogoro: hasService(row['84gogoro'])
                             };
                         }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
                         console.log(`✅ 成功解析 711.csv，共 ${this.rawData['convenience'].length} 家門市`);
@@ -835,10 +870,12 @@
             setTimeout(() => { this.updateMarkers(); }, 1000); 
         },
         updateMarkers: function() {
-            if (!currentRouteTurfLine) return;
+            if (!currentRouteTurfLine || !map) return; // 確保地圖已存在
             
             for (const key in this.rawData) {
                 const layerGroup = travelServices[key];
+                if(!layerGroup) continue;
+
                 layerGroup.clearLayers();
 
                 this.rawData[key].forEach(item => {
@@ -855,18 +892,34 @@
                                 });
                                 const marker = L.marker([item.lat, item.lng], { icon: customIcon });
                                 
-                                const getIcon = (hasService) => hasService ? '<span style="color: green; font-weight:bold;">✅</span>' : '<span style="color: red; font-weight:bold;">❌</span>';
+                                // ★ 使用標籤(Tag)系統來顯示服務，更簡潔美觀 ★
+                                const getTag = (hasService, label, bgColor, textColor) => hasService ? `<span style="background:${bgColor}; color:${textColor}; padding:3px 6px; border-radius:4px; font-size:0.75rem; font-weight:bold; white-space:nowrap;">${label}</span>` : '';
+                                
+                                const tagsHtml1 = [
+                                    getTag(item.isDining, '🪑 座位區', '#e0f2f1', '#00695c'),
+                                    getTag(item.isToilet, '🚻 洗手間', '#e3f2fd', '#1565c0'),
+                                    getTag(item.isATM, '🏧 ATM', '#f3e5f5', '#4527a0'),
+                                    getTag(item.isParking, '🅿️ 停車場', '#eeeeee', '#424242')
+                                ].filter(t => t).join('');
+
+                                const tagsHtml2 = [
+                                    getTag(item.isSlurpee, '🥤 思樂冰', '#ffebee', '#c62828'),
+                                    getTag(item.isIceCream, '🍦 霜淇淋', '#fff3e0', '#ef6c00'),
+                                    getTag(item.isToast, '🥪 熱壓土司', '#fbe9e7', '#d84315'),
+                                    getTag(item.isSweetPotato, '🍠 地瓜', '#efebe9', '#4e342e'),
+                                    getTag(item.isGogoro, '🔋 Gogoro', '#e8f5e9', '#2e7d32')
+                                ].filter(t => t).join('');
                                 
                                 marker.bindPopup(`
-                                    <div style="font-size:0.75rem; color:#00a651; font-weight:bold; margin-bottom: 3px;">7-ELEVEN 門市</div>
-                                    <div style="font-size:1.05rem; font-weight:bold; color:#333; margin-bottom: 8px;">${item.name}</div>
-                                    <div style="display: flex; gap: 10px; margin-bottom: 5px;">
-                                        <div>${getIcon(item.isDining)} 座位區</div>
-                                        <div>${getIcon(item.isToilet)} 洗手間</div>
-                                        <div>${getIcon(item.isATM)} ATM</div>
+                                    <div style="font-size:0.75rem; color:#00a651; font-weight:bold; margin-bottom: 3px;">🏪 7-ELEVEN 門市</div>
+                                    <div style="font-size:1.1rem; font-weight:bold; color:#333; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px;">${item.name}</div>
+                                    ${tagsHtml1 ? `<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;">${tagsHtml1}</div>` : ''}
+                                    ${tagsHtml2 ? `<div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;">${tagsHtml2}</div>` : ''}
+                                    <div style="font-size: 0.65rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                        ℹ️ 資料來自 <a href="https://emap.pcsc.com.tw/" target="_blank" style="color: #00a651; text-decoration: none;">https://emap.pcsc.com.tw/</a>
                                     </div>
-                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="margin-top:10px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 6px 0; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">🗺️ Google 導航</button>
-                                `, { minWidth: 220 });
+                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="margin-top:8px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 6px 0; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">🗺️ Google 導航</button>
+                                `, { minWidth: 240 });
                                 layerGroup.addLayer(marker);
                             } else {
                                 const customIcon = L.divIcon({
@@ -896,7 +949,7 @@
             let hasActiveLayers = false; let html = '';
 
             ['convenience', 'toilet', 'water'].forEach(key => {
-                if (map.hasLayer(travelServices[key])) {
+                if (travelServices[key] && map.hasLayer(travelServices[key])) {
                     hasActiveLayers = true;
                     const count = (typeof travelServices[key].getLayers === 'function') ? travelServices[key].getLayers().length : 0;
                     html += `<div class="dash-row"><span>${serviceConfig[key].icon}</span><strong>${count}</strong></div>`;
@@ -909,7 +962,7 @@
     };
 
     // ==========================================
-    // 路線計算 (TSP) 
+    // 路線計算 (強制使用 route API 避開高速公路)
     // ==========================================
     async function calculateTSPRoute() {
         const checkboxes = document.querySelectorAll('#tsp-checklist input[type="checkbox"]:checked');
@@ -924,7 +977,7 @@
         infoEl.style.display = 'none';
         loadingEl.style.display = 'flex';
         if (currentPathLayer) map.removeLayer(currentPathLayer);
-        dynamicFoodLayer.clearLayers();
+        if (dynamicFoodLayer) dynamicFoodLayer.clearLayers();
 
         let points = [POIs["hsr"].coords];
         checkboxes.forEach(cb => { points.push(POIs[cb.value].coords); });
@@ -940,8 +993,8 @@
             // 🚨 重大修正：放棄使用容易發生異常捷徑的 Trip API
             // 強制使用標準的 Route API，並傳入按順序排列的點（包含頭尾的高鐵站）
             // 雖然這會失去「自動最佳化排序(TSP)」的功能，但能大幅降低 OSRM 為了抄近路而誤闖快速道路的機率。
-            // 加入 exclude=motorway,trunk (如果 OSRM 後端有啟用此功能的話) 雖然公開版可能忽略，但加上去比較保險。
-            url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false`;
+            // 加上 exclude=motorway,trunk,toll 參數，盡可能限制單車模式不要上高架。
+            url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false&exclude=motorway,trunk,toll`;
             
             const response = await fetch(url);
             const data = await response.json();
@@ -957,13 +1010,10 @@
 
             currentRouteTurfLine = turf.lineString(routeGeoJSON.coordinates);
             
-            // 觸發超商更新
+            // 觸發超商與美食更新
             TravelServiceManager.updateMarkers();
-            
-            // 觸發美食更新 (使用抽出後的共用函數)
             scanAndRenderFood();
 
-            // 注意這裡加入了一個 id="food-count-display" 讓切換半徑時可以動態替換文字
             infoEl.innerHTML = `
                 ✨ <b style="color:#27ae60;">單車路線規劃完成！</b><br>
                 📏 總長度：${distanceKm} 公里<br>
@@ -1000,12 +1050,14 @@
         else { btn.style.opacity = '0'; btn.style.pointerEvents = 'none'; btn.style.transform = 'translateX(20px)'; }
     }
 
-    window.onload = async () => { 
-        setTimeout(() => { map.invalidateSize(); }, 100);
+    // 將 onload 事件改為 DOMContentLoaded 以確保資源載入後才初始化地圖
+    document.addEventListener("DOMContentLoaded", async () => { 
+        initializeMap();
         fetchWeather(); 
         await loadFoodData();
         TravelServiceManager.init();
-    }
+    });
+
 </script>
 </body>
 </html>
