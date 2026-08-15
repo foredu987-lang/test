@@ -506,8 +506,9 @@
         }
     };
 
+   
     // =========================================================================
-    // 3. 路線計算 (TSP) 
+    // 3. 路線計算 (TSP)
     // =========================================================================
     async function calculateTSPRoute() {
         const checkboxes = document.querySelectorAll('#tsp-checklist input[type="checkbox"]:checked');
@@ -534,14 +535,15 @@
         points.push(POIs["hsr"].coords);
         
         const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
-        // 強制使用 Route API 並設定 exclude 來避開高速公路與快速道路
-        const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false&exclude=motorway,trunk,toll`;
+        
+        // ★ V1.2 修正：移除 &exclude 參數，因為 OSRM 公開伺服器不支援，會導致 HTTP Error
+        const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson`;
 
         try {
             const response = await fetch(url);
             const data = await response.json();
             
-            if (data.code !== 'Ok') throw new Error('API 無法規劃路線');
+            if (data.code !== 'Ok') throw new Error(`API 回傳錯誤: ${data.code}`);
             
             let routeGeoJSON = data.routes[0].geometry;
             let distKm = (data.routes[0].distance / 1000).toFixed(1);
@@ -591,12 +593,13 @@
             infoEl.style.display = 'block';
 
         } catch (e) {
-            alert("⚠️ 路線伺服器忙碌中，請稍後再試。");
-            console.error(e);
+            alert(`⚠️ 路線伺服器忙碌中，請稍後再試。\n錯誤訊息: ${e.message}`);
+            console.error("路線規劃錯誤:", e);
         } finally {
             loadingEl.style.display = 'none';
         }
     }
+
 
     // =========================================================================
     // 4. 初始化與 CSV 載入 (包含 V1.1 新增的 711 處理)
