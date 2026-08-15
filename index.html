@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖</title>
+    <title>雲林高鐵 MOOVO 信仰與美食地圖 v4.6</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -29,15 +29,9 @@
         #app-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         header {
-            background: #1a1a1a;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            flex-shrink: 0;
+            background: #1a1a1a; color: white; padding: 1rem; text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; flex-shrink: 0;
         }
-
         header h1 { margin: 0; font-size: 1.5rem; }
         header p { margin: 5px 0 0 0; font-size: 0.9rem; color: #ccc; }
 
@@ -110,7 +104,6 @@
             font-weight: bold; font-size: 1.2rem; color: var(--moovo-dark); display: none; backdrop-filter: blur(2px);
         }
 
-        /* 預覽 Popup 與按鈕樣式 */
         .leaflet-popup-content-wrapper { border-radius: 12px; border: 1px solid #ccc; box-shadow: 0 6px 20px rgba(0,0,0,0.15); font-family: inherit; }
         .leaflet-popup-content b { font-size: 1.1rem; color: #222; }
         .popup-tag { font-size: 0.7rem; padding: 3px 6px; border-radius: 4px; color: white; margin-bottom: 6px; display: inline-block; font-weight: bold; }
@@ -120,12 +113,10 @@
         }
         .btn-view-more:hover { background: #1a252f; }
 
-        /* 雷達範圍控制按鈕 */
         .radius-toggle { display: flex; background: #f1f5f9; border-radius: 8px; padding: 4px; margin-top: 10px; border: 1px solid #cbd5e1; }
         .radius-btn { flex: 1; padding: 6px; text-align: center; font-size: 0.85rem; font-weight: bold; color: #64748b; cursor: pointer; border-radius: 6px; transition: all 0.2s; user-select: none; }
         .radius-btn.active { background: white; color: #0f172a; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-        /* 左側旅行服務動態儀表板 */
         .dashboard-panel {
             position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95);
             padding: 15px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.2); z-index: 1000; min-width: 110px; backdrop-filter: blur(10px); border: 2px solid #eee; display: none; 
@@ -135,7 +126,6 @@
         .dash-row span { display: flex; align-items: center; gap: 6px; }
         .dash-row strong { color: var(--moovo-dark); font-size: 1.15rem; }
 
-        /* 左側 Story Card 面板 */
         .story-panel {
             position: absolute; top: 0; left: -450px; width: 400px; max-width: 100%; height: 100%;
             background: #fff; box-shadow: 5px 0 25px rgba(0,0,0,0.15); z-index: 3000;
@@ -164,7 +154,7 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林高鐵 MOOVO 信仰與 100 碗美食地圖</h1>
+        <h1>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 (v4.6)</h1>
         <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線</p>
     </header>
 
@@ -287,29 +277,33 @@
     let dynamicFoodLayer;
 
     function initializeMap() {
-        if (map) return; // 避免重複初始化
-        const mapEl = document.getElementById('map');
-        if (!mapEl || mapEl.offsetHeight === 0) {
-            setTimeout(initializeMap, 100);
-            return;
+        try {
+            if (map) return;
+            const mapEl = document.getElementById('map');
+            if (!mapEl || mapEl.offsetHeight === 0) {
+                setTimeout(initializeMap, 100);
+                return;
+            }
+
+            map = L.map('map', { zoomControl: false }).setView([23.73, 120.43], 12);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+            
+            mainLayerGroup = L.layerGroup().addTo(map);
+            poiLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 14 }).addTo(mainLayerGroup);
+            dynamicFoodLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 }).addTo(mainLayerGroup);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            setTimeout(() => { 
+                map.invalidateSize(true); 
+                renderPOIs(); 
+            }, 300); 
+        } catch (e) {
+            console.error("地圖初始化錯誤：", e);
         }
-
-        map = L.map('map', { zoomControl: false }).setView([23.73, 120.43], 12);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-        
-        mainLayerGroup = L.layerGroup().addTo(map);
-        poiLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 14 }).addTo(mainLayerGroup);
-        dynamicFoodLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 }).addTo(mainLayerGroup);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        setTimeout(() => { 
-            map.invalidateSize(true); 
-            renderPOIs(); 
-        }, 300); 
     }
 
     window.copyCoordsHelper = function(lat, lng) {
@@ -317,7 +311,7 @@
         if (navigator.clipboard) {
             navigator.clipboard.writeText(textToCopy).then(() => {
                 alert("座標已成功複製：" + textToCopy);
-            }).catch(err => {
+            }).catch(() => {
                 prompt("請手動複製以下座標：", textToCopy);
             });
         } else {
@@ -431,18 +425,20 @@
         
         let foundCount = 0;
         loaded100Bowls.forEach(food => {
-            const pt = turf.point([food.lng, food.lat]);
-            if (turf.pointToLineDistance(pt, currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
-                foundCount++;
-                const icon = L.divIcon({ html: `<div style="background:var(--food-pink); width:24px; height:24px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">😋</div>`, className: '', iconSize: [24,24] });
-                L.marker([food.lat, food.lng], {icon}).bindPopup(`
-                    <div style="font-size:0.75rem; color:var(--food-pink); font-weight:bold; margin-bottom: 3px;">百碗美食雷達</div>
-                    <b style="font-size:1.1rem; color:#333;">${food.name}</b><br>
-                    <div style="margin-top:5px; color:#c2185b; font-weight:bold;">🏆 推薦：${food.item}</div>
-                    <div style="margin-top:3px; color:#666; font-size:0.85rem;">📍 ${food.address}</div>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${food.lat},${food.lng}')" style="margin-top:10px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 6px 0; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">🗺️ Google 導航</button>
-                `).addTo(dynamicFoodLayer);
-            }
+            try {
+                const pt = turf.point([food.lng, food.lat]);
+                if (turf.pointToLineDistance(pt, currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
+                    foundCount++;
+                    const icon = L.divIcon({ html: `<div style="background:var(--food-pink); width:24px; height:24px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">😋</div>`, className: '', iconSize: [24,24] });
+                    L.marker([food.lat, food.lng], {icon}).bindPopup(`
+                        <div style="font-size:0.75rem; color:var(--food-pink); font-weight:bold; margin-bottom: 3px;">百碗美食雷達</div>
+                        <b style="font-size:1.1rem; color:#333;">${food.name}</b><br>
+                        <div style="margin-top:5px; color:#c2185b; font-weight:bold;">🏆 推薦：${food.item}</div>
+                        <div style="margin-top:3px; color:#666; font-size:0.85rem;">📍 ${food.address}</div>
+                        <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${food.lat},${food.lng}')" style="margin-top:10px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 6px 0; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">🗺️ Google 導航</button>
+                    `).addTo(dynamicFoodLayer);
+                }
+            } catch(e) {}
         });
 
         const infoEl = document.getElementById('route-info');
@@ -461,20 +457,12 @@
                 skipEmptyLines: true,
                 complete: function(results) {
                     loaded100Bowls = results.data.map(row => {
-                        let coords = [NaN, NaN];
-                        if (row['經緯度座標']) {
-                            const parts = row['經緯度座標'].split(',');
-                            if (parts.length >= 2) {
-                                coords[0] = parseFloat(parts[0].trim());
-                                coords[1] = parseFloat(parts[1].trim());
-                            }
-                        }
                         return {
                             name: row['商家名稱'] || row['店名'] || "在地美食",
                             item: row['入選品名'] || row['品項'] || "特色小吃",
                             address: row['商家地址'] || row['地址'] || "雲林縣",
-                            lat: isNaN(coords[0]) ? parseFloat(row['緯度'] || row['lat']) : coords[0],
-                            lng: isNaN(coords[1]) ? parseFloat(row['經度'] || row['lng']) : coords[1]
+                            lat: parseFloat(row['緯度'] || row['Lat'] || row['lat']),
+                            lng: parseFloat(row['經度'] || row['Lng'] || row['lng'])
                         };
                     }).filter(food => !isNaN(food.lat) && !isNaN(food.lng));
                     resolve();
@@ -581,7 +569,6 @@
         const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
         
         try {
-            // 使用安全且繞過高速公路的標準 Route API
             const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false&exclude=motorway,trunk,toll`;
             const response = await fetch(url);
             const data = await response.json();
