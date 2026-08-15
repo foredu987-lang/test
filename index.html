@@ -44,8 +44,23 @@
         header h1 { margin: 0; font-size: 1.5rem; }
         header p { margin: 5px 0 0 0; font-size: 0.9rem; color: #ccc; }
 
-        .map-wrapper { position: relative; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        #map { flex-grow: 1; width: 100%; height: 100%; z-index: 1; position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        .map-wrapper { 
+            position: relative; 
+            flex: 1 1 auto; /* 讓它自動佔滿 flex 剩餘空間 */
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        #map { 
+            /* 使用絕對定位填滿父容器，這是對付 Leaflet 灰底最有效的方法 */
+            position: absolute; 
+            top: 0; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            z-index: 1; 
+        }
 
         /* ====================================================
            正上方橫向工具列
@@ -570,10 +585,18 @@
     let poiLayer;
     let dynamicFoodLayer;
 
-    // 將所有 Leaflet 相關的初始化操作包在一個函數中，確保容器準備好再執行
     function initializeMap() {
         console.log("初始化地圖...");
-        // 1. 初始化地圖，設定中心點與縮放層級
+        
+        // 確保地圖容器存在且有大小
+        const mapEl = document.getElementById('map');
+        if (!mapEl || mapEl.offsetHeight === 0) {
+            console.warn("地圖容器尚未準備好，延遲初始化...");
+            setTimeout(initializeMap, 100);
+            return;
+        }
+
+        // 1. 初始化地圖
         map = L.map('map', { zoomControl: false }).setView([23.73, 120.43], 12);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         
@@ -582,17 +605,17 @@
         poiLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 14 }).addTo(mainLayerGroup);
         dynamicFoodLayer = createSafeLayerGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 }).addTo(mainLayerGroup);
 
-        // 3. 載入 OpenStreetMap 圖磚
+        // 3. 載入圖磚
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // 4. 確保地圖容器大小正確 (解決空白問題的關鍵)
+        // 4. 強制重繪與渲染 POI
         setTimeout(() => { 
-            console.log("重新計算地圖大小...");
-            map.invalidateSize(); 
-            renderPOIs(); // 地圖準備好後再畫點
+            console.log("執行地圖強制重繪...");
+            map.invalidateSize(true); 
+            renderPOIs(); 
         }, 500); 
     }
 
