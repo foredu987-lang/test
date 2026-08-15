@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林高鐵 MOOVO 信仰與旅遊地圖</title>
+    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V1.1</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
@@ -296,7 +296,7 @@
 <div id="app-container">
     <header>
         <h1>雲林高鐵 MOOVO 信仰與 100 碗美食地圖</h1>
-        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線</p>
+        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V1.1)</p>
     </header>
 
     <div class="map-wrapper">
@@ -401,6 +401,7 @@
     let currentRouteTurfLine = null;
     let dynamicFoodLayer = null;
     let loaded100Bowls = []; 
+    let loaded711Stores = []; // V1.1 新增：用來存放解析好的 711 資料
     
     const POIs = {
         "hsr": { name: "雲林高鐵站", type: "station", coords: [120.3929, 23.7371], desc: "MOOVO 租借與歸還點" },
@@ -506,7 +507,7 @@
     };
 
     // =========================================================================
-    // 3. 路線計算 (TSP) 與 CSV 解析
+    // 3. 路線計算 (TSP) 
     // =========================================================================
     async function calculateTSPRoute() {
         const checkboxes = document.querySelectorAll('#tsp-checklist input[type="checkbox"]:checked');
@@ -514,7 +515,6 @@
         const infoEl = document.getElementById('route-info');
         const loadingEl = document.getElementById('loading');
 
-        // 【終極防呆解鎖】：僅提出 Console 警告，不中斷任何流程
         if (loaded100Bowls.length === 0) {
              console.warn("⚠️ 美食 CSV 資料尚未載入或失敗，跳過美食雷達掃描，但仍繼續繪製單車路線！");
         }
@@ -530,17 +530,11 @@
         let points = [POIs["hsr"].coords];
         checkboxes.forEach(cb => { points.push(POIs[cb.value].coords); });
         
-        /* 
-           ========================================================================
-           【核心修正】：禁止自行車上高速公路 / 快速道路
-           說明：不使用 Trip API，強制改用 Route API，並加上 `exclude=motorway,trunk,toll` 參數，
-                 明確告訴 OSRM 不要將路線導航至國道或快速道路上。
-                 為了形成環狀，必須手動將終點設回起點 (高鐵站)。
-           ========================================================================
-        */
+        // 為了形成環狀，必須手動將終點設回起點 (高鐵站)
         points.push(POIs["hsr"].coords);
         
         const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
+        // 強制使用 Route API 並設定 exclude 來避開高速公路與快速道路
         const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false&exclude=motorway,trunk,toll`;
 
         try {
@@ -571,7 +565,6 @@
             dynamicFoodLayer.clearLayers();
             let foundCount = 0;
             
-            // 安全防禦：如果 loaded100Bowls 陣列有東西，才進行美食掃描
             if (loaded100Bowls.length > 0) {
                 loaded100Bowls.forEach(food => {
                     const pt = turf.point([food.lng, food.lat]);
@@ -606,7 +599,7 @@
     }
 
     // =========================================================================
-    // 4. 初始化與 CSV 載入
+    // 4. 初始化與 CSV 載入 (包含 V1.1 新增的 711 處理)
     // =========================================================================
     const TravelServiceManager = {
         init: function() {
@@ -619,11 +612,38 @@
             Object.keys(travelServices).forEach(key => {
                 const group = travelServices[key];
                 group.clearLayers();
-                fallbackServiceData[key].forEach(item => {
+                
+                // V1.1 新增：判斷如果是超商且 711 資料已載入，就改用 loaded711Stores
+                let dataSource = fallbackServiceData[key];
+                if (key === 'convenience' && loaded711Stores.length > 0) {
+                    dataSource = loaded711Stores;
+                }
+
+                dataSource.forEach(item => {
                     if (turf.pointToLineDistance(turf.point([item.lng, item.lat]), currentRouteTurfLine, {units: 'kilometers'}) <= 2.0) {
                         const config = serviceConfig[key];
                         const icon = L.divIcon({ html: `<div style="background:${config.color}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
-                        L.marker([item.lat, item.lng], {icon}).bindPopup(`<b>${item.name}</b>`).addTo(group);
+                        
+                        let popupContent = `<b>${item.name}</b>`;
+                        
+                        // V1.1 新增：如果是超商，加上精緻的服務標籤
+                        if (key === 'convenience' && item.isToilet !== undefined) {
+                            const getTag = (has, label, bg, fg) => has ? `<span style="background:${bg}; color:${fg}; padding:2px 6px; border-radius:4px; font-size:0.75rem; font-weight:bold; margin-right:4px;">${label}</span>` : '';
+                            const tags = [
+                                getTag(item.isToilet, '🚻 廁所', '#e3f2fd', '#1565c0'),
+                                getTag(item.isDining, '🪑 座位', '#e0f2f1', '#00695c'),
+                                getTag(item.isATM, '🏧 ATM', '#f3e5f5', '#4527a0')
+                            ].join('');
+                            
+                            popupContent = `
+                                <div style="font-size:0.75rem; color:${config.color}; font-weight:bold; margin-bottom:3px;">🏪 超商雷達</div>
+                                <b style="font-size:1.1rem; color:#333;">${item.name}</b><br>
+                                ${tags ? `<div style="margin-top:5px; margin-bottom:5px;">${tags}</div>` : ''}
+                                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="margin-top:5px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 4px 0; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">🗺️ Google 導航</button>
+                            `;
+                        }
+
+                        L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent).addTo(group);
                     }
                 });
             });
@@ -634,7 +654,7 @@
         }
     };
 
-    // 利用 PapaParse 非同步載入 CSV 資料
+    // 載入 100 碗美食 CSV
     async function loadFoodData() {
         return new Promise((resolve) => {
             Papa.parse('100.csv', {
@@ -643,17 +663,14 @@
                 skipEmptyLines: true,
                 complete: function(results) {
                     loaded100Bowls = results.data.map(row => {
-                        // 將「經緯度座標」字串拆分成 lat 與 lng
                         let lat = NaN, lng = NaN;
                         if (row['經緯度座標']) {
-                            // 支援全形或半形逗號，並自動清除空白
                             const coords = row['經緯度座標'].replace(/，/g, ',').split(',');
                             if (coords.length >= 2) {
                                 lat = parseFloat(coords[0].trim());
                                 lng = parseFloat(coords[1].trim());
                             }
                         }
-
                         return {
                             name: row['商家名稱'] || "在地美食",
                             item: row['入選品名'] || "特色小吃",
@@ -667,9 +684,41 @@
                     resolve();
                 },
                 error: function(err) {
-                    console.warn("⚠️ CSV 載入失敗 (可能是找不到 100.csv)，但系統將繼續運作。", err);
+                    console.warn("⚠️ CSV 載入失敗 (可能是找不到 100.csv)。", err);
                     loaded100Bowls = []; 
-                    resolve(); // 即便失敗也要 resolve，讓系統不卡死
+                    resolve();
+                }
+            });
+        });
+    }
+
+    // V1.1 新增：載入 7-11 超商擴充資料 CSV
+    async function load711Data() {
+        return new Promise((resolve) => {
+            Papa.parse('711.csv', {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    loaded711Stores = results.data.map(row => {
+                        const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
+                        return {
+                            name: row['POIName'] || row['店名'] || "7-ELEVEN",
+                            lat: parseFloat(row['Y'] || row['緯度'] || row['Lat']),
+                            lng: parseFloat(row['X'] || row['經度'] || row['Lng']),
+                            isToilet: hasService(row['02廁所']),
+                            isDining: hasService(row['04座位區']),
+                            isATM: hasService(row['03ATM'])
+                        };
+                    }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                    
+                    console.log("✅ 成功載入 CSV 超商名單，共 " + loaded711Stores.length + " 筆。");
+                    resolve();
+                },
+                error: function(err) {
+                    console.warn("⚠️ 711.csv 載入失敗，將自動降級使用備用超商資料。", err);
+                    loaded711Stores = [];
+                    resolve();
                 }
             });
         });
@@ -716,6 +765,7 @@
 
             // 啟動時自動載入 CSV
             await loadFoodData();
+            await load711Data(); // V1.1 新增：等待 7-11 資料載入完畢
 
         } catch (e) {
             console.error("Initialization Failed:", e);
