@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V1.2</title>
+    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V2.0</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
@@ -84,6 +84,17 @@
             padding: 4px;
             backdrop-filter: blur(4px);
             gap: 4px;
+            transition: opacity 0.4s ease; /* 加入轉場動畫 */
+        }
+
+        /* V2.0 新增：雷達按鈕鎖定狀態 */
+        .service-btn-group.locked {
+            opacity: 0.5;
+            pointer-events: none; /* 鎖定時無法點擊 */
+            filter: grayscale(80%);
+        }
+        .service-btn-group.locked .service-toggle-label {
+            cursor: not-allowed;
         }
 
         .service-toggle-label {
@@ -296,19 +307,19 @@
 <div id="app-container">
     <header>
         <h1>雲林高鐵 MOOVO 信仰與 100 碗美食地圖</h1>
-        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V1.2)</p>
+        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V2.0)</p>
     </header>
 
     <div class="map-wrapper">
         <div id="map"></div>
         <div id="loading" class="loading-overlay">⏳ 正在處理您的請求...</div>
         
-        <!-- 正上方工具列 -->
+        <!-- 正上方工具列 (V2.0：預設加入 locked 鎖定樣式) -->
         <div class="top-toolbar">
             <div class="toolbar-info-box">
-                🍽️ 內建 100 碗雷達：規劃後自動掃描 2 公里
+                🍽️ 內建 100 碗雷達：規劃後解鎖掃描功能
             </div>
-            <div class="service-btn-group">
+            <div id="radar-group" class="service-btn-group locked" title="請先計算最佳路線解鎖此功能">
                 <label class="service-toggle-label conv">
                     <input type="checkbox" onchange="TravelServiceManager.toggleService('convenience', this.checked)">
                     <span>🏪 超商</span>
@@ -345,7 +356,7 @@
                     <div id="weather-widget" class="weather-widget">⏳ 正在載入氣象...</div>
                 </section>
 
-                <!-- 路線規劃 (TSP) -->
+                <!-- 路線規劃 (TSP) 改為 Checkbox -->
                 <section class="ui-card">
                     <div class="ui-card-title">🗺️ 智慧路線規劃</div>
                     <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">
@@ -515,6 +526,10 @@
         const infoEl = document.getElementById('route-info');
         const loadingEl = document.getElementById('loading');
 
+        if (loaded100Bowls.length === 0) {
+             console.warn("⚠️ 美食 CSV 資料尚未載入或失敗，跳過美食雷達掃描，但仍繼續繪製單車路線！");
+        }
+
         if (checkboxes.length === 0) {
             errorEl.style.display = 'block';
             infoEl.style.display = 'none';
@@ -526,12 +541,10 @@
         let points = [POIs["hsr"].coords];
         checkboxes.forEach(cb => { points.push(POIs[cb.value].coords); });
         
-        // 為了形成環狀，必須手動將終點設回起點 (高鐵站)
         points.push(POIs["hsr"].coords);
         
         const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
-        // 使用安全且不會報錯的 Route API
-        const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false`;
+        const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false&exclude=motorway,trunk,toll`;
 
         try {
             const response = await fetch(url);
@@ -556,6 +569,13 @@
             map.fitBounds(currentPathLayer.getBounds(), { padding: [40, 40] });
 
             currentRouteTurfLine = turf.lineString(routeGeoJSON.coordinates);
+            
+            // V2.0 解鎖動畫與狀態解除
+            const radarGroup = document.getElementById('radar-group');
+            radarGroup.classList.remove('locked');
+            radarGroup.title = "已解鎖，點擊可開啟沿線雷達！";
+            
+            // 每次規劃新路線，都要清空舊雷達，重新判斷哪些點符合新的 2km 範圍
             TravelServiceManager.updateMarkers();
             
             dynamicFoodLayer.clearLayers();
@@ -609,7 +629,6 @@
                 const group = travelServices[key];
                 group.clearLayers();
                 
-                // 判斷如果是超商且 711 資料已載入，就改用 loaded711Stores
                 let dataSource = fallbackServiceData[key];
                 if (key === 'convenience' && loaded711Stores.length > 0) {
                     dataSource = loaded711Stores;
@@ -622,7 +641,7 @@
                         
                         let popupContent = `<b>${item.name}</b>`;
                         
-                        // 如果是超商，加上精緻的服務標籤
+                        // 超商客製化顯示邏輯
                         if (key === 'convenience' && item.isToilet !== undefined) {
                             let services = [];
                             if (item.isParking) services.push("🅿️停車場");
@@ -633,13 +652,13 @@
                             if (item.isWifi) services.push("📶WiFi");
                             if (item.isSlurpee) services.push("🥤思樂冰");
                             if (item.isPowerBank) services.push("🔋行動電源租賃");
-                            if (item.isDonut) services.push("🍩Mister Donut甜甜圈");
+                            if (item.isDonut) services.push("🍩Mister Donut");
                             if (item.isTea) services.push("🍵現萃茶");
                             if (item.isSweetPotato) services.push("🍠現蒸地瓜");
-                            if (item.isIceCream) services.push("🍦雪淋霜霜淇淋");
+                            if (item.isIceCream) services.push("🍦霜淇淋");
                             
                             let serviceText = services.length > 0 
-                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.85rem; color:#444; line-height: 1.4;"><b>提供服務：</b>${services.join('、')}</div>` 
+                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.85rem; color:#444; line-height: 1.4;"><b>提供服務：</b><br>${services.join('、')}</div>` 
                                 : '';
                             
                             popupContent = `
@@ -659,12 +678,27 @@
             });
         },
         toggleService: function(key, isVisible) {
+            // V2.0：如果還沒畫路線，就拒絕勾選並給予提示
+            if (!currentRouteTurfLine) {
+                const radarGroup = document.getElementById('radar-group');
+                // 讓按鈕閃爍一下表示拒絕
+                radarGroup.style.transform = "translateX(5px)";
+                setTimeout(() => radarGroup.style.transform = "translateX(-5px)", 100);
+                setTimeout(() => radarGroup.style.transform = "translateX(0)", 200);
+                
+                // 強制把 checkbox 退回取消勾選狀態
+                setTimeout(() => {
+                    const checkboxes = document.querySelectorAll(`.${key} input[type="checkbox"]`);
+                    checkboxes.forEach(cb => cb.checked = false);
+                }, 50);
+                return;
+            }
+
             if(isVisible) map.addLayer(travelServices[key]);
             else map.removeLayer(travelServices[key]);
         }
     };
 
-    // 載入 100 碗美食 CSV
     async function loadFoodData() {
         return new Promise((resolve) => {
             Papa.parse('100.csv', {
@@ -696,7 +730,6 @@
         });
     }
 
-    // 載入 7-11 超商擴充資料 CSV
     async function load711Data() {
         return new Promise((resolve) => {
             Papa.parse('711.csv', {
@@ -707,7 +740,6 @@
                     loaded711Stores = results.data.map(row => {
                         const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
                         
-                        // 模糊比對欄位名稱，避免 CSV 標題含有隱藏空白或代號差異而抓不到資料
                         const getVal = (keywords) => {
                             for (let key in row) {
                                 for (let kw of keywords) {
@@ -781,9 +813,8 @@
                 .then(data => { document.getElementById('weather-widget').innerHTML = `🌤️ 雲林即時氣溫：${data.current_weather.temperature}°C`; })
                 .catch(() => { document.getElementById('weather-widget').innerHTML = "⚠️ 氣象載入失敗"; });
 
-            // 啟動時自動載入 CSV
             await loadFoodData();
-            await load711Data(); // 等待 7-11 資料載入完畢
+            await load711Data(); 
 
         } catch (e) {
             console.error("Initialization Failed:", e);
