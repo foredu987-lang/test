@@ -624,20 +624,22 @@
                         
                         // 如果是超商，加上精緻的服務標籤
                         if (key === 'convenience' && item.isToilet !== undefined) {
-                            const getTag = (has, label, bg, fg) => has ? `<span style="background:${bg}; color:${fg}; padding:3px 6px; border-radius:4px; font-size:0.75rem; font-weight:bold; margin-right:4px; margin-bottom:4px; display:inline-block;">${label}</span>` : '';
-                            const tags = [
-                                getTag(item.isToilet, '🚻 洗手間', '#e3f2fd', '#1565c0'),
-                                getTag(item.isDining, '🪑 座位區', '#e0f2f1', '#00695c'),
-                                getTag(item.isATM, '🏧 ATM', '#f3e5f5', '#4527a0'),
-                                getTag(item.isParking, '🅿️ 停車場', '#f5f5f5', '#424242'),
-                                getTag(item.isSlurpee, '🥤 思樂冰', '#ffebee', '#c62828'),
-                                getTag(item.isGogoro, '🔋 Gogoro', '#e8f5e9', '#2e7d32')
-                            ].join('');
+                            let services = [];
+                            if (item.isToilet) services.push("🚻廁所");
+                            if (item.isDining) services.push("🪑座位區");
+                            if (item.isATM) services.push("🏧ATM");
+                            if (item.isParking) services.push("🅿️停車場");
+                            if (item.isSlurpee) services.push("🥤思樂冰");
+                            if (item.isGogoro) services.push("🔋Gogoro");
+                            
+                            let serviceText = services.length > 0 
+                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.85rem; color:#444;"><b>提供服務：</b>${services.join('、')}</div>` 
+                                : '';
                             
                             popupContent = `
                                 <div style="font-size:0.75rem; color:${config.color}; font-weight:bold; margin-bottom:3px;">🏪 7-ELEVEN 門市</div>
                                 <b style="font-size:1.1rem; color:#333;">${item.name}</b><br>
-                                ${tags ? `<div style="margin-top:6px; margin-bottom:4px; display:flex; flex-wrap:wrap;">${tags}</div>` : ''}
+                                ${serviceText}
                                 <div style="font-size: 0.65rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
                                     ℹ️ 資料來源 來自 <a href="https://emap.pcsc.com.tw/" target="_blank" style="color: #00a651; text-decoration: none;">https://emap.pcsc.com.tw/</a>
                                 </div>
@@ -698,16 +700,27 @@
                 complete: function(results) {
                     loaded711Stores = results.data.map(row => {
                         const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
+                        
+                        // 模糊比對欄位名稱，避免 CSV 標題含有隱藏空白或代號差異而抓不到資料
+                        const getVal = (keywords) => {
+                            for (let key in row) {
+                                for (let kw of keywords) {
+                                    if (key.includes(kw)) return row[key];
+                                }
+                            }
+                            return null;
+                        };
+
                         return {
-                            name: row['POIName'] || row['店名'] || "7-ELEVEN",
-                            lat: parseFloat(row['Y'] || row['緯度'] || row['Lat']),
-                            lng: parseFloat(row['X'] || row['經度'] || row['Lng']),
-                            isToilet: hasService(row['02廁所']),
-                            isDining: hasService(row['04座位區']),
-                            isATM: hasService(row['03ATM']),
-                            isParking: hasService(row['01停車場']),
-                            isSlurpee: hasService(row['06思樂冰']),
-                            isGogoro: hasService(row['84gogoro'])
+                            name: getVal(['POIName', '店名', '門市']) || "7-ELEVEN",
+                            lat: parseFloat(getVal(['Y', '緯度', 'Lat'])),
+                            lng: parseFloat(getVal(['X', '經度', 'Lng'])),
+                            isToilet: hasService(getVal(['02廁所', '廁所', '洗手間'])),
+                            isDining: hasService(getVal(['04座位區', '座位', '內用'])),
+                            isATM: hasService(getVal(['03ATM', 'ATM', '提款機'])),
+                            isParking: hasService(getVal(['01停車場', '停車'])),
+                            isSlurpee: hasService(getVal(['06思樂冰', '思樂冰'])),
+                            isGogoro: hasService(getVal(['84gogoro', 'gogoro', 'Gogoro']))
                         };
                     }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
                     resolve();
