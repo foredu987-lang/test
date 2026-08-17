@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V1.1</title>
+    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V1.2</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
@@ -296,7 +296,7 @@
 <div id="app-container">
     <header>
         <h1>雲林高鐵 MOOVO 信仰與 100 碗美食地圖</h1>
-        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V1.1)</p>
+        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V1.2)</p>
     </header>
 
     <div class="map-wrapper">
@@ -345,7 +345,7 @@
                     <div id="weather-widget" class="weather-widget">⏳ 正在載入氣象...</div>
                 </section>
 
-                <!-- 路線規劃 (TSP) 改為 Checkbox -->
+                <!-- 路線規劃 (TSP) -->
                 <section class="ui-card">
                     <div class="ui-card-title">🗺️ 智慧路線規劃</div>
                     <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">
@@ -401,7 +401,7 @@
     let currentRouteTurfLine = null;
     let dynamicFoodLayer = null;
     let loaded100Bowls = []; 
-    let loaded711Stores = []; // V1.1 新增：用來存放解析好的 711 資料
+    let loaded711Stores = []; // 用來存放解析好的 711 資料
     
     const POIs = {
         "hsr": { name: "雲林高鐵站", type: "station", coords: [120.3929, 23.7371], desc: "MOOVO 租借與歸還點" },
@@ -506,19 +506,14 @@
         }
     };
 
-   
     // =========================================================================
-    // 3. 路線計算 (TSP)
+    // 3. 路線計算 (TSP) 
     // =========================================================================
     async function calculateTSPRoute() {
         const checkboxes = document.querySelectorAll('#tsp-checklist input[type="checkbox"]:checked');
         const errorEl = document.getElementById('route-error');
         const infoEl = document.getElementById('route-info');
         const loadingEl = document.getElementById('loading');
-
-        if (loaded100Bowls.length === 0) {
-             console.warn("⚠️ 美食 CSV 資料尚未載入或失敗，跳過美食雷達掃描，但仍繼續繪製單車路線！");
-        }
 
         if (checkboxes.length === 0) {
             errorEl.style.display = 'block';
@@ -535,15 +530,14 @@
         points.push(POIs["hsr"].coords);
         
         const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
-        
-        // ★ V1.2 修正：移除 &exclude 參數，因為 OSRM 公開伺服器不支援，會導致 HTTP Error
-        const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson`;
+        // 使用安全且不會報錯的 Route API
+        const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false`;
 
         try {
             const response = await fetch(url);
             const data = await response.json();
             
-            if (data.code !== 'Ok') throw new Error(`API 回傳錯誤: ${data.code}`);
+            if (data.code !== 'Ok') throw new Error('API 無法規劃路線');
             
             let routeGeoJSON = data.routes[0].geometry;
             let distKm = (data.routes[0].distance / 1000).toFixed(1);
@@ -593,16 +587,15 @@
             infoEl.style.display = 'block';
 
         } catch (e) {
-            alert(`⚠️ 路線伺服器忙碌中，請稍後再試。\n錯誤訊息: ${e.message}`);
-            console.error("路線規劃錯誤:", e);
+            alert("⚠️ 路線伺服器忙碌中，請稍後再試。");
+            console.error(e);
         } finally {
             loadingEl.style.display = 'none';
         }
     }
 
-
     // =========================================================================
-    // 4. 初始化與 CSV 載入 (包含 V1.1 新增的 711 處理)
+    // 4. 初始化與 CSV 載入 
     // =========================================================================
     const TravelServiceManager = {
         init: function() {
@@ -610,13 +603,13 @@
                 travelServices[key] = L.markerClusterGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 15 });
             });
         },
-       updateMarkers: function() {
+        updateMarkers: function() {
             if (!currentRouteTurfLine) return;
             Object.keys(travelServices).forEach(key => {
                 const group = travelServices[key];
                 group.clearLayers();
                 
-                // V1.1 新增：判斷如果是超商且 711 資料已載入，就改用 loaded711Stores
+                // 判斷如果是超商且 711 資料已載入，就改用 loaded711Stores
                 let dataSource = fallbackServiceData[key];
                 if (key === 'convenience' && loaded711Stores.length > 0) {
                     dataSource = loaded711Stores;
@@ -629,11 +622,11 @@
                         
                         let popupContent = `<b>${item.name}</b>`;
                         
-                        // V1.1 新增：如果是超商，加上精緻的服務標籤
+                        // 如果是超商，加上精緻的服務標籤
                         if (key === 'convenience' && item.isToilet !== undefined) {
-                            const getTag = (has, label, bg, fg) => has ? `<span style="background:${bg}; color:${fg}; padding:2px 6px; border-radius:4px; font-size:0.75rem; font-weight:bold; margin-right:4px; margin-bottom:4px; display:inline-block;">${label}</span>` : '';
+                            const getTag = (has, label, bg, fg) => has ? `<span style="background:${bg}; color:${fg}; padding:3px 6px; border-radius:4px; font-size:0.75rem; font-weight:bold; margin-right:4px; margin-bottom:4px; display:inline-block;">${label}</span>` : '';
                             const tags = [
-                                getTag(item.isToilet, '🚻 廁所', '#e3f2fd', '#1565c0'),
+                                getTag(item.isToilet, '🚻 洗手間', '#e3f2fd', '#1565c0'),
                                 getTag(item.isDining, '🪑 座位區', '#e0f2f1', '#00695c'),
                                 getTag(item.isATM, '🏧 ATM', '#f3e5f5', '#4527a0'),
                                 getTag(item.isParking, '🅿️ 停車場', '#f5f5f5', '#424242'),
@@ -688,20 +681,14 @@
                             lng: lng
                         };
                     }).filter(food => !isNaN(food.lat) && !isNaN(food.lng));
-                    
-                    console.log("✅ 成功載入 CSV 百碗美食名單，共 " + loaded100Bowls.length + " 筆。");
                     resolve();
                 },
-                error: function(err) {
-                    console.warn("⚠️ CSV 載入失敗 (可能是找不到 100.csv)。", err);
-                    loaded100Bowls = []; 
-                    resolve();
-                }
+                error: function() { loaded100Bowls = []; resolve(); }
             });
         });
     }
 
-    // V1.1 新增：載入 7-11 超商擴充資料 CSV
+    // 載入 7-11 超商擴充資料 CSV
     async function load711Data() {
         return new Promise((resolve) => {
             Papa.parse('711.csv', {
@@ -723,15 +710,9 @@
                             isGogoro: hasService(row['84gogoro'])
                         };
                     }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
-                    
-                    console.log("✅ 成功載入 CSV 超商名單，共 " + loaded711Stores.length + " 筆。");
                     resolve();
                 },
-                error: function(err) {
-                    console.warn("⚠️ 711.csv 載入失敗，將自動降級使用備用超商資料。", err);
-                    loaded711Stores = [];
-                    resolve();
-                }
+                error: function() { loaded711Stores = []; resolve(); }
             });
         });
     }
@@ -777,7 +758,7 @@
 
             // 啟動時自動載入 CSV
             await loadFoodData();
-            await load711Data(); // V1.1 新增：等待 7-11 資料載入完畢
+            await load711Data(); // 等待 7-11 資料載入完畢
 
         } catch (e) {
             console.error("Initialization Failed:", e);
