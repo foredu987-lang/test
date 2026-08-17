@@ -625,15 +625,21 @@
                         // 如果是超商，加上精緻的服務標籤
                         if (key === 'convenience' && item.isToilet !== undefined) {
                             let services = [];
-                            if (item.isToilet) services.push("🚻廁所");
-                            if (item.isDining) services.push("🪑座位區");
-                            if (item.isATM) services.push("🏧ATM");
                             if (item.isParking) services.push("🅿️停車場");
+                            if (item.isToilet) services.push("🚻廁所");
+                            if (item.isATM) services.push("🏧ATM");
+                            if (item.isDining) services.push("🪑座位區");
+                            if (item.isIbon) services.push("🖨️ibon");
+                            if (item.isWifi) services.push("📶WiFi");
                             if (item.isSlurpee) services.push("🥤思樂冰");
-                            if (item.isGogoro) services.push("🔋Gogoro");
+                            if (item.isPowerBank) services.push("🔋行動電源租賃");
+                            if (item.isDonut) services.push("🍩Mister Donut甜甜圈");
+                            if (item.isTea) services.push("🍵現萃茶");
+                            if (item.isSweetPotato) services.push("🍠現蒸地瓜");
+                            if (item.isIceCream) services.push("🍦雪淋霜霜淇淋");
                             
                             let serviceText = services.length > 0 
-                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.85rem; color:#444;"><b>提供服務：</b>${services.join('、')}</div>` 
+                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.85rem; color:#444; line-height: 1.4;"><b>提供服務：</b>${services.join('、')}</div>` 
                                 : '';
                             
                             popupContent = `
@@ -647,7 +653,7 @@
                             `;
                         }
 
-                        L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent, { minWidth: 220 }).addTo(group);
+                        L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent, { minWidth: 240 }).addTo(group);
                     }
                 });
             });
@@ -715,12 +721,18 @@
                             name: getVal(['POIName', '店名', '門市']) || "7-ELEVEN",
                             lat: parseFloat(getVal(['Y', '緯度', 'Lat'])),
                             lng: parseFloat(getVal(['X', '經度', 'Lng'])),
-                            isToilet: hasService(getVal(['02廁所', '廁所', '洗手間'])),
-                            isDining: hasService(getVal(['04座位區', '座位', '內用'])),
-                            isATM: hasService(getVal(['03ATM', 'ATM', '提款機'])),
                             isParking: hasService(getVal(['01停車場', '停車'])),
+                            isToilet: hasService(getVal(['02廁所', '廁所', '洗手間'])),
+                            isATM: hasService(getVal(['03ATM', 'ATM', '提款機'])),
+                            isDining: hasService(getVal(['04座位區', '座位', '內用'])),
+                            isIbon: hasService(getVal(['ibon', '19ibon'])),
+                            isWifi: hasService(getVal(['WiFi', '05ibon WiFi'])),
                             isSlurpee: hasService(getVal(['06思樂冰', '思樂冰'])),
-                            isGogoro: hasService(getVal(['84gogoro', 'gogoro', 'Gogoro']))
+                            isPowerBank: hasService(getVal(['行動電源', '12行動電源租賃'])),
+                            isDonut: hasService(getVal(['Donut', '15Mister Donut甜甜圈', '甜甜圈'])),
+                            isTea: hasService(getVal(['現萃茶', '21現萃茶'])),
+                            isSweetPotato: hasService(getVal(['現蒸地瓜', '22現蒸地瓜'])),
+                            isIceCream: hasService(getVal(['霜淇淋', '24雪淋霜淇淋', '雪淋霜淇淋']))
                         };
                     }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
                     resolve();
