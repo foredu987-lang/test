@@ -544,7 +544,7 @@
         points.push(POIs["hsr"].coords);
         
         const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
-        const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false&exclude=motorway,trunk,toll`;
+        const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false`;
 
         try {
             const response = await fetch(url);
