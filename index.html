@@ -113,6 +113,7 @@
         .service-toggle-label.water input:checked + span { color: #039BE5; }
         .service-toggle-label.bike input:checked + span { color: #8D6E63; }
         .service-toggle-label.souvenir input:checked + span { color: #E65100; }
+        .service-toggle-label.hotel input:checked + span { color: #8E24AA; }
         .service-toggle-label input:checked + span { text-shadow: 0 0 1px currentColor; }
 
         .control-panel {
@@ -318,6 +319,10 @@
                     <input type="checkbox" onchange="TravelServiceManager.toggleService('souvenir', this.checked)">
                     <span>🎁 伴手禮</span>
                 </label>
+                <label class="service-toggle-label hotel">
+                    <input type="checkbox" onchange="TravelServiceManager.toggleService('accommodation', this.checked)">
+                    <span>🏨 住宿</span>
+                </label>
             </div>
         </div>
 
@@ -393,6 +398,7 @@
     let loaded100Bowls = []; 
     let loaded711Stores = [];
     let loadedSouvenirs = [];
+    let loadedAccommodations = [];
     
     const POIs = {
         "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.3929, 23.7371], desc: "MOOVO 租借與歸還點" },
@@ -405,13 +411,14 @@
         "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.5412, 23.7125], desc: "MOOVO 租借站" },
         "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.4345, 23.7025], desc: "MOOVO 租借站" }
     };
-    const travelServices = { convenience: null, toilet: null, water: null, bikeShop: null, souvenir: null };
+    const travelServices = { convenience: null, toilet: null, water: null, bikeShop: null, souvenir: null, accommodation: null };
     const serviceConfig = {
         convenience: { icon: "🏪", color: "#FFB300" },
         toilet: { icon: "🚻", color: "#00ACC1" },
         water: { icon: "💧", color: "#039BE5" },
         bikeShop: { icon: "🚲", color: "#8D6E63" },
-        souvenir: { icon: "🎁", color: "#E65100" }
+        souvenir: { icon: "🎁", color: "#E65100" },
+        accommodation: { icon: "🏨", color: "#8E24AA" }
     };
     const fallbackServiceData = {
         convenience: [{ lat: 23.7350, lng: 120.3940, name: "7-ELEVEN 高鐵站門市" }],
@@ -560,6 +567,9 @@
                             <div style="margin-top:5px; color:#c2185b; font-weight:bold;">🏆 推薦：${food.item}</div>
                             <div style="margin-top:3px; color:#666; font-size:0.85rem;">📍 ${food.address}</div>
                             <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${food.lat},${food.lng}')" style="margin-top:10px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 6px 0; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">🗺️ Google 導航</button>
+                            <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                ℹ️ 資料來自 雲林一百碗與漫遊雲林網站
+                            </div>
                         `).addTo(dynamicFoodLayer);
                     }
                 });
@@ -598,6 +608,8 @@
                     dataSource = loaded711Stores;
                 } else if (key === 'souvenir' && loadedSouvenirs.length > 0) {
                     dataSource = loadedSouvenirs;
+                } else if (key === 'accommodation' && loadedAccommodations.length > 0) {
+                    dataSource = loadedAccommodations;
                 }
 
                 dataSource.forEach(item => {
@@ -605,7 +617,7 @@
                         const config = serviceConfig[key];
                         const icon = L.divIcon({ html: `<div style="background:${config.color}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
                         
-                        let popupContent = `<b>${item.name || item.store_name}</b>`;
+                        let popupContent = `<b>${item.name || item.store_name || item.stay_name}</b>`;
                         
                         // 伴手禮門市專屬 UI 卡片
                         if (key === 'souvenir' && item.store_name) {
@@ -625,6 +637,36 @@
                                 <div style="display:flex; gap:6px; margin-top:10px;">
                                     ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
                                     <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
+                                </div>
+                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                    ℹ️ 資料來自 <a href="https://tour.yunlin.gov.tw/mainssl/modules/MySpace/index.php" target="_blank" style="color: #e65100; text-decoration: underline;">漫遊雲林網站</a>
+                                </div>
+                            `;
+                        }
+
+                        // 精選住宿專屬 UI 卡片
+                        if (key === 'accommodation' && item.stay_name) {
+                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            
+                            popupContent = `
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
+                                    <span style="font-size:0.75rem; color:#8e24aa; font-weight:bold;">🏨 雲林精選住宿</span>
+                                    <div style="display:flex; gap:4px;">
+                                        ${item.stay_type ? `<span style="background:#8e24aa; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.stay_type}</span>` : ''}
+                                        ${item.district ? `<span style="background:#4a148c; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
+                                    </div>
+                                </div>
+                                <b style="font-size:1.1rem; color:#1e293b;">${item.stay_name}</b><br>
+                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
+                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
+                                ${item.check_in_out ? `<div style="font-size:0.8rem; color:#64748b; margin-top:4px;">🕒 入退房：${item.check_in_out}</div>` : ''}
+                                ${item.address ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
+                                <div style="display:flex; gap:6px; margin-top:10px;">
+                                    ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
+                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
+                                </div>
+                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                    ℹ️ 資料來自 <a href="https://tour.yunlin.gov.tw/mainssl/modules/MySpace/index.php" target="_blank" style="color: #8e24aa; text-decoration: underline;">漫遊雲林網站</a>
                                 </div>
                             `;
                         }
@@ -789,6 +831,41 @@
         });
     }
 
+    async function loadAccommodationData() {
+        return new Promise((resolve) => {
+            Papa.parse('yunlin_accommodations.csv', {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    loadedAccommodations = results.data.map(row => {
+                        let lat = NaN, lng = NaN;
+                        const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || '';
+                        if (rawCoords) {
+                            const coords = rawCoords.replace(/，/g, ',').split(',');
+                            if (coords.length >= 2) {
+                                lat = parseFloat(coords[0].trim());
+                                lng = parseFloat(coords[1].trim());
+                            }
+                        }
+                        return {
+                            id: row['id'] || '',
+                            district: row['district'] || row['行政區'] || '',
+                            stay_name: row['stay_name'] || row['旅宿名稱'] || '精選住宿',
+                            stay_type: row['stay_type'] || row['住宿類型'] || '',
+                            address: row['address'] || row['旅宿地址'] || '',
+                            phone: row['phone'] || row['聯絡電話'] || '',
+                            check_in_out: row['check_in_out'] || row['入住/退房時間'] || '',
+                            tags: row['tags'] || row['特色標籤'] || '',
+                            description: row['description'] || row['旅宿簡介'] || '',
+                            lat: lat, lng: lng
+                        };
+                    }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                    resolve();
+                },
+                error: function() { loadedAccommodations = []; resolve(); }
+            });
+        });
+    }
+
     async function fetchWeather() {
         const widget = document.getElementById('weather-widget');
         try {
@@ -858,7 +935,7 @@
             });
 
             fetchWeather();
-            await Promise.all([ loadFoodData(), load711Data(), loadSouvenirData() ]);
+            await Promise.all([ loadFoodData(), load711Data(), loadSouvenirData(), loadAccommodationData() ]);
 
         } catch (e) {
             console.error("Initialization Failed:", e);
