@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V3.0</title>
+    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V3.1</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -321,7 +321,7 @@
 <div id="app-container">
     <header>
         <h1>雲林高鐵 MOOVO 信仰與 100 碗美食地圖</h1>
-        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V3.0)</p>
+        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V3.1)</p>
     </header>
 
     <div class="map-wrapper">
@@ -973,48 +973,64 @@
         });
     }
 
+    // V3.1 升級：載入 MOOVO 站點資料（優先讀取 moovo_yunlin_stations_cards_2.csv，解析「經緯度座標」欄位並包含數值範圍防呆對調）
     async function loadMoovoData() {
-        return new Promise((resolve) => {
-            Papa.parse('moovo_yunlin_stations_cards.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    try {
-                        loadedMoovoStations = results.data.map(row => {
-                            let lat = NaN, lng = NaN;
-                            const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || row['經緯度'] || '';
-                            if (rawCoords) {
-                                const coords = rawCoords.replace(/，/g, ',').split(',');
-                                if (coords.length >= 2) {
-                                    lat = parseFloat(coords[0].trim());
-                                    lng = parseFloat(coords[1].trim());
+        const fetchFile = async (fileName) => {
+            return new Promise((resolve, reject) => {
+                Papa.parse(fileName, {
+                    download: true, header: true, skipEmptyLines: true,
+                    complete: function(results) {
+                        try {
+                            const parsed = results.data.map(row => {
+                                let lat = NaN, lng = NaN;
+                                const rawCoords = row['經緯度座標'] || row['coordinates'] || row['座標'] || row['經緯度'] || '';
+                                if (rawCoords) {
+                                    const coords = rawCoords.replace(/，/g, ',').split(',');
+                                    if (coords.length >= 2) {
+                                        let val1 = parseFloat(coords[0].trim());
+                                        let val2 = parseFloat(coords[1].trim());
+                                        // 經緯度對調自動防呆檢查（台灣經度約 120-122，緯度約 21-25）
+                                        if (val1 > 100) { lng = val1; lat = val2; }
+                                        else { lat = val1; lng = val2; }
+                                    }
                                 }
-                            }
-                            if (isNaN(lat) || isNaN(lng)) {
-                                lat = parseFloat(row['lat'] || row['緯度'] || row['Y'] || NaN);
-                                lng = parseFloat(row['lng'] || row['經度'] || row['X'] || NaN);
-                            }
-                            return {
-                                station_code: row['station_code'] || row['站點代碼'] || '',
-                                station_name: row['station_name'] || row['站點名稱'] || 'Moovo 站點',
-                                district: row['district'] || row['行政區'] || '',
-                                station_type: row['station_type'] || row['站點類型'] || '',
-                                location_description: row['location_description'] || row['位置與周邊地標'] || row['位置說明'] || '',
-                                bike_models: row['bike_models'] || row['提供車款'] || '',
-                                rental_methods: row['rental_methods'] || row['租借方式'] || '',
-                                rate_info: row['rate_info'] || row['費率與優惠'] || '',
-                                operating_status: row['operating_status'] || row['營運狀態'] || '正常營運',
-                                description: row['description'] || row['網站小卡文案簡介'] || row['簡介'] || '',
-                                tags: row['tags'] || row['特色標籤'] || '',
-                                map_url: row['map_url'] || row['Google地圖連結'] || '',
-                                lat: lat, lng: lng
-                            };
-                        }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
-                    } catch(e) { console.warn("Parse Moovo err", e); }
-                    resolve();
-                },
-                error: function() { loadedMoovoStations = []; resolve(); }
+                                if (isNaN(lat) || isNaN(lng)) {
+                                    lat = parseFloat(row['lat'] || row['緯度'] || row['Y'] || NaN);
+                                    lng = parseFloat(row['lng'] || row['經度'] || row['X'] || NaN);
+                                }
+                                return {
+                                    station_code: row['station_code'] || row['站點代碼'] || '',
+                                    station_name: row['station_name'] || row['站點名稱'] || 'Moovo 站點',
+                                    district: row['district'] || row['行政區'] || '',
+                                    station_type: row['station_type'] || row['站點類型'] || '',
+                                    location_description: row['location_description'] || row['位置與周邊地標'] || row['位置說明'] || '',
+                                    bike_models: row['bike_models'] || row['提供車款'] || '',
+                                    rental_methods: row['rental_methods'] || row['租借方式'] || '',
+                                    rate_info: row['rate_info'] || row['費率與優惠'] || '',
+                                    operating_status: row['operating_status'] || row['營運狀態'] || '正常營運',
+                                    description: row['description'] || row['網站小卡文案簡介'] || row['簡介'] || '',
+                                    tags: row['tags'] || row['特色標籤'] || '',
+                                    map_url: row['map_url'] || row['Google地圖連結'] || '',
+                                    lat: lat, lng: lng
+                                };
+                            }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                            resolve(parsed);
+                        } catch(e) { reject(e); }
+                    },
+                    error: function(err) { reject(err); }
+                });
             });
-        });
+        };
+
+        try {
+            loadedMoovoStations = await fetchFile('moovo_yunlin_stations_cards_2.csv');
+        } catch (e) {
+            try {
+                loadedMoovoStations = await fetchFile('moovo_yunlin_stations_cards.csv');
+            } catch (err) {
+                loadedMoovoStations = [];
+            }
+        }
     }
 
     async function fetchWeather() {
