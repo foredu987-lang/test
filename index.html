@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V4.5</title>
+    <title>雲林信仰跟著卡打車打卡 V4.6</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -256,7 +256,6 @@
         }
         .btn-sos:hover { background: #b71c1c; transform: translateY(-2px); }
 
-        /* SOS 自訂彈出視窗 Modal */
         .custom-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
@@ -299,7 +298,6 @@
         }
         .sos-map-btn:hover { background: #0369a1; }
 
-        /* 地圖救援圖層關閉按鈕 */
         .close-sos-map-btn {
             position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000;
             background: #dc2626; color: white; border: 2px solid white; padding: 10px 20px; border-radius: 25px;
@@ -389,7 +387,7 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V4.5</h1>
+        <h1>雲林信仰跟著卡打車打卡 V4.6</h1>
         <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線</p>
     </header>
 
@@ -505,7 +503,6 @@
     </div>
 </div>
 
-<!-- SOS 自訂救援彈出視窗 Modal -->
 <div id="sosModal" class="custom-modal-overlay">
     <div class="custom-modal-card" id="sosModalCard">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -751,7 +748,20 @@
         return '';
     }
 
-    // 救援資源地理座標資料庫
+    // 智慧座標提取器：解決任何 CSV、文字或 Google 地圖連結中的座標偏移
+    function extractLatLng(str) {
+        if (!str) return null;
+        const match = str.match(/([0-9]{2}\.[0-9]+)[\s,]+([0-9]{3}\.[0-9]+)/) || str.match(/([0-9]{3}\.[0-9]+)[\s,]+([0-9]{2}\.[0-9]+)/);
+        if (match) {
+            let p1 = parseFloat(match[1]);
+            let p2 = parseFloat(match[2]);
+            if (isNaN(p1) || isNaN(p2)) return null;
+            if (p1 > 100) return { lat: p2, lng: p1 };
+            else return { lat: p1, lng: p2 };
+        }
+        return null;
+    }
+
     const sosEmergencyResources = {
         hospitals: [
             { name: "臺大醫院雲林分院 (斗六院區)", coords: [120.5367, 23.7011], phone: "05-532-3911", addr: "斗六市雲林路二段579號" },
@@ -1172,7 +1182,7 @@
                 ✨ <b style="color: #388E3C;">最佳路線計算完成！</b><br>
                 📏 總長度：${distKm} 公里<br>
                 🚴 預估時間：${timeMin} 分鐘<br>
-                ${foundCount > 0 ? `<div style="color:#c2185b; font-weight:bold; margin-top:5px;">🎯 掃描到路線 ${currentScanRadius} 公里內有 ${foundCount} 家百碗美食！</div>` : ''}
+                ${foundCount > 0 ? `<div style="color:#c2185b; font-weight:bold; margin-top:5px;">🎯 掃描到路線 ${currentScanRadius} 公里內有 ${foundCount} 家美食！</div>` : ''}
             `;
             infoEl.style.display = 'block';
 
@@ -1479,19 +1489,9 @@
                     header: true, skipEmptyLines: true,
                     complete: function(results) {
                         loaded100Bowls = results.data.map(row => {
-                            let lat = NaN, lng = NaN;
-                            const rawCoords = getRowVal(row, ['經緯度座標', '座標', 'coordinates']);
-                            if (rawCoords) {
-                                const coords = rawCoords.replace(/，/g, ',').split(',');
-                                if (coords.length >= 2) {
-                                    lat = parseFloat(coords[0].trim());
-                                    lng = parseFloat(coords[1].trim());
-                                }
-                            }
-                            if (isNaN(lat) || isNaN(lng)) {
-                                lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
-                                lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
-                            }
+                            let extracted = extractLatLng(getRowVal(row, ['經緯度座標', '座標', 'coordinates']));
+                            let lat = extracted?.lat ?? parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
+                            let lng = extracted?.lng ?? parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
                             return {
                                 name: getRowVal(row, ['商家名稱', '店名', '名稱', 'name']) || "在地美食",
                                 item: getRowVal(row, ['入選品名', '品項', '推薦品項', 'item']) || "特色小吃",
@@ -1555,21 +1555,9 @@
                     complete: function(results) {
                         loadedFamilyMartStores = results.data.map(row => {
                             const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
-                            let lat = NaN, lng = NaN;
-                            const rawCoords = getRowVal(row, ['經緯度座標', '座標', 'coordinates', '經緯度']);
-                            if (rawCoords) {
-                                const coords = rawCoords.replace(/，/g, ',').split(',');
-                                if (coords.length >= 2) {
-                                    let val1 = parseFloat(coords[0].trim());
-                                    let val2 = parseFloat(coords[1].trim());
-                                    if (val1 > 100) { lng = val1; lat = val2; }
-                                    else { lat = val1; lng = val2; }
-                                }
-                            }
-                            if (isNaN(lat) || isNaN(lng)) {
-                                lat = parseFloat(getRowVal(row, ['緯度', 'Lat', 'lat', 'Y']));
-                                lng = parseFloat(getRowVal(row, ['經度', 'Lng', 'lng', 'X']));
-                            }
+                            let extracted = extractLatLng(getRowVal(row, ['經緯度座標', '座標', 'coordinates', '經緯度']));
+                            let lat = extracted?.lat ?? parseFloat(getRowVal(row, ['緯度', 'Lat', 'lat', 'Y']));
+                            let lng = extracted?.lng ?? parseFloat(getRowVal(row, ['經度', 'Lng', 'lng', 'X']));
 
                             let storeName = getRowVal(row, ['門市名稱', '店舖名稱', '店舖代號', '店名', 'POIName', '名稱']) || '全家門市';
                             if (!storeName.includes('全家')) storeName = '全家 ' + storeName;
@@ -1613,19 +1601,9 @@
                     header: true, skipEmptyLines: true,
                     complete: function(results) {
                         loadedSouvenirs = results.data.map(row => {
-                            let lat = NaN, lng = NaN;
-                            const rawCoords = getRowVal(row, ['coordinates', '經緯度座標', '座標', '經緯度']);
-                            if (rawCoords) {
-                                const coords = rawCoords.replace(/，/g, ',').split(',');
-                                if (coords.length >= 2) {
-                                    lat = parseFloat(coords[0].trim());
-                                    lng = parseFloat(coords[1].trim());
-                                }
-                            }
-                            if (isNaN(lat) || isNaN(lng)) {
-                                lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
-                                lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
-                            }
+                            let extracted = extractLatLng(getRowVal(row, ['coordinates', '經緯度座標', '座標', '經緯度']));
+                            let lat = extracted?.lat ?? parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
+                            let lng = extracted?.lng ?? parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
                             return {
                                 id: getRowVal(row, ['id']),
                                 district: getRowVal(row, ['district', '行政區']),
@@ -1656,19 +1634,9 @@
                     header: true, skipEmptyLines: true,
                     complete: function(results) {
                         loadedAccommodations = results.data.map(row => {
-                            let lat = NaN, lng = NaN;
-                            const rawCoords = getRowVal(row, ['coordinates', '經緯度座標', '座標', '經緯度']);
-                            if (rawCoords) {
-                                const coords = rawCoords.replace(/，/g, ',').split(',');
-                                if (coords.length >= 2) {
-                                    lat = parseFloat(coords[0].trim());
-                                    lng = parseFloat(coords[1].trim());
-                                }
-                            }
-                            if (isNaN(lat) || isNaN(lng)) {
-                                lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
-                                lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
-                            }
+                            let extracted = extractLatLng(getRowVal(row, ['coordinates', '經緯度座標', '座標', '經緯度']));
+                            let lat = extracted?.lat ?? parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
+                            let lng = extracted?.lng ?? parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
                             return {
                                 id: getRowVal(row, ['id']),
                                 district: getRowVal(row, ['district', '行政區']),
@@ -1701,23 +1669,16 @@
                 const parsedResults = Papa.parse(text, { header: true, skipEmptyLines: true });
                 if (parsedResults && parsedResults.data && parsedResults.data.length > 0) {
                     const parsed = parsedResults.data.map(row => {
-                        let lat = NaN, lng = NaN;
-                        const rawCoords = getRowVal(row, ['經緯度座標', 'coordinates', '座標', '經緯度']);
-                        if (rawCoords) {
-                            const coords = rawCoords.replace(/，/g, ',').split(',');
-                            if (coords.length >= 2) {
-                                let val1 = parseFloat(coords[0].trim());
-                                let val2 = parseFloat(coords[1].trim());
-                                if (!isNaN(val1) && !isNaN(val2)) {
-                                    if (val1 > 100) { lng = val1; lat = val2; }
-                                    else { lat = val1; lng = val2; }
-                                }
-                            }
+                        let extracted = extractLatLng(getRowVal(row, ['經緯度座標', 'coordinates', '座標', '經緯度']));
+                        
+                        // 若無直接座標字串，嘗試從 Google地圖連結 中提取經緯度
+                        if (!extracted) {
+                            extracted = extractLatLng(getRowVal(row, ['Google地圖連結', '地圖連結', 'map_url', 'map']));
                         }
-                        if (isNaN(lat) || isNaN(lng)) {
-                            lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
-                            lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
-                        }
+
+                        let lat = extracted?.lat ?? parseFloat(getRowVal(row, ['緯度', 'lat', 'y', 'Latitude']));
+                        let lng = extracted?.lng ?? parseFloat(getRowVal(row, ['經度', 'lng', 'x', 'Longitude']));
+
                         return {
                             station_code: getRowVal(row, ['站點代碼', 'code', 'id']),
                             station_name: getRowVal(row, ['站點名稱', '名稱', 'store_name', 'title', 'name']) || 'Moovo 站點',
@@ -1758,21 +1719,9 @@
                     header: true, skipEmptyLines: true,
                     complete: function(results) {
                         loadedWaterToiletHubs = results.data.map(row => {
-                            let lat = NaN, lng = NaN;
-                            const rawCoords = getRowVal(row, ['經緯度座標', '座標', 'coordinates', '經緯度']);
-                            if (rawCoords) {
-                                const coords = rawCoords.replace(/，/g, ',').split(',');
-                                if (coords.length >= 2) {
-                                    let val1 = parseFloat(coords[0].trim());
-                                    let val2 = parseFloat(coords[1].trim());
-                                    if (val1 > 100) { lng = val1; lat = val2; }
-                                    else { lat = val1; lng = val2; }
-                                }
-                            }
-                            if (isNaN(lat) || isNaN(lng)) {
-                                lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
-                                lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
-                            }
+                            let extracted = extractLatLng(getRowVal(row, ['經緯度座標', '座標', 'coordinates', '經緯度']));
+                            let lat = extracted?.lat ?? parseFloat(getRowVal(row, ['緯度', 'lat', 'y', 'Latitude']));
+                            let lng = extracted?.lng ?? parseFloat(getRowVal(row, ['經度', 'lng', 'x', 'Longitude']));
 
                             return {
                                 station_code: getRowVal(row, ['站點代碼', 'code', 'id']),
