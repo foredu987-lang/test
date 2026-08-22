@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V4.7</title>
+    <title>雲林信仰跟著卡打車打卡 V5.0</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -64,18 +64,19 @@
         .top-toolbar > * { pointer-events: auto; }
 
         .toolbar-info-box {
-            background: rgba(252, 231, 243, 0.95);
-            border: 1px solid #fbcfe8;
-            border-left: 4px solid var(--food-pink);
+            background: rgba(236, 253, 245, 0.95);
+            border: 1px solid #a7f3d0;
+            border-left: 4px solid var(--moovo-green);
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 0.85rem;
-            color: #be185d;
+            color: #065f46;
             font-weight: bold;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             backdrop-filter: blur(4px);
+            transition: all 0.3s;
         }
 
         .service-btn-group {
@@ -89,11 +90,6 @@
             gap: 4px;
             transition: all 0.3s ease;
             flex-wrap: wrap;
-        }
-
-        .service-btn-group.locked {
-            opacity: 0.55;
-            filter: grayscale(60%);
         }
 
         .service-toggle-label {
@@ -114,7 +110,7 @@
         .service-toggle-label.food input:checked + span { color: var(--food-pink); }
         .service-toggle-label.conv input:checked + span { color: #FFB300; }
         .service-toggle-label.waterToilet input:checked + span { color: #00ACC1; }
-        .service-toggle-label.bike input:checked + span { color: #388E3C; }
+        .service-toggle-label.moovo input:checked + span { color: #388E3C; }
         .service-toggle-label.repair input:checked + span { color: #D32F2F; }
         .service-toggle-label.souvenir input:checked + span { color: #E65100; }
         .service-toggle-label.hotel input:checked + span { color: #8E24AA; }
@@ -388,8 +384,8 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V4.7</h1>
-        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線</p>
+        <h1>雲林信仰跟著卡打車打卡 V5.0</h1>
+        <p>整合全縣各大據點與必吃美食，智慧 AI 規劃單車環狀路線</p>
     </header>
 
     <div class="map-wrapper">
@@ -398,15 +394,15 @@
         
         <!-- 正上方工具列 -->
         <div class="top-toolbar" id="topToolbar">
-            <div class="toolbar-info-box">
-                🍽️ 內建雷達：規劃後解鎖掃描
+            <div class="toolbar-info-box" id="toolbar-mode-badge">
+                🗺️ 全縣探索模式：自由點選勾選展示
             </div>
             <!-- 掃描範圍切換鈕 -->
             <div class="radius-selector-group" id="radius-group" title="選擇沿線掃描範圍">
                 <button class="radius-btn active" id="btn-rad-2" onclick="setScanRadius(2.0)">2 公里</button>
                 <button class="radius-btn" id="btn-rad-5" onclick="setScanRadius(5.0)">5 公里</button>
             </div>
-            <div id="radar-group" class="service-btn-group locked" title="請先計算最佳路線解鎖此功能">
+            <div id="radar-group" class="service-btn-group">
                 <label class="service-toggle-label food">
                     <input type="checkbox" id="chk-food" onchange="toggleFoodService(this.checked)">
                     <span>😋 美食</span>
@@ -419,7 +415,7 @@
                     <input type="checkbox" onchange="TravelServiceManager.toggleService('waterToilet', this.checked)">
                     <span>💧🚻 友善水/廁</span>
                 </label>
-                <label class="service-toggle-label bike">
+                <label class="service-toggle-label moovo">
                     <input type="checkbox" onchange="TravelServiceManager.toggleService('moovo', this.checked)">
                     <span>🚲 Moovo站點</span>
                 </label>
@@ -740,10 +736,9 @@
     let isSirenActive = false;
     let sirenTimer = null;
 
-    // 通用欄位關鍵字彈性搜尋，自動忽略 UTF-8 BOM (\ufeff)
+    // 通用欄位關鍵字搜尋與專屬相符，忽視 BOM
     function getRowVal(row, keywords) {
         if (!row) return '';
-        // 優先完全比對
         for (let key in row) {
             const cleanKey = key.replace(/^\ufeff/, '').trim();
             for (let kw of keywords) {
@@ -752,7 +747,6 @@
                 }
             }
         }
-        // 模糊包含比對
         for (let key in row) {
             const cleanKey = key.replace(/^\ufeff/, '').trim();
             for (let kw of keywords) {
@@ -764,37 +758,46 @@
         return '';
     }
 
-    // ★ V4.7 核心升級：智慧雙重地理座標提取與防呆驗證器 ★
+    // 驗證經緯度並在倒置時自動校正（臺灣範圍：Lat 20~26, Lng 119~123）
+    function validateAndSwap(p1, p2) {
+        if (isNaN(p1) || isNaN(p2)) return null;
+        let lat = p1 > 100 ? p2 : p1;
+        let lng = p1 > 100 ? p1 : p2;
+        if (lat >= 20 && lat <= 26 && lng >= 119 && lng <= 123) {
+            return { lat, lng };
+        }
+        return null;
+    }
+
+    // ★ V5.0 萬用地理座標提取器 (Universal Extractor) ★
     function extractLatLng(str) {
         if (!str) return null;
         str = String(str).trim();
 
         // 1. Google 地圖 !3d (緯度) !4d (經度) 格式
-        const gmapsMatch = str.match(/!3d([0-9]{2}\.[0-9]+)!4d([0-9]{3}\.[0-9]+)/);
-        if (gmapsMatch) {
-            return { lat: parseFloat(gmapsMatch[1]), lng: parseFloat(gmapsMatch[2]) };
-        }
+        let m = str.match(/!3d([0-9]{2}\.[0-9]+)!4d([0-9]{3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
 
-        // 2. 數值對格式 (逗號/空白分隔)
-        const match = str.match(/([0-9]{2,3}\.[0-9]+)[\s,]+([0-9]{2,3}\.[0-9]+)/);
-        if (match) {
-            let p1 = parseFloat(match[1]);
-            let p2 = parseFloat(match[2]);
-            if (isNaN(p1) || isNaN(p2)) return null;
-            // 臺灣座標數值範圍防呆：經度必然 119~123，緯度必然 20~26
-            let lat = p1 > 100 ? p2 : p1;
-            let lng = p1 > 100 ? p1 : p2;
-            if (lat >= 20 && lat <= 26 && lng >= 119 && lng <= 123) {
-                return { lat, lng };
-            }
-        }
+        // 2. Google 地圖 @lat,lng 格式
+        m = str.match(/@([0-9]{2}\.[0-9]+),([0-9]{3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+
+        // 3. 網址 query/destination/q/ll 參數格式
+        m = str.match(/(?:query|destination|q|ll)=([0-9]{2,3}\.[0-9]+)[\s,]+([0-9]{2,3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+
+        // 4. 一般數字對格式
+        m = str.match(/([0-9]{2,3}\.[0-9]+)[\s,]+([0-9]{2,3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+
         return null;
     }
 
-    // ★ 統一列座標解析器（避免獨立搜尋「緯度」抓到「經緯度座標」復合字串）★
+    // ★ 統一整列座標解析器 ★
     function parseRowCoords(row) {
         if (!row) return null;
-        // 1. 優先嘗試複合欄位與地圖網址
+        
+        // 優先嘗試複合座標欄位與 Google 地圖連結
         const compositeCandidates = [
             getRowVal(row, ['經緯度座標', 'coordinates', '座標', '經緯度']),
             getRowVal(row, ['Google地圖連結', '地圖連結', 'map_url', 'map'])
@@ -806,7 +809,7 @@
             }
         }
 
-        // 2. 嘗試單獨經緯度欄位
+        // 嘗試獨立經緯度欄位
         let rawLat = getRowVal(row, ['緯度(Latitude)', '緯度', 'lat', 'y', 'Latitude']);
         let rawLng = getRowVal(row, ['經度(Longitude)', '經度', 'lng', 'x', 'Longitude']);
 
@@ -815,15 +818,7 @@
         let p1 = parseFloat(rawLat);
         let p2 = parseFloat(rawLng);
 
-        if (isNaN(p1) || isNaN(p2)) return null;
-
-        let lat = p1 > 100 ? p2 : p1;
-        let lng = p1 > 100 ? p1 : p2;
-
-        if (lat >= 20 && lat <= 26 && lng >= 119 && lng <= 123) {
-            return { lat, lng };
-        }
-        return null;
+        return validateAndSwap(p1, p2);
     }
 
     const sosEmergencyResources = {
@@ -1234,10 +1229,13 @@
 
             currentRouteTurfLine = turf.lineString(routeGeoJSON.coordinates);
             
-            const radarGroup = document.getElementById('radar-group');
-            if (radarGroup) {
-                radarGroup.classList.remove('locked');
-                radarGroup.title = "已解鎖，點擊開啟沿線雷達！";
+            // ★ V5.0 升級：計算路線後，切換為「沿線雷達模式」
+            const modeBadge = document.getElementById('toolbar-mode-badge');
+            if (modeBadge) {
+                modeBadge.innerHTML = "🚴 沿線雷達模式：僅高亮沿線據點";
+                modeBadge.style.background = "rgba(254, 243, 199, 0.95)";
+                modeBadge.style.borderColor = "#fde68a";
+                modeBadge.style.color = "#92400e";
             }
             
             TravelServiceManager.updateMarkers();
@@ -1260,37 +1258,37 @@
     }
 
     function toggleFoodService(isVisible) {
-        if (!currentRouteTurfLine) {
-            const radarGroup = document.getElementById('radar-group');
-            if (radarGroup) {
-                radarGroup.style.transform = "translateX(5px)";
-                setTimeout(() => radarGroup.style.transform = "translateX(-5px)", 100);
-                setTimeout(() => radarGroup.style.transform = "translateX(0)", 200);
-            }
-            setTimeout(() => {
-                const chk = document.getElementById('chk-food');
-                if (chk) chk.checked = false;
-            }, 50);
-            return;
-        }
-
         if (isVisible) {
             if (dynamicFoodLayer) map.addLayer(dynamicFoodLayer);
+            renderFoodRadar();
         } else {
             if (dynamicFoodLayer) map.removeLayer(dynamicFoodLayer);
         }
     }
 
     function renderFoodRadar() {
-        if (!currentRouteTurfLine || !dynamicFoodLayer) return 0;
+        if (!dynamicFoodLayer) return 0;
         dynamicFoodLayer.clearLayers();
         let foundCount = 0;
         
         if (loaded100Bowls.length > 0) {
             loaded100Bowls.forEach(food => {
-                const pt = turf.point([food.lng, food.lat]);
-                if (turf.pointToLineDistance(pt, currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
-                    foundCount++;
+                let showMarker = false;
+
+                // ★ V5.0 核心顯示邏輯 ★
+                if (!currentRouteTurfLine) {
+                    // 未計算路線（全貌模式）：完全允許展示
+                    showMarker = true;
+                } else {
+                    // 已計算路線（沿線雷達模式）：判定距離是否 <= 緩衝半徑
+                    const pt = turf.point([food.lng, food.lat]);
+                    if (turf.pointToLineDistance(pt, currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
+                        showMarker = true;
+                        foundCount++;
+                    }
+                }
+
+                if (showMarker) {
                     const icon = L.divIcon({ html: `<div style="background:var(--food-pink); width:24px; height:24px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">😋</div>`, className: '', iconSize: [24,24] });
                     L.marker([food.lat, food.lng], {icon}).bindPopup(`
                         <div style="font-size:0.75rem; color:var(--food-pink); font-weight:bold; margin-bottom: 3px;">百碗美食雷達</div>
@@ -1323,7 +1321,6 @@
             });
         },
         updateMarkers: function() {
-            if (!currentRouteTurfLine) return;
             Object.keys(travelServices).forEach(key => {
                 const group = travelServices[key];
                 group.clearLayers();
@@ -1344,7 +1341,19 @@
                 }
 
                 dataSource.forEach(item => {
-                    if (turf.pointToLineDistance(turf.point([item.lng, item.lat]), currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
+                    let showMarker = false;
+
+                    // ★ V5.0 核心顯示邏輯：未計算路線時開放全雲林展示；計算路線後完全隱藏區域外點位 ★
+                    if (!currentRouteTurfLine) {
+                        showMarker = true;
+                    } else {
+                        const pt = turf.point([item.lng, item.lat]);
+                        if (turf.pointToLineDistance(pt, currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
+                            showMarker = true;
+                        }
+                    }
+
+                    if (showMarker) {
                         const config = serviceConfig[key] || { icon: "📍", color: "#2196F3" };
                         let iconColor = config.color;
                         if (key === 'convenience' && item.brand === 'FamilyMart') {
@@ -1550,21 +1559,7 @@
             });
         },
         toggleService: function(key, isVisible) {
-            if (!currentRouteTurfLine) {
-                const radarGroup = document.getElementById('radar-group');
-                if (radarGroup) {
-                    radarGroup.style.transform = "translateX(5px)";
-                    setTimeout(() => radarGroup.style.transform = "translateX(-5px)", 100);
-                    setTimeout(() => radarGroup.style.transform = "translateX(0)", 200);
-                }
-                setTimeout(() => {
-                    const checkboxes = document.querySelectorAll(`.${key} input[type="checkbox"]`);
-                    checkboxes.forEach(cb => cb.checked = false);
-                }, 50);
-                return;
-            }
-
-            if(isVisible) map.addLayer(travelServices[key]);
+            if (isVisible) map.addLayer(travelServices[key]);
             else map.removeLayer(travelServices[key]);
         }
     };
@@ -1815,7 +1810,6 @@
         });
     }
 
-    // ★ V4.7 新增：單車救援維修據點資料載入器 ★
     async function loadBikeRepairData() {
         return new Promise((resolve) => {
             Papa.parse('yunlin_bike_repair_shops.csv', {
@@ -1838,7 +1832,6 @@
                                 lat: coords?.lat ?? NaN, lng: coords?.lng ?? NaN
                             };
                         }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
-                        console.log(`✅ 成功載入單車維修據點，共 ${loadedBikeRepairShops.length} 筆`);
                     } catch(e) { console.warn("Parse bike repair err", e); }
                     resolve();
                 },
