@@ -112,6 +112,7 @@
         .service-toggle-label.toilet input:checked + span { color: #00ACC1; }
         .service-toggle-label.water input:checked + span { color: #039BE5; }
         .service-toggle-label.bike input:checked + span { color: #8D6E63; }
+        .service-toggle-label.souvenir input:checked + span { color: #E65100; }
         .service-toggle-label input:checked + span { text-shadow: 0 0 1px currentColor; }
 
         .control-panel {
@@ -313,6 +314,10 @@
                     <input type="checkbox" onchange="TravelServiceManager.toggleService('bikeShop', this.checked)">
                     <span>🚲 車行</span>
                 </label>
+                <label class="service-toggle-label souvenir">
+                    <input type="checkbox" onchange="TravelServiceManager.toggleService('souvenir', this.checked)">
+                    <span>🎁 伴手禮</span>
+                </label>
             </div>
         </div>
 
@@ -387,6 +392,7 @@
     let dynamicFoodLayer = null;
     let loaded100Bowls = []; 
     let loaded711Stores = [];
+    let loadedSouvenirs = [];
     
     const POIs = {
         "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.3929, 23.7371], desc: "MOOVO 租借與歸還點" },
@@ -399,13 +405,13 @@
         "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.5412, 23.7125], desc: "MOOVO 租借站" },
         "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.4345, 23.7025], desc: "MOOVO 租借站" }
     };
-
-    const travelServices = { convenience: null, toilet: null, water: null, bikeShop: null };
+    const travelServices = { convenience: null, toilet: null, water: null, bikeShop: null, souvenir: null };
     const serviceConfig = {
         convenience: { icon: "🏪", color: "#FFB300" },
         toilet: { icon: "🚻", color: "#00ACC1" },
         water: { icon: "💧", color: "#039BE5" },
-        bikeShop: { icon: "🚲", color: "#8D6E63" }
+        bikeShop: { icon: "🚲", color: "#8D6E63" },
+        souvenir: { icon: "🎁", color: "#E65100" }
     };
     const fallbackServiceData = {
         convenience: [{ lat: 23.7350, lng: 120.3940, name: "7-ELEVEN 高鐵站門市" }],
@@ -587,9 +593,11 @@
                 const group = travelServices[key];
                 group.clearLayers();
                 
-                let dataSource = fallbackServiceData[key];
+                let dataSource = fallbackServiceData[key] || [];
                 if (key === 'convenience' && loaded711Stores.length > 0) {
                     dataSource = loaded711Stores;
+                } else if (key === 'souvenir' && loadedSouvenirs.length > 0) {
+                    dataSource = loadedSouvenirs;
                 }
 
                 dataSource.forEach(item => {
@@ -597,8 +605,30 @@
                         const config = serviceConfig[key];
                         const icon = L.divIcon({ html: `<div style="background:${config.color}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
                         
-                        let popupContent = `<b>${item.name}</b>`;
+                        let popupContent = `<b>${item.name || item.store_name}</b>`;
                         
+                        // 伴手禮門市專屬 UI 卡片
+                        if (key === 'souvenir' && item.store_name) {
+                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            
+                            popupContent = `
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                                    <span style="font-size:0.75rem; color:#e65100; font-weight:bold;">🎁 雲林伴手禮名店</span>
+                                    ${item.district ? `<span style="background:#e65100; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
+                                </div>
+                                <b style="font-size:1.1rem; color:#1e293b;">${item.store_name}</b><br>
+                                ${item.product_name ? `<div style="margin-top:3px; color:#d81b60; font-weight:bold; font-size:0.9rem;">✨ 推薦特產：${item.product_name}</div>` : ''}
+                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
+                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
+                                ${item.business_hours ? `<div style="font-size:0.8rem; color:#64748b; margin-top:4px;">🕒 營業時間：${item.business_hours}</div>` : ''}
+                                ${item.address ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
+                                <div style="display:flex; gap:6px; margin-top:10px;">
+                                    ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
+                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
+                                </div>
+                            `;
+                        }
+
                         // 超商客製小卡：純文字清單與emap連結
                         if (key === 'convenience' && item.isToilet !== undefined) {
                             let services = [];
@@ -724,6 +754,41 @@
         });
     }
 
+    async function loadSouvenirData() {
+        return new Promise((resolve) => {
+            Papa.parse('yunlin_souvenirs.csv', {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    loadedSouvenirs = results.data.map(row => {
+                        let lat = NaN, lng = NaN;
+                        const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || '';
+                        if (rawCoords) {
+                            const coords = rawCoords.replace(/，/g, ',').split(',');
+                            if (coords.length >= 2) {
+                                lat = parseFloat(coords[0].trim());
+                                lng = parseFloat(coords[1].trim());
+                            }
+                        }
+                        return {
+                            id: row['id'] || '',
+                            district: row['district'] || row['行政區'] || '',
+                            store_name: row['store_name'] || row['商家名稱'] || '在地伴手禮',
+                            product_name: row['product_name'] || row['推薦品項'] || '',
+                            address: row['address'] || row['門市地址'] || '',
+                            phone: row['phone'] || row['聯絡電話'] || '',
+                            business_hours: row['business_hours'] || row['營業時間'] || '',
+                            tags: row['tags'] || row['特色標籤'] || '',
+                            description: row['description'] || row['特色簡介'] || '',
+                            lat: lat, lng: lng
+                        };
+                    }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                    resolve();
+                },
+                error: function() { loadedSouvenirs = []; resolve(); }
+            });
+        });
+    }
+
     async function fetchWeather() {
         const widget = document.getElementById('weather-widget');
         try {
@@ -793,7 +858,7 @@
             });
 
             fetchWeather();
-            await Promise.all([ loadFoodData(), load711Data() ]);
+            await Promise.all([ loadFoodData(), load711Data(), loadSouvenirData() ]);
 
         } catch (e) {
             console.error("Initialization Failed:", e);
