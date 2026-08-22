@@ -1482,7 +1482,7 @@
                             let services = [];
                             if (isFM) {
                                 if (item.services_summary) {
-                                    services = item.services_summary.split(/[,，\s]+/ substitute /[\/]/g, '').filter(Boolean);
+                                    services = item.services_summary.split(/[,，\s]+/).filter(Boolean);
                                 } else {
                                     if (item.isToilet) services.push("🚻洗手間");
                                     if (item.isDining) services.push("🪑內用座位");
@@ -1512,7 +1512,7 @@
                                 ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.82rem; color:#444; line-height: 1.4;"><b>提供服務：</b><br>${services.join('、')}</div>` 
                                 : '';
                             
-                            let tagChips = (item.tags || '').split(/[,，\s]+/ substitute /[\/]/g, '').filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
 
                             popupContent = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; gap:4px;">
