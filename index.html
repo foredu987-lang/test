@@ -374,8 +374,14 @@
             <div class="panel-scroll-area">
                 <!-- 今日資訊 -->
                 <section class="ui-card">
-                    <div class="ui-card-title">📅 今日資訊</div>
+                    <div class="ui-card-title">📅 今日資訊與路況</div>
                     <div id="weather-widget" class="weather-widget">⏳ 正在載入氣象...</div>
+                    <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
+                        <label class="ui-checkbox-label" style="font-size: 0.85rem; font-weight: bold; color: #334155;">
+                            <input type="checkbox" onchange="toggleTrafficLayer(this.checked)">
+                            <span>🚦 顯示 Google 即時車流量路況</span>
+                        </label>
+                    </div>
                 </section>
 
                 <!-- 路線規劃 (TSP) -->
@@ -437,6 +443,23 @@
     let loadedAccommodations = [];
     let loadedMoovoStations = [];
     let loadedWaterToiletHubs = [];
+    let trafficLayer = null;
+
+    // 切換 Google 即時車流量圖層
+    function toggleTrafficLayer(enable) {
+        if (!map) return;
+        if (!trafficLayer) {
+            trafficLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m,traffic&x={x}&y={y}&z={z}', {
+                maxZoom: 19,
+                attribution: '&copy; Google Traffic'
+            });
+        }
+        if (enable) {
+            map.addLayer(trafficLayer);
+        } else {
+            map.removeLayer(trafficLayer);
+        }
+    }
 
     // 切換掃描範圍函數 (2km / 5km)
     function setScanRadius(radius) {
@@ -1121,16 +1144,17 @@
     async function fetchWeather() {
         const widget = document.getElementById('weather-widget');
         try {
-            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=23.73&longitude=120.39&current_weather=true&hourly=precipitation_probability&timezone=Asia/Taipei`);
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=23.73&longitude=120.39&current_weather=true&daily=precipitation_probability_max&hourly=precipitation_probability&timezone=Asia/Taipei`);
             const data = await res.json();
             
             const temp = data.current_weather?.temperature ?? "--";
             const code = data.current_weather?.weathercode ?? 0;
             
-            let precipProb = "0";
-            if (data.hourly && data.hourly.precipitation_probability) {
+            let maxPrecipProb = data.daily?.precipitation_probability_max?.[0] ?? "0";
+            let precipProb = maxPrecipProb;
+            if (data.hourly && data.hourly.precipitation_probability && data.hourly.time) {
                 const currentHourIso = data.current_weather?.time;
-                const idx = (data.hourly.time || []).indexOf(currentHourIso);
+                const idx = (data.hourly.time || []).findIndex(t => t.startsWith(currentHourIso?.slice(0, 13) || ""));
                 if (idx !== -1) precipProb = data.hourly.precipitation_probability[idx];
             }
             
@@ -1147,7 +1171,10 @@
                     <span style="color:#93c5fd; margin: 0 4px;">|</span>
                     <span>🌡️ ${temp}°C</span>
                 </div>
-                <div style="font-size: 0.8rem; color: #0284c7; margin-top: 2px;">☔ 降雨機率: ${precipProb}%</div>
+                <div style="font-size: 0.82rem; color: #0284c7; margin-top: 4px; display: flex; justify-content: center; gap: 8px;">
+                    <span>☔ 今日降雨機率: <b>${maxPrecipProb}%</b></span>
+                    <span>(當前: ${precipProb}%)</span>
+                </div>
             `;
         } catch (e) { widget.innerHTML = "⚠️ 氣象載入失敗"; }
     }
