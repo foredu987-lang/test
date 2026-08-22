@@ -1427,6 +1427,34 @@
                                 </div>
                             `;
                         }
+                        else if (key === 'bikeShop' && (item.station_name || item.station_code)) {
+                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let statusColor = (item.operating_status || '').includes('施工') || (item.operating_status || '').includes('暫停') ? '#ef4444' : '#16a34a';
+                            
+                            popupContent = `
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
+                                    <span style="font-size:0.75rem; color:#8d6e63; font-weight:bold;">🚲 MOOVO 公共自行車</span>
+                                    <div style="display:flex; gap:4px;">
+                                        ${item.operating_status ? `<span style="background:${statusColor}; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.operating_status}</span>` : ''}
+                                        ${item.district ? `<span style="background:#388e3c; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
+                                    </div>
+                                </div>
+                                <b style="font-size:1.1rem; color:#1e293b;">${item.station_name}</b><br>
+                                ${item.station_type ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">🏷️ 分類：${item.station_type}</div>` : ''}
+                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
+                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
+                                ${item.bike_models ? `<div style="font-size:0.8rem; color:#334155; margin-top:4px;">🚲 車款：${item.bike_models}</div>` : ''}
+                                ${item.rental_methods ? `<div style="font-size:0.8rem; color:#334155; margin-top:2px;">💳 租借：${item.rental_methods}</div>` : ''}
+                                ${item.rate_info ? `<div style="font-size:0.8rem; color:#15803d; margin-top:2px; font-weight:bold;">💰 優惠：${item.rate_info}</div>` : ''}
+                                ${item.location_description ? `<div style="font-size:0.78rem; color:#64748b; margin-top:4px;">📍 位置：${item.location_description}</div>` : ''}
+                                <div style="margin-top:10px;">
+                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="width:100%; text-align:center; background:#8d6e63; border:none; color:white; padding:7px 0; border-radius:6px; cursor:pointer; font-size:0.82rem; font-weight:bold;">🧭 導航前往</button>
+                                </div>
+                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                    ℹ️ 資料來自 雲林縣公共自行車 MOOVO 官方網站
+                                </div>
+                            `;
+                        }
                         else if (key === 'convenience') {
                             const isFM = item.brand === 'FamilyMart';
                             const brandTitle = isFM ? '🏪 全家便利商店 FamilyMart' : '🏪 7-11 門市';
