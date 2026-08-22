@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -575,6 +575,208 @@
             ❌ 關閉地圖救援雷達圖層
         </button>
 
+    </div>
+</div>
+
+<!-- SOS 自訂救援彈出視窗 Modal -->
+<div id="sosModal" class="custom-modal-overlay">
+    <div class="custom-modal-card" id="sosModalCard">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; color:var(--sos-red); font-size: 1.2rem; display:flex; align-items:center; gap:6px;">
+                🆘 SOS 救援雷達與資源庫
+            </h3>
+            <button onclick="closeSosModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#94a3b8;">✖</button>
+        </div>
+        
+        <!-- 步驟一：GPS 定位顯示區塊 -->
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px; margin-top: 10px; text-align:left;">
+            <div style="font-size:0.78rem; color:#166534; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+                <span>📍 當前實時 GPS 定位座標</span>
+                <button onclick="openSosModal()" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0; text-decoration:underline;">重新定位</button>
+            </div>
+            <div id="sosGpsCoords" style="font-size:1rem; color:#0f172a; font-weight:800; margin-top:3px;">⏳ 正在定位中...</div>
+            <div id="sosGpsAddress" style="font-size:0.8rem; color:#475569; margin-top:2px; line-height: 1.3;">正在獲取大約地址說明...</div>
+            
+            <!-- 最近救援資源即時計算結果 -->
+            <div id="sosNearestBox" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #bbf7d0; font-size: 0.8rem; color: #15803d; display: none;">
+                <div id="sosNearestHosp">🏥 最近急診：計算中...</div>
+                <div id="sosNearestPol" style="margin-top:2px;">👮 最近驛站：計算中...</div>
+            </div>
+
+            <!-- 地圖開啟救援圖層按鈕 -->
+            <button class="sos-map-btn" onclick="toggleSosMapLayer()">🗺️ 在地圖上顯示救援雷達圖層</button>
+        </div>
+
+        <div class="sos-modal-scroll">
+            <!-- 高音蜂鳴警報器 -->
+            <button id="sirenToggleBtn" class="sos-siren-btn" onclick="toggleSiren()">
+                🔊 播放高音求救警報聲 (引人注意)
+            </button>
+
+            <!-- 1. 24H 緊急報案專線 -->
+            <div class="sos-sec-title">🚨 24H 緊急求救報案專線</div>
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+                <a href="tel:110" class="sos-btn-call" style="font-size:0.95rem; padding:8px;">📞 110 警察報案</a>
+                <a href="tel:119" class="sos-btn-call" style="background:#dc2626; font-size:0.95rem; padding:8px;">🚑 119 消防救護</a>
+            </div>
+
+            <!-- 2. 雲林 24H 急診醫療院所網 -->
+            <div class="sos-sec-title">🏥 雲林 24H 急診醫療院所網</div>
+            
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">臺大醫院雲林分院 (斗六院區)</span>
+                    <span class="sos-card-badge red">24H急診</span>
+                </div>
+                <div class="sos-card-desc">📍 雲林縣斗六市雲林路二段579號</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:055323911" class="sos-btn-call">📞 直撥 05-532-3911</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7011,120.5367')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">臺大醫院雲林分院 (虎尾院區)</span>
+                    <span class="sos-card-badge red">24H急診</span>
+                </div>
+                <div class="sos-card-desc">📍 雲林縣虎尾鎮學府路99號 (高鐵站附近)</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:056330002" class="sos-btn-call">📞 直撥 05-633-0002</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7371,120.4285')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">天主教若瑟醫院 (虎尾院區)</span>
+                    <span class="sos-card-badge red">24H急診</span>
+                </div>
+                <div class="sos-card-desc">📍 雲林縣虎尾鎮新生路74號</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:056337333" class="sos-btn-call">📞 直撥 05-633-7333</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7017,120.4338')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">雲林基督教醫院 (西螺院區)</span>
+                    <span class="sos-card-badge red">24H急診</span>
+                </div>
+                <div class="sos-card-desc">📍 雲林縣西螺鎮市場南路375號</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:055871111" class="sos-btn-call">📞 直撥 05-587-1111</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7941,120.4608')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">中國醫藥大學北港附設醫院 (媽祖醫院)</span>
+                    <span class="sos-card-badge red">24H急診</span>
+                </div>
+                <div class="sos-card-desc">📍 雲林縣北港鎮新德路123號</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:057837901" class="sos-btn-call">📞 直撥 05-783-7901</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.5785,120.3061')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <!-- 3. 雲林縣 6 大警察分局 & 鐵馬驛站 -->
+            <div class="sos-sec-title">👮 雲林縣 6 大警察分局 (含鐵馬驛站)</div>
+            
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">虎尾警察分局</span>
+                    <span class="sos-card-badge green">鐵馬驛站</span>
+                </div>
+                <div class="sos-card-desc">📍 轄區：虎尾鎮、土庫鎮、褒忠鄉、元長鄉</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:056322042" class="sos-btn-call" style="background:#0284c7;">📞 直撥 05-632-2042</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7088,120.4335')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">西螺警察分局</span>
+                    <span class="sos-card-badge green">鐵馬驛站</span>
+                </div>
+                <div class="sos-card-desc">📍 轄區：西螺鎮、二崙鄉、崙背鄉</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:055862014" class="sos-btn-call" style="background:#0284c7;">📞 直撥 05-586-2014</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7981,120.4612')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">北港警察分局</span>
+                    <span class="sos-card-badge green">鐵馬驛站</span>
+                </div>
+                <div class="sos-card-desc">📍 轄區：北港鎮、水林鄉、口湖鄉</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:057832015" class="sos-btn-call" style="background:#0284c7;">📞 直撥 05-783-2015</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.5712,120.3021')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">斗六警察分局</span>
+                    <span class="sos-card-badge green">鐵馬驛站</span>
+                </div>
+                <div class="sos-card-desc">📍 轄區：斗六市、林內鄉、莿桐鄉</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:055322042" class="sos-btn-call" style="background:#0284c7;">📞 直撥 05-532-2042</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7095,120.5431')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <!-- 4. 單車故障道路救援與 Moovo 應變 -->
+            <div class="sos-sec-title">🚲 單車故障與道路救援</div>
+            
+            <div class="sos-resource-card">
+                <div class="sos-card-header">
+                    <span class="sos-card-name">捷安特 虎尾單車專賣店</span>
+                    <span class="sos-card-badge">緊急維修</span>
+                </div>
+                <div class="sos-card-desc">🛠️ 提供爆胎換胎、鏈條故障救援與車輛檢修</div>
+                <div class="sos-card-btn-group">
+                    <a href="tel:056321234" class="sos-btn-call" style="background:#15803d;">📞 直撥 05-632-1234</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7073,120.4325')" class="sos-btn-nav">🧭 地圖導航</button>
+                </div>
+            </div>
+
+            <!-- 5. 騎乘急救與臨修小常識 -->
+            <div class="sos-sec-title">🩹 騎乘意外急救與臨修小常識</div>
+            <details class="sos-accordion">
+                <summary>🩹 摔車擦傷與大出血處置</summary>
+                <div class="sos-accordion-content">
+                    1. <b>直接壓迫止血</b>：使用乾淨紗布或衣物緊壓傷口。<br>
+                    2. <b>沖洗傷口</b>：用生理食鹽水或乾淨飲用水由內向外沖洗掉砂石。<br>
+                    3. <b>預防休克</b>：讓傷者平躺抬高下肢，並注意保暖。
+                </div>
+            </details>
+            <details class="sos-accordion">
+                <summary>☀️ 中暑與熱衰竭處置</summary>
+                <div class="sos-accordion-content">
+                    1. <b>移至陰涼處</b>：立即至樹蔭或超商內休憩，鬆開緊身衣物。<br>
+                    2. <b>物理降溫</b>：用水擦拭頸部、腋下與大腿溝。<br>
+                    3. <b>補充水分</b>：若意識清醒，小口補充含電解質水或運動飲料。
+                </div>
+            </details>
+            <details class="sos-accordion">
+                <summary>🚲 掉鏈/爆胎臨修指南</summary>
+                <div class="sos-accordion-content">
+                    1. <b>落鏈復位</b>：將變速器切至最小齒盤，用手或樹枝將鏈條掛回大餅後轉動踏板。<br>
+                    2. <b>爆胎補胎</b>：尋找最近超商或鐵馬驛站借用打氣筒，若破損過大請前往救援店家。
+                </div>
+            </details>
+        </div>
+
+        <button onclick="closeSosModal()" style="width: 100%; padding:11px; background:var(--sos-red); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:0.95rem; margin-top:6px;">關閉救援視窗</button>
     </div>
 </div>
 
