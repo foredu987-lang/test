@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V3.3</title>
+    <title>雲林信仰跟著卡打車打卡 V4.0</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -111,6 +111,7 @@
         .service-toggle-label:hover { background: #f1f5f9; }
         .service-toggle-label input { display: none; } 
         
+        .service-toggle-label.food input:checked + span { color: var(--food-pink); }
         .service-toggle-label.conv input:checked + span { color: #FFB300; }
         .service-toggle-label.waterToilet input:checked + span { color: #00ACC1; }
         .service-toggle-label.bike input:checked + span { color: #8D6E63; }
@@ -317,8 +318,8 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林高鐵 MOOVO 信仰與 100 碗美食地圖</h1>
-        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V3.3)</p>
+        <h1>雲林信仰跟著卡打車打卡</h1>
+        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V4.0)</p>
     </header>
 
     <div class="map-wrapper">
@@ -336,6 +337,10 @@
                 <button class="radius-btn" id="btn-rad-5" onclick="setScanRadius(5.0)">5 公里</button>
             </div>
             <div id="radar-group" class="service-btn-group locked" title="請先計算最佳路線解鎖此功能">
+                <label class="service-toggle-label food">
+                    <input type="checkbox" id="chk-food" onchange="toggleFoodService(this.checked)">
+                    <span>😋 美食</span>
+                </label>
                 <label class="service-toggle-label conv">
                     <input type="checkbox" onchange="TravelServiceManager.toggleService('convenience', this.checked)">
                     <span>🏪 超商</span>
@@ -424,7 +429,7 @@
     </div>
 </div>
 
-<!-- 自訂原生 SOS 救援彈窗 (替代原生 alert) -->
+<!-- 自訂原生 SOS 救援彈窗 -->
 <div id="sosModal" class="custom-modal-overlay">
     <div class="custom-modal-card">
         <h3 style="margin-top:0; color:var(--sos-red); font-size: 1.2rem;">🆘 SOS 救援資訊</h3>
@@ -655,6 +660,28 @@
         }
     }
 
+    function toggleFoodService(isVisible) {
+        if (!currentRouteTurfLine) {
+            const radarGroup = document.getElementById('radar-group');
+            if (radarGroup) {
+                radarGroup.style.transform = "translateX(5px)";
+                setTimeout(() => radarGroup.style.transform = "translateX(-5px)", 100);
+                setTimeout(() => radarGroup.style.transform = "translateX(0)", 200);
+            }
+            setTimeout(() => {
+                const chk = document.getElementById('chk-food');
+                if (chk) chk.checked = false;
+            }, 50);
+            return;
+        }
+
+        if (isVisible) {
+            if (dynamicFoodLayer) map.addLayer(dynamicFoodLayer);
+        } else {
+            if (dynamicFoodLayer) map.removeLayer(dynamicFoodLayer);
+        }
+    }
+
     function renderFoodRadar() {
         if (!currentRouteTurfLine || !dynamicFoodLayer) return 0;
         dynamicFoodLayer.clearLayers();
@@ -679,6 +706,14 @@
                 }
             });
         }
+
+        const chkFood = document.getElementById('chk-food');
+        if (chkFood && chkFood.checked) {
+            map.addLayer(dynamicFoodLayer);
+        } else {
+            map.removeLayer(dynamicFoodLayer);
+        }
+
         return foundCount;
     }
 
@@ -1266,7 +1301,7 @@
             setTimeout(() => { if (map) map.invalidateSize(); }, 300);
 
             markersCluster = L.markerClusterGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 14 }).addTo(map);
-            dynamicFoodLayer = L.layerGroup().addTo(map);
+            dynamicFoodLayer = L.layerGroup(); 
             TravelServiceManager.init();
 
             Object.values(POIs).forEach(poi => {
@@ -1317,3 +1352,4 @@
 </script>
 </body>
 </html>
+
