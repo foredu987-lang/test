@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V2.2</title>
+    <title>雲林高鐵 MOOVO 信仰與 100 碗美食地圖 V3.0</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -321,7 +321,7 @@
 <div id="app-container">
     <header>
         <h1>雲林高鐵 MOOVO 信仰與 100 碗美食地圖</h1>
-        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V2.2)</p>
+        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V3.0)</p>
     </header>
 
     <div class="map-wrapper">
@@ -446,8 +446,8 @@
     function setScanRadius(radius) {
         currentScanRadius = radius;
         document.querySelectorAll('.radius-btn').forEach(btn => btn.classList.remove('active'));
-        if (radius === 2.0) document.getElementById('btn-rad-2').classList.add('active');
-        if (radius === 5.0) document.getElementById('btn-rad-5').classList.add('active');
+        if (radius === 2.0) document.getElementById('btn-rad-2')?.classList.add('active');
+        if (radius === 5.0) document.getElementById('btn-rad-5')?.classList.add('active');
 
         // 若已劃出路線，切換半徑時重新渲染沿線地標與美食
         if (currentRouteTurfLine) {
@@ -603,8 +603,10 @@
             
             // 解鎖工具列
             const radarGroup = document.getElementById('radar-group');
-            radarGroup.classList.remove('locked');
-            radarGroup.title = "已解鎖，點擊開啟沿線雷達！";
+            if (radarGroup) {
+                radarGroup.classList.remove('locked');
+                radarGroup.title = "已解鎖，點擊開啟沿線雷達！";
+            }
             
             TravelServiceManager.updateMarkers();
             
@@ -647,7 +649,7 @@
                         <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
                             ℹ️ 資料來自 雲林一百碗與慢遊雲林網站
                         </div>
-                    `).addTo(dynamicFoodLayer);
+                    `, { minWidth: 220 }).addTo(dynamicFoodLayer);
                 }
             });
         }
@@ -767,6 +769,38 @@
                         }
 
                         // 4. 超商客製小卡
+                        else if (key === 'convenience') {
+                            let services = [];
+                            if (item.isToilet) services.push("🚻廁所");
+                            if (item.isATM) services.push("🏧ATM");
+                            if (item.isDining) services.push("🪑座位區");
+                            if (item.isIbon) services.push("🖨️ibon");
+                            if (item.isWifi) services.push("📶WiFi");
+                            if (item.isParking) services.push("🅿️停車場");
+                            if (item.isSlurpee) services.push("🥤思樂冰");
+                            if (item.isPowerBank) services.push("🔋行動電源租賃");
+                            if (item.isDonut) services.push("🍩Mister Donut");
+                            if (item.isTea) services.push("🍵現萃茶");
+                            if (item.isSweetPotato) services.push("🍠現蒸地瓜");
+                            if (item.isIceCream) services.push("🍦霜淇淋");
+
+                            let serviceText = services.length > 0 
+                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.85rem; color:#444; line-height: 1.4;"><b>提供服務：</b><br>${services.join('、')}</div>` 
+                                : '';
+                            
+                            popupContent = `
+                                <div style="font-size:0.75rem; color:${config.color}; font-weight:bold; margin-bottom:3px;">🏪 7-11 門市</div>
+                                <b style="font-size:1.1rem; color:#333;">${item.name}</b><br>
+                                ${serviceText}
+                                <div style="font-size: 0.65rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                    ℹ️ 資料來源 來自 <a href="https://emap.pcsc.com.tw/" target="_blank" style="color: #00a651; text-decoration: none;">https://emap.pcsc.com.tw/</a>
+                                </div>
+                                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="margin-top:8px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 6px 0; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">🗺️ Google 導航</button>
+                            `;
+                        }
+
+                        L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent, { minWidth: 240 }).addTo(group);
+                    }
                 });
             });
         },
@@ -774,9 +808,11 @@
             // 未計算路線前的鎖定提示
             if (!currentRouteTurfLine) {
                 const radarGroup = document.getElementById('radar-group');
-                radarGroup.style.transform = "translateX(5px)";
-                setTimeout(() => radarGroup.style.transform = "translateX(-5px)", 100);
-                setTimeout(() => radarGroup.style.transform = "translateX(0)", 200);
+                if (radarGroup) {
+                    radarGroup.style.transform = "translateX(5px)";
+                    setTimeout(() => radarGroup.style.transform = "translateX(-5px)", 100);
+                    setTimeout(() => radarGroup.style.transform = "translateX(0)", 200);
+                }
                 
                 setTimeout(() => {
                     const checkboxes = document.querySelectorAll(`.${key} input[type="checkbox"]`);
@@ -795,22 +831,24 @@
             Papa.parse('100.csv', {
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
-                    loaded100Bowls = results.data.map(row => {
-                        let lat = NaN, lng = NaN;
-                        if (row['經緯度座標']) {
-                            const coords = row['經緯度座標'].replace(/，/g, ',').split(',');
-                            if (coords.length >= 2) {
-                                lat = parseFloat(coords[0].trim());
-                                lng = parseFloat(coords[1].trim());
+                    try {
+                        loaded100Bowls = results.data.map(row => {
+                            let lat = NaN, lng = NaN;
+                            if (row['經緯度座標']) {
+                                const coords = row['經緯度座標'].replace(/，/g, ',').split(',');
+                                if (coords.length >= 2) {
+                                    lat = parseFloat(coords[0].trim());
+                                    lng = parseFloat(coords[1].trim());
+                                }
                             }
-                        }
-                        return {
-                            name: row['商家名稱'] || "在地美食",
-                            item: row['入選品名'] || "特色小吃",
-                            address: row['商家地址'] || "雲林縣",
-                            lat: lat, lng: lng
-                        };
-                    }).filter(food => !isNaN(food.lat) && !isNaN(food.lng));
+                            return {
+                                name: row['商家名稱'] || "在地美食",
+                                item: row['入選品名'] || "特色小吃",
+                                address: row['商家地址'] || "雲林縣",
+                                lat: lat, lng: lng
+                            };
+                        }).filter(food => !isNaN(food.lat) && !isNaN(food.lng));
+                    } catch(e) { console.warn("Parse food err", e); }
                     resolve();
                 },
                 error: function() { loaded100Bowls = []; resolve(); }
@@ -823,35 +861,37 @@
             Papa.parse('711.csv', {
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
-                    loaded711Stores = results.data.map(row => {
-                        const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
-                        const getVal = (keywords) => {
-                            for (let key in row) {
-                                for (let kw of keywords) {
-                                    if (key.includes(kw)) return row[key];
+                    try {
+                        loaded711Stores = results.data.map(row => {
+                            const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
+                            const getVal = (keywords) => {
+                                for (let key in row) {
+                                    for (let kw of keywords) {
+                                        if (key.includes(kw)) return row[key];
+                                    }
                                 }
-                            }
-                            return null;
-                        };
+                                return null;
+                            };
 
-                        return {
-                            name: getVal(['POIName', '店名', '門市']) || "7-11",
-                            lat: parseFloat(getVal(['Y', '緯度', 'Lat'])),
-                            lng: parseFloat(getVal(['X', '經度', 'Lng'])),
-                            isParking: hasService(getVal(['01停車場', '停車'])),
-                            isToilet: hasService(getVal(['02廁所', '廁所', '洗手間'])),
-                            isATM: hasService(getVal(['03ATM', 'ATM', '提款機'])),
-                            isDining: hasService(getVal(['04座位區', '座位', '內用'])),
-                            isIbon: hasService(getVal(['ibon', '19ibon'])),
-                            isWifi: hasService(getVal(['WiFi', '05ibon WiFi'])),
-                            isSlurpee: hasService(getVal(['06思樂冰', '思樂冰'])),
-                            isPowerBank: hasService(getVal(['行動電源', '12行動電源租賃'])),
-                            isDonut: hasService(getVal(['Donut', '15Mister Donut甜甜圈', '甜甜圈'])),
-                            isTea: hasService(getVal(['現萃茶', '21現萃茶'])),
-                            isSweetPotato: hasService(getVal(['現蒸地瓜', '22現蒸地瓜'])),
-                            isIceCream: hasService(getVal(['霜淇淋', '24雪淋霜淇淋', '雪淋霜淇淋']))
-                        };
-                    }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                            return {
+                                name: getVal(['POIName', '店名', '門市']) || "7-11",
+                                lat: parseFloat(getVal(['Y', '緯度', 'Lat'])),
+                                lng: parseFloat(getVal(['X', '經度', 'Lng'])),
+                                isParking: hasService(getVal(['01停車場', '停車'])),
+                                isToilet: hasService(getVal(['02廁所', '廁所', '洗手間'])),
+                                isATM: hasService(getVal(['03ATM', 'ATM', '提款機'])),
+                                isDining: hasService(getVal(['04座位區', '座位', '內用'])),
+                                isIbon: hasService(getVal(['ibon', '19ibon'])),
+                                isWifi: hasService(getVal(['WiFi', '05ibon WiFi'])),
+                                isSlurpee: hasService(getVal(['06思樂冰', '思樂冰'])),
+                                isPowerBank: hasService(getVal(['行動電源', '12行動電源租賃'])),
+                                isDonut: hasService(getVal(['Donut', '15Mister Donut甜甜圈', '甜甜圈'])),
+                                isTea: hasService(getVal(['現萃茶', '21現萃茶'])),
+                                isSweetPotato: hasService(getVal(['現蒸地瓜', '22現蒸地瓜'])),
+                                isIceCream: hasService(getVal(['霜淇淋', '24雪淋霜淇淋', '雪淋霜淇淋']))
+                            };
+                        }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                    } catch(e) { console.warn("Parse 711 err", e); }
                     resolve();
                 },
                 error: function() { loaded711Stores = []; resolve(); }
@@ -864,29 +904,31 @@
             Papa.parse('yunlin_souvenirs.csv', {
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
-                    loadedSouvenirs = results.data.map(row => {
-                        let lat = NaN, lng = NaN;
-                        const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || '';
-                        if (rawCoords) {
-                            const coords = rawCoords.replace(/，/g, ',').split(',');
-                            if (coords.length >= 2) {
-                                lat = parseFloat(coords[0].trim());
-                                lng = parseFloat(coords[1].trim());
+                    try {
+                        loadedSouvenirs = results.data.map(row => {
+                            let lat = NaN, lng = NaN;
+                            const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || '';
+                            if (rawCoords) {
+                                const coords = rawCoords.replace(/，/g, ',').split(',');
+                                if (coords.length >= 2) {
+                                    lat = parseFloat(coords[0].trim());
+                                    lng = parseFloat(coords[1].trim());
+                                }
                             }
-                        }
-                        return {
-                            id: row['id'] || '',
-                            district: row['district'] || row['行政區'] || '',
-                            store_name: row['store_name'] || row['商家名稱'] || '在地伴手禮',
-                            product_name: row['product_name'] || row['推薦品項'] || '',
-                            address: row['address'] || row['門市地址'] || '',
-                            phone: row['phone'] || row['聯絡電話'] || '',
-                            business_hours: row['business_hours'] || row['營業時間'] || '',
-                            tags: row['tags'] || row['特色標籤'] || '',
-                            description: row['description'] || row['特色簡介'] || '',
-                            lat: lat, lng: lng
-                        };
-                    }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                            return {
+                                id: row['id'] || '',
+                                district: row['district'] || row['行政區'] || '',
+                                store_name: row['store_name'] || row['商家名稱'] || '在地伴手禮',
+                                product_name: row['product_name'] || row['推薦品項'] || '',
+                                address: row['address'] || row['門市地址'] || '',
+                                phone: row['phone'] || row['聯絡電話'] || '',
+                                business_hours: row['business_hours'] || row['營業時間'] || '',
+                                tags: row['tags'] || row['特色標籤'] || '',
+                                description: row['description'] || row['特色簡介'] || '',
+                                lat: lat, lng: lng
+                            };
+                        }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                    } catch(e) { console.warn("Parse souvenir err", e); }
                     resolve();
                 },
                 error: function() { loadedSouvenirs = []; resolve(); }
@@ -899,29 +941,31 @@
             Papa.parse('yunlin_accommodations.csv', {
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
-                    loadedAccommodations = results.data.map(row => {
-                        let lat = NaN, lng = NaN;
-                        const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || '';
-                        if (rawCoords) {
-                            const coords = rawCoords.replace(/，/g, ',').split(',');
-                            if (coords.length >= 2) {
-                                lat = parseFloat(coords[0].trim());
-                                lng = parseFloat(coords[1].trim());
+                    try {
+                        loadedAccommodations = results.data.map(row => {
+                            let lat = NaN, lng = NaN;
+                            const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || '';
+                            if (rawCoords) {
+                                const coords = rawCoords.replace(/，/g, ',').split(',');
+                                if (coords.length >= 2) {
+                                    lat = parseFloat(coords[0].trim());
+                                    lng = parseFloat(coords[1].trim());
+                                }
                             }
-                        }
-                        return {
-                            id: row['id'] || '',
-                            district: row['district'] || row['行政區'] || '',
-                            stay_name: row['stay_name'] || row['旅宿名稱'] || '精選住宿',
-                            stay_type: row['stay_type'] || row['住宿類型'] || '',
-                            address: row['address'] || row['旅宿地址'] || '',
-                            phone: row['phone'] || row['聯絡電話'] || '',
-                            check_in_out: row['check_in_out'] || row['入住/退房時間'] || '',
-                            tags: row['tags'] || row['特色標籤'] || '',
-                            description: row['description'] || row['旅宿簡介'] || '',
-                            lat: lat, lng: lng
-                        };
-                    }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                            return {
+                                id: row['id'] || '',
+                                district: row['district'] || row['行政區'] || '',
+                                stay_name: row['stay_name'] || row['旅宿名稱'] || '精選住宿',
+                                stay_type: row['stay_type'] || row['住宿類型'] || '',
+                                address: row['address'] || row['旅宿地址'] || '',
+                                phone: row['phone'] || row['聯絡電話'] || '',
+                                check_in_out: row['check_in_out'] || row['入住/退房時間'] || '',
+                                tags: row['tags'] || row['特色標籤'] || '',
+                                description: row['description'] || row['旅宿簡介'] || '',
+                                lat: lat, lng: lng
+                            };
+                        }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                    } catch(e) { console.warn("Parse hotel err", e); }
                     resolve();
                 },
                 error: function() { loadedAccommodations = []; resolve(); }
@@ -934,36 +978,38 @@
             Papa.parse('moovo_yunlin_stations_cards.csv', {
                 download: true, header: true, skipEmptyLines: true,
                 complete: function(results) {
-                    loadedMoovoStations = results.data.map(row => {
-                        let lat = NaN, lng = NaN;
-                        const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || row['經緯度'] || '';
-                        if (rawCoords) {
-                            const coords = rawCoords.replace(/，/g, ',').split(',');
-                            if (coords.length >= 2) {
-                                lat = parseFloat(coords[0].trim());
-                                lng = parseFloat(coords[1].trim());
+                    try {
+                        loadedMoovoStations = results.data.map(row => {
+                            let lat = NaN, lng = NaN;
+                            const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || row['經緯度'] || '';
+                            if (rawCoords) {
+                                const coords = rawCoords.replace(/，/g, ',').split(',');
+                                if (coords.length >= 2) {
+                                    lat = parseFloat(coords[0].trim());
+                                    lng = parseFloat(coords[1].trim());
+                                }
                             }
-                        }
-                        if (isNaN(lat) || isNaN(lng)) {
-                            lat = parseFloat(row['lat'] || row['緯度'] || row['Y'] || NaN);
-                            lng = parseFloat(row['lng'] || row['經度'] || row['X'] || NaN);
-                        }
-                        return {
-                            station_code: row['station_code'] || row['站點代碼'] || '',
-                            station_name: row['station_name'] || row['站點名稱'] || 'Moovo 站點',
-                            district: row['district'] || row['行政區'] || '',
-                            station_type: row['station_type'] || row['站點類型'] || '',
-                            location_description: row['location_description'] || row['位置與周邊地標'] || row['位置說明'] || '',
-                            bike_models: row['bike_models'] || row['提供車款'] || '',
-                            rental_methods: row['rental_methods'] || row['租借方式'] || '',
-                            rate_info: row['rate_info'] || row['費率與優惠'] || '',
-                            operating_status: row['operating_status'] || row['營運狀態'] || '正常營運',
-                            description: row['description'] || row['網站小卡文案簡介'] || row['簡介'] || '',
-                            tags: row['tags'] || row['特色標籤'] || '',
-                            map_url: row['map_url'] || row['Google地圖連結'] || '',
-                            lat: lat, lng: lng
-                        };
-                    }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                            if (isNaN(lat) || isNaN(lng)) {
+                                lat = parseFloat(row['lat'] || row['緯度'] || row['Y'] || NaN);
+                                lng = parseFloat(row['lng'] || row['經度'] || row['X'] || NaN);
+                            }
+                            return {
+                                station_code: row['station_code'] || row['站點代碼'] || '',
+                                station_name: row['station_name'] || row['站點名稱'] || 'Moovo 站點',
+                                district: row['district'] || row['行政區'] || '',
+                                station_type: row['station_type'] || row['站點類型'] || '',
+                                location_description: row['location_description'] || row['位置與周邊地標'] || row['位置說明'] || '',
+                                bike_models: row['bike_models'] || row['提供車款'] || '',
+                                rental_methods: row['rental_methods'] || row['租借方式'] || '',
+                                rate_info: row['rate_info'] || row['費率與優惠'] || '',
+                                operating_status: row['operating_status'] || row['營運狀態'] || '正常營運',
+                                description: row['description'] || row['網站小卡文案簡介'] || row['簡介'] || '',
+                                tags: row['tags'] || row['特色標籤'] || '',
+                                map_url: row['map_url'] || row['Google地圖連結'] || '',
+                                lat: lat, lng: lng
+                            };
+                        }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                    } catch(e) { console.warn("Parse Moovo err", e); }
                     resolve();
                 },
                 error: function() { loadedMoovoStations = []; resolve(); }
@@ -1013,7 +1059,7 @@
             
             // 安全強化的全螢幕縮放監聽器，防止灰底現象
             const mapContainer = document.getElementById('map');
-            if (window.ResizeObserver) {
+            if (window.ResizeObserver && mapContainer) {
                 new ResizeObserver(() => {
                     if (map) map.invalidateSize();
                 }).observe(mapContainer);
@@ -1058,6 +1104,7 @@
     function togglePanel() {
         const panel = document.getElementById('controlPanel');
         const btn = document.getElementById('expandBtn');
+        if (!panel || !btn) return;
         panel.classList.toggle('collapsed');
         if (panel.classList.contains('collapsed')) {
             btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.style.transform = 'translateX(0)';
