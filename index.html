@@ -235,7 +235,7 @@
         .btn-route:hover { background: var(--moovo-dark); }
         #route-info { font-size: 0.85rem; line-height: 1.5; background: #f1f8e9; padding: 12px; border-radius: 8px; border-left: 4px solid var(--moovo-green); display: none; margin-top: 5px; }
 
-        /* V4.5 升級：智慧規劃廟宇勾選由 1*6 改為 2*3 雙欄網格排列 */
+        /* 智慧規劃廟宇勾選 2*3 雙欄網格排列 */
         .checkbox-group {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -256,7 +256,7 @@
         }
         .btn-sos:hover { background: #b71c1c; transform: translateY(-2px); }
 
-        /* SOS 自訂彈出視窗（Modal） CSS */
+        /* SOS 自訂彈出視窗 Modal */
         .custom-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
@@ -293,107 +293,34 @@
         .sos-btn-nav:hover { background: #2563eb; }
 
         .sos-map-btn {
-            width: 100%;
-            padding: 8px;
-            background: #0284c7;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 0.85rem;
-            cursor: pointer;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: background 0.2s;
+            width: 100%; padding: 8px; background: #0284c7; color: white; border: none; border-radius: 8px;
+            font-weight: bold; font-size: 0.85rem; cursor: pointer; margin-top: 8px;
+            display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;
         }
         .sos-map-btn:hover { background: #0369a1; }
 
-        /* V4.5 升級：地圖救援圖層關閉按鈕 */
+        /* 地圖救援圖層關閉按鈕 */
         .close-sos-map-btn {
-            position: absolute;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2000;
-            background: #dc2626;
-            color: white;
-            border: 2px solid white;
-            padding: 10px 20px;
-            border-radius: 25px;
-            font-weight: 800;
-            font-size: 0.95rem;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(220,38,38,0.4);
-            display: none;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
+            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000;
+            background: #dc2626; color: white; border: 2px solid white; padding: 10px 20px; border-radius: 25px;
+            font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(220,38,38,0.4);
+            display: none; align-items: center; gap: 6px; transition: all 0.2s;
         }
-        .close-sos-map-btn:hover {
-            background: #b91c1c;
-            transform: translateX(-50%) scale(1.05);
-        }
+        .close-sos-map-btn:hover { background: #b91c1c; transform: translateX(-50%) scale(1.05); }
 
-        /* V4.4 升級：高音警報蜂鳴器按鈕 */
         .sos-siren-btn {
-            width: 100%;
-            padding: 10px;
-            background: #f43f5e;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 800;
-            font-size: 0.9rem;
-            cursor: pointer;
-            margin-top: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: all 0.2s;
+            width: 100%; padding: 10px; background: #f43f5e; color: white; border: none; border-radius: 8px;
+            font-weight: 800; font-size: 0.9rem; cursor: pointer; margin-top: 6px;
+            display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;
             box-shadow: 0 4px 12px rgba(244,63,94,0.3);
         }
         .sos-siren-btn:hover { background: #e11d48; }
-        .sos-siren-btn.active {
-            background: #1e293b;
-            color: #f43f5e;
-            border: 2px solid #f43f5e;
-            animation: pulseSOS 1.2s infinite;
-        }
+        .sos-siren-btn.active { background: #1e293b; color: #f43f5e; border: 2px solid #f43f5e; animation: pulseSOS 1.2s infinite; }
 
-        /* V4.4 升級：急救折疊卡 Accordion */
-        .sos-accordion {
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            margin-bottom: 6px;
-            overflow: hidden;
-        }
-        .sos-accordion summary {
-            padding: 8px 12px;
-            font-weight: bold;
-            font-size: 0.85rem;
-            color: #0f172a;
-            cursor: pointer;
-            background: #f1f5f9;
-            user-select: none;
-            outline: none;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+        .sos-accordion { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 6px; overflow: hidden; }
+        .sos-accordion summary { padding: 8px 12px; font-weight: bold; font-size: 0.85rem; color: #0f172a; cursor: pointer; background: #f1f5f9; user-select: none; outline: none; display: flex; align-items: center; justify-content: space-between; }
         .sos-accordion summary:hover { background: #e2e8f0; }
-        .sos-accordion-content {
-            padding: 10px 12px;
-            font-size: 0.8rem;
-            line-height: 1.5;
-            color: #334155;
-            border-top: 1px dashed #cbd5e1;
-            background: white;
-        }
+        .sos-accordion-content { padding: 10px 12px; font-size: 0.8rem; line-height: 1.5; color: #334155; border-top: 1px dashed #cbd5e1; background: white; }
 
         .story-card-drawer {
             position: absolute; top: 50%; left: -450px; transform: translateY(-50%);
@@ -570,7 +497,7 @@
 
         <div id="story-card-container" class="story-card-drawer"></div>
 
-        <!-- V4.5 新增：關閉救援雷達圖層懸浮按鈕 -->
+        <!-- 關閉救援雷達圖層懸浮按鈕 -->
         <button id="closeSosMapBtn" class="close-sos-map-btn" onclick="clearSosMapLayer()">
             ❌ 關閉地圖救援雷達圖層
         </button>
@@ -588,7 +515,7 @@
             <button onclick="closeSosModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#94a3b8;">✖</button>
         </div>
         
-        <!-- 步驟一：GPS 定位顯示區塊 -->
+        <!-- GPS 定位顯示區塊 -->
         <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px; margin-top: 10px; text-align:left;">
             <div style="font-size:0.78rem; color:#166534; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
                 <span>📍 當前實時 GPS 定位座標</span>
@@ -786,7 +713,7 @@
 
 <script>
     // =========================================================================
-    // 1. 全域變數與資料設定
+    // 1. 全域變數與通用 Helper 函數
     // =========================================================================
     let map = null;
     let markersCluster = null;
@@ -806,10 +733,23 @@
     let loadedWaterToiletHubs = [];
     let trafficLayer = null;
 
-    // V4.4 升級：Web Audio API 蜂鳴警報器全域變數
     let audioCtx = null;
     let isSirenActive = false;
     let sirenTimer = null;
+
+    // 通用欄位關鍵字彈性搜尋，自動忽略 UTF-8 BOM (\ufeff)
+    function getRowVal(row, keywords) {
+        if (!row) return '';
+        for (let key in row) {
+            const cleanKey = key.replace(/^\ufeff/, '').trim();
+            for (let kw of keywords) {
+                if (cleanKey.toLowerCase().includes(kw.toLowerCase())) {
+                    return String(row[key] || '').trim();
+                }
+            }
+        }
+        return '';
+    }
 
     // 救援資源地理座標資料庫
     const sosEmergencyResources = {
@@ -831,13 +771,11 @@
         ]
     };
 
-    // V4.4 升級：Web Audio API 蜂鳴警報器控制函數
     function toggleSiren() {
         const sirenBtn = document.getElementById('sirenToggleBtn');
         const modalCard = document.getElementById('sosModalCard');
 
         if (!isSirenActive) {
-            // 開啟蜂鳴警報
             isSirenActive = true;
             if (sirenBtn) {
                 sirenBtn.classList.add('active');
@@ -845,7 +783,6 @@
             }
             if (modalCard) modalCard.classList.add('flashing-card');
 
-            // 初始化 AudioContext
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
@@ -876,7 +813,6 @@
             }, 300);
 
         } else {
-            // 關閉蜂鳴警報
             stopSiren();
         }
     }
@@ -897,7 +833,6 @@
         if (modalCard) modalCard.classList.remove('flashing-card');
     }
 
-    // 開啟 SOS Modal 並呼叫 HTML5 定位
     function openSosModal() { 
         const modal = document.getElementById('sosModal');
         if (modal) modal.style.display = 'flex'; 
@@ -918,7 +853,6 @@
 
                     if (coordsEl) coordsEl.innerHTML = `🌐 經緯度：<b>${lat.toFixed(5)}, ${lng.toFixed(5)}</b>`;
                     
-                    // 計算距離最近的急診與警察分局
                     calculateNearestResources(lat, lng);
                     if (nearestBox) nearestBox.style.display = 'block';
 
@@ -949,7 +883,6 @@
         }
     }
 
-    // 利用 Turf.js 計算離目前 GPS 最近的急診醫院與警察分局
     function calculateNearestResources(userLat, userLng) {
         if (typeof turf === 'undefined') return;
         const userPt = turf.point([userLng, userLat]);
@@ -985,7 +918,6 @@
         }
     }
 
-    // 切換/開啟地圖 SOS 緊急救援圖層
     function toggleSosMapLayer() {
         closeSosModal();
         if (!map) return;
@@ -996,7 +928,6 @@
 
         sosMapLayer.clearLayers();
 
-        // 1. 繪製救援醫院
         sosEmergencyResources.hospitals.forEach(h => {
             const icon = L.divIcon({ html: `<div style="background:#dc2626; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 6px rgba(220,38,38,0.5);">🏥</div>`, className: '', iconSize: [28,28] });
             L.marker([h.coords[1], h.coords[0]], { icon }).bindPopup(`
@@ -1008,7 +939,6 @@
             `).addTo(sosMapLayer);
         });
 
-        // 2. 繪製警察分局 / 鐵馬驛站
         sosEmergencyResources.police.forEach(p => {
             const icon = L.divIcon({ html: `<div style="background:#0284c7; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 6px rgba(2,132,199,0.5);">👮</div>`, className: '', iconSize: [28,28] });
             L.marker([p.coords[1], p.coords[0]], { icon }).bindPopup(`
@@ -1020,7 +950,6 @@
             `).addTo(sosMapLayer);
         });
 
-        // 3. 繪製單車道路救援店家
         sosEmergencyResources.repairs.forEach(r => {
             const icon = L.divIcon({ html: `<div style="background:#15803d; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 6px rgba(21,128,61,0.5);">🚲</div>`, className: '', iconSize: [28,28] });
             L.marker([r.coords[1], r.coords[0]], { icon }).bindPopup(`
@@ -1031,7 +960,6 @@
             `).addTo(sosMapLayer);
         });
 
-        // 4. 繪製使用者當前 GPS 定位圖示
         if (currentUserCoords) {
             const userIcon = L.divIcon({ html: `<div style="background:#f43f5e; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow: 0 0 0 6px rgba(244,63,94,0.3); animation: pulseSOS 1.5s infinite;"></div>`, className: '', iconSize: [20,20] });
             if (userGpsMarker) map.removeLayer(userGpsMarker);
@@ -1041,7 +969,6 @@
 
         map.addLayer(sosMapLayer);
 
-        // V4.5 升級：顯示地圖關閉救援圖層按鈕
         const closeBtn = document.getElementById('closeSosMapBtn');
         if (closeBtn) closeBtn.style.display = 'flex';
 
@@ -1050,7 +977,6 @@
         }
     }
 
-    // V4.5 新增：清除與關閉 SOS 地圖救援圖層
     function clearSosMapLayer() {
         if (sosMapLayer && map) {
             map.removeLayer(sosMapLayer);
@@ -1427,19 +1353,21 @@
                                 </div>
                             `;
                         }
-                        else if (key === 'bikeShop' && (item.station_name || item.station_code)) {
+                        else if (key === 'bikeShop' && (item.station_name || item.station_code || item.name)) {
                             let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
                             let statusColor = (item.operating_status || '').includes('施工') || (item.operating_status || '').includes('暫停') ? '#ef4444' : '#16a34a';
-                            
+                            let titleName = item.station_name || item.name || 'Moovo 站點';
+                            let opStatus = item.operating_status || '正常營運';
+
                             popupContent = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
                                     <span style="font-size:0.75rem; color:#8d6e63; font-weight:bold;">🚲 MOOVO 公共自行車</span>
                                     <div style="display:flex; gap:4px;">
-                                        ${item.operating_status ? `<span style="background:${statusColor}; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.operating_status}</span>` : ''}
+                                        <span style="background:${statusColor}; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${opStatus}</span>
                                         ${item.district ? `<span style="background:#388e3c; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
                                     </div>
                                 </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${item.station_name}</b><br>
+                                <b style="font-size:1.1rem; color:#1e293b;">${titleName}</b><br>
                                 ${item.station_type ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">🏷️ 分類：${item.station_type}</div>` : ''}
                                 ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
                                 ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
@@ -1542,98 +1470,93 @@
     };
 
     async function loadFoodData() {
-        return new Promise((resolve) => {
-            Papa.parse('100.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    try {
+        return new Promise(async (resolve) => {
+            try {
+                const res = await fetch('100.csv');
+                if (!res.ok) throw new Error();
+                const text = await res.text();
+                Papa.parse(text, {
+                    header: true, skipEmptyLines: true,
+                    complete: function(results) {
                         loaded100Bowls = results.data.map(row => {
                             let lat = NaN, lng = NaN;
-                            if (row['經緯度座標']) {
-                                const coords = row['經緯度座標'].replace(/，/g, ',').split(',');
+                            const rawCoords = getRowVal(row, ['經緯度座標', '座標', 'coordinates']);
+                            if (rawCoords) {
+                                const coords = rawCoords.replace(/，/g, ',').split(',');
                                 if (coords.length >= 2) {
                                     lat = parseFloat(coords[0].trim());
                                     lng = parseFloat(coords[1].trim());
                                 }
                             }
+                            if (isNaN(lat) || isNaN(lng)) {
+                                lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
+                                lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
+                            }
                             return {
-                                name: row['商家名稱'] || "在地美食",
-                                item: row['入選品名'] || "特色小吃",
-                                address: row['商家地址'] || "雲林縣",
+                                name: getRowVal(row, ['商家名稱', '店名', '名稱', 'name']) || "在地美食",
+                                item: getRowVal(row, ['入選品名', '品項', '推薦品項', 'item']) || "特色小吃",
+                                address: getRowVal(row, ['商家地址', '地址', 'address']) || "雲林縣",
                                 lat: lat, lng: lng
                             };
                         }).filter(food => !isNaN(food.lat) && !isNaN(food.lng));
-                    } catch(e) { console.warn("Parse food err", e); }
-                    resolve();
-                },
-                error: function() { loaded100Bowls = []; resolve(); }
-            });
+                        resolve();
+                    }
+                });
+            } catch(e) { loaded100Bowls = []; resolve(); }
         });
     }
 
     async function load711Data() {
-        return new Promise((resolve) => {
-            Papa.parse('711.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    try {
+        return new Promise(async (resolve) => {
+            try {
+                const res = await fetch('711.csv');
+                if (!res.ok) throw new Error();
+                const text = await res.text();
+                Papa.parse(text, {
+                    header: true, skipEmptyLines: true,
+                    complete: function(results) {
                         loaded711Stores = results.data.map(row => {
                             const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
-                            const getVal = (keywords) => {
-                                for (let key in row) {
-                                    for (let kw of keywords) {
-                                        if (key.includes(kw)) return row[key];
-                                    }
-                                }
-                                return null;
-                            };
-
+                            let lat = parseFloat(getRowVal(row, ['Y', '緯度', 'Lat']));
+                            let lng = parseFloat(getRowVal(row, ['X', '經度', 'Lng']));
                             return {
                                 brand: '7-11',
-                                name: getVal(['POIName', '店名', '門市']) || "7-11",
-                                lat: parseFloat(getVal(['Y', '緯度', 'Lat'])),
-                                lng: parseFloat(getVal(['X', '經度', 'Lng'])),
-                                isParking: hasService(getVal(['01停車場', '停車'])),
-                                isToilet: hasService(getVal(['02廁所', '廁所', '洗手間'])),
-                                isATM: hasService(getVal(['03ATM', 'ATM', '提款機'])),
-                                isDining: hasService(getVal(['04座位區', '座位', '內用'])),
-                                isIbon: hasService(getVal(['ibon', '19ibon'])),
-                                isWifi: hasService(getVal(['WiFi', '05ibon WiFi'])),
-                                isSlurpee: hasService(getVal(['06思樂冰', '思樂冰'])),
-                                isPowerBank: hasService(getVal(['行動電源', '12行動電源租賃'])),
-                                isDonut: hasService(getVal(['Donut', '15Mister Donut甜甜圈', '甜甜圈'])),
-                                isTea: hasService(getVal(['現萃茶', '21現萃茶'])),
-                                isSweetPotato: hasService(getVal(['現蒸地瓜', '22現蒸地瓜'])),
-                                isIceCream: hasService(getVal(['霜淇淋', '24雪淋霜淇淋', '雪淋霜淇淋']))
+                                name: getRowVal(row, ['POIName', '店名', '門市']) || "7-11",
+                                lat: lat, lng: lng,
+                                isParking: hasService(getRowVal(row, ['01停車場', '停車'])),
+                                isToilet: hasService(getRowVal(row, ['02廁所', '廁所', '洗手間'])),
+                                isATM: hasService(getRowVal(row, ['03ATM', 'ATM', '提款機'])),
+                                isDining: hasService(getRowVal(row, ['04座位區', '座位', '內用'])),
+                                isIbon: hasService(getRowVal(row, ['ibon', '19ibon'])),
+                                isWifi: hasService(getRowVal(row, ['WiFi', '05ibon WiFi'])),
+                                isSlurpee: hasService(getRowVal(row, ['06思樂冰', '思樂冰'])),
+                                isPowerBank: hasService(getRowVal(row, ['行動電源', '12行動電源租賃'])),
+                                isDonut: hasService(getRowVal(row, ['Donut', '15Mister Donut甜甜圈', '甜甜圈'])),
+                                isTea: hasService(getRowVal(row, ['現萃茶', '21現萃茶'])),
+                                isSweetPotato: hasService(getRowVal(row, ['現蒸地瓜', '22現蒸地瓜'])),
+                                isIceCream: hasService(getRowVal(row, ['霜淇淋', '24雪淋霜淇淋', '雪淋霜淇淋']))
                             };
                         }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
-                    } catch(e) { console.warn("Parse 711 err", e); }
-                    resolve();
-                },
-                error: function() { loaded711Stores = []; resolve(); }
-            });
+                        resolve();
+                    }
+                });
+            } catch(e) { loaded711Stores = []; resolve(); }
         });
     }
 
     async function loadFamilyMartData() {
-        return new Promise((resolve) => {
-            Papa.parse('yunlin_familymart_all_services_cards_complete.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    try {
+        return new Promise(async (resolve) => {
+            try {
+                const res = await fetch('yunlin_familymart_all_services_cards_complete.csv');
+                if (!res.ok) throw new Error();
+                const text = await res.text();
+                Papa.parse(text, {
+                    header: true, skipEmptyLines: true,
+                    complete: function(results) {
                         loadedFamilyMartStores = results.data.map(row => {
                             const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
-                            const getVal = (keywords) => {
-                                for (let key in row) {
-                                    for (let kw of keywords) {
-                                        if (key.includes(kw)) return row[key];
-                                    }
-                                }
-                                return '';
-                            };
-
                             let lat = NaN, lng = NaN;
-                            const rawCoords = getVal(['經緯度座標', '座標', 'coordinates', '經緯度']);
+                            const rawCoords = getRowVal(row, ['經緯度座標', '座標', 'coordinates', '經緯度']);
                             if (rawCoords) {
                                 const coords = rawCoords.replace(/，/g, ',').split(',');
                                 if (coords.length >= 2) {
@@ -1644,55 +1567,54 @@
                                 }
                             }
                             if (isNaN(lat) || isNaN(lng)) {
-                                lat = parseFloat(getVal(['緯度(Latitude)', '緯度', 'Lat', 'lat', 'Y']) || NaN);
-                                lng = parseFloat(getVal(['經度(Longitude)', '經度', 'Lng', 'lng', 'X']) || NaN);
+                                lat = parseFloat(getRowVal(row, ['緯度', 'Lat', 'lat', 'Y']));
+                                lng = parseFloat(getRowVal(row, ['經度', 'Lng', 'lng', 'X']));
                             }
 
-                            let storeName = getVal(['門市名稱', '店舖名稱', '店舖代號', '店名', 'POIName', '名稱']) || '全家門市';
-                            if (!storeName.includes('全家')) {
-                                storeName = '全家 ' + storeName;
-                            }
+                            let storeName = getRowVal(row, ['門市名稱', '店舖名稱', '店舖代號', '店名', 'POIName', '名稱']) || '全家門市';
+                            if (!storeName.includes('全家')) storeName = '全家 ' + storeName;
 
                             return {
                                 brand: 'FamilyMart',
-                                code: getVal(['站點代碼', '店舖代號']) || '',
-                                district: getVal(['行政區', 'district']) || '',
+                                code: getRowVal(row, ['站點代碼', '店舖代號']),
+                                district: getRowVal(row, ['行政區', 'district']),
                                 name: storeName,
-                                address: getVal(['詳細地址', '地址']) || '',
-                                hours: getVal(['營業時間']) || '24H',
-                                lat: lat,
-                                lng: lng,
-                                description: getVal(['網站小卡文案簡介', '簡介']) || '',
-                                tags: getVal(['特色標籤', '標籤']) || '',
-                                services_summary: getVal(['全部服務項目彙整', '服務項目']) || '',
-                                map_url: getVal(['Google地圖連結', '地圖連結']) || '',
-                                isToilet: hasService(getVal(['洗手間', '公廁'])),
-                                isDining: hasService(getVal(['內用', '座位'])),
-                                isIceCream: hasService(getVal(['霜淇淋', 'Fami!ce'])),
-                                isCafe: hasService(getVal(['咖啡', 'Let\'s Café'])),
-                                isFamiPort: hasService(getVal(['FamiPort'])),
-                                isATM: hasService(getVal(['ATM'])),
-                                isPowerBank: hasService(getVal(['行動電源'])),
-                                isGogoro: hasService(getVal(['Gogoro', '換電站']))
+                                address: getRowVal(row, ['詳細地址', '地址']),
+                                hours: getRowVal(row, ['營業時間']) || '24H',
+                                lat: lat, lng: lng,
+                                description: getRowVal(row, ['網站小卡文案簡介', '簡介']),
+                                tags: getRowVal(row, ['特色標籤', '標籤']),
+                                services_summary: getRowVal(row, ['全部服務項目彙整', '服務項目']),
+                                map_url: getRowVal(row, ['Google地圖連結', '地圖連結']),
+                                isToilet: hasService(getRowVal(row, ['洗手間', '公廁'])),
+                                isDining: hasService(getRowVal(row, ['內用', '座位'])),
+                                isIceCream: hasService(getRowVal(row, ['霜淇淋', 'Fami!ce'])),
+                                isCafe: hasService(getRowVal(row, ['咖啡', 'Let\'s Café'])),
+                                isFamiPort: hasService(getRowVal(row, ['FamiPort'])),
+                                isATM: hasService(getRowVal(row, ['ATM'])),
+                                isPowerBank: hasService(getRowVal(row, ['行動電源'])),
+                                isGogoro: hasService(getRowVal(row, ['Gogoro', '換電站']))
                             };
                         }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
-                    } catch(e) { console.warn("Parse FamilyMart err", e); }
-                    resolve();
-                },
-                error: function() { loadedFamilyMartStores = []; resolve(); }
-            });
+                        resolve();
+                    }
+                });
+            } catch(e) { loadedFamilyMartStores = []; resolve(); }
         });
     }
 
     async function loadSouvenirData() {
-        return new Promise((resolve) => {
-            Papa.parse('yunlin_souvenirs.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    try {
+        return new Promise(async (resolve) => {
+            try {
+                const res = await fetch('yunlin_souvenirs.csv');
+                if (!res.ok) throw new Error();
+                const text = await res.text();
+                Papa.parse(text, {
+                    header: true, skipEmptyLines: true,
+                    complete: function(results) {
                         loadedSouvenirs = results.data.map(row => {
                             let lat = NaN, lng = NaN;
-                            const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || '';
+                            const rawCoords = getRowVal(row, ['coordinates', '經緯度座標', '座標', '經緯度']);
                             if (rawCoords) {
                                 const coords = rawCoords.replace(/，/g, ',').split(',');
                                 if (coords.length >= 2) {
@@ -1700,36 +1622,42 @@
                                     lng = parseFloat(coords[1].trim());
                                 }
                             }
+                            if (isNaN(lat) || isNaN(lng)) {
+                                lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
+                                lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
+                            }
                             return {
-                                id: row['id'] || '',
-                                district: row['district'] || row['行政區'] || '',
-                                store_name: row['store_name'] || row['商家名稱'] || '在地伴手禮',
-                                product_name: row['product_name'] || row['推薦品項'] || '',
-                                address: row['address'] || row['門市地址'] || '',
-                                phone: row['phone'] || row['聯絡電話'] || '',
-                                business_hours: row['business_hours'] || row['營業時間'] || '',
-                                tags: row['tags'] || row['特色標籤'] || '',
-                                description: row['description'] || row['特色簡介'] || '',
+                                id: getRowVal(row, ['id']),
+                                district: getRowVal(row, ['district', '行政區']),
+                                store_name: getRowVal(row, ['store_name', '商家名稱', '名稱']) || '在地伴手禮',
+                                product_name: getRowVal(row, ['product_name', '推薦品項', '品項']),
+                                address: getRowVal(row, ['address', '門市地址', '地址']),
+                                phone: getRowVal(row, ['phone', '聯絡電話', '電話']),
+                                business_hours: getRowVal(row, ['business_hours', '營業時間']),
+                                tags: getRowVal(row, ['tags', '特色標籤', '標籤']),
+                                description: getRowVal(row, ['description', '特色簡介', '簡介']),
                                 lat: lat, lng: lng
                             };
                         }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
-                    } catch(e) { console.warn("Parse souvenir err", e); }
-                    resolve();
-                },
-                error: function() { loadedSouvenirs = []; resolve(); }
-            });
+                        resolve();
+                    }
+                });
+            } catch(e) { loadedSouvenirs = []; resolve(); }
         });
     }
 
     async function loadAccommodationData() {
-        return new Promise((resolve) => {
-            Papa.parse('yunlin_accommodations.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    try {
+        return new Promise(async (resolve) => {
+            try {
+                const res = await fetch('yunlin_accommodations.csv');
+                if (!res.ok) throw new Error();
+                const text = await res.text();
+                Papa.parse(text, {
+                    header: true, skipEmptyLines: true,
+                    complete: function(results) {
                         loadedAccommodations = results.data.map(row => {
                             let lat = NaN, lng = NaN;
-                            const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || '';
+                            const rawCoords = getRowVal(row, ['coordinates', '經緯度座標', '座標', '經緯度']);
                             if (rawCoords) {
                                 const coords = rawCoords.replace(/，/g, ',').split(',');
                                 if (coords.length >= 2) {
@@ -1737,103 +1665,101 @@
                                     lng = parseFloat(coords[1].trim());
                                 }
                             }
+                            if (isNaN(lat) || isNaN(lng)) {
+                                lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
+                                lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
+                            }
                             return {
-                                id: row['id'] || '',
-                                district: row['district'] || row['行政區'] || '',
-                                stay_name: row['stay_name'] || row['旅宿名稱'] || '精選住宿',
-                                stay_type: row['stay_type'] || row['住宿類型'] || '',
-                                address: row['address'] || row['旅宿地址'] || '',
-                                phone: row['phone'] || row['聯絡電話'] || '',
-                                check_in_out: row['check_in_out'] || row['入住/退房時間'] || '',
-                                tags: row['tags'] || row['特色標籤'] || '',
-                                description: row['description'] || row['旅宿簡介'] || '',
+                                id: getRowVal(row, ['id']),
+                                district: getRowVal(row, ['district', '行政區']),
+                                stay_name: getRowVal(row, ['stay_name', '旅宿名稱', '名稱']) || '精選住宿',
+                                stay_type: getRowVal(row, ['stay_type', '住宿類型', '類型']),
+                                address: getRowVal(row, ['address', '旅宿地址', '地址']),
+                                phone: getRowVal(row, ['phone', '聯絡電話', '電話']),
+                                check_in_out: getRowVal(row, ['check_in_out', '入住/退房時間']),
+                                tags: getRowVal(row, ['tags', '特色標籤', '標籤']),
+                                description: getRowVal(row, ['description', '旅宿簡介', '簡介']),
                                 lat: lat, lng: lng
                             };
                         }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
-                    } catch(e) { console.warn("Parse hotel err", e); }
-                    resolve();
-                },
-                error: function() { loadedAccommodations = []; resolve(); }
-            });
+                        resolve();
+                    }
+                });
+            } catch(e) { loadedAccommodations = []; resolve(); }
         });
     }
 
     async function loadMoovoData() {
-        const fetchFile = async (fileName) => {
-            return new Promise((resolve, reject) => {
-                Papa.parse(fileName, {
-                    download: true, header: true, skipEmptyLines: true,
-                    complete: function(results) {
-                        try {
-                            const parsed = results.data.map(row => {
-                                let lat = NaN, lng = NaN;
-                                const rawCoords = row['經緯度座標'] || row['coordinates'] || row['座標'] || row['經緯度'] || '';
-                                if (rawCoords) {
-                                    const coords = rawCoords.replace(/，/g, ',').split(',');
-                                    if (coords.length >= 2) {
-                                        let val1 = parseFloat(coords[0].trim());
-                                        let val2 = parseFloat(coords[1].trim());
-                                        if (val1 > 100) { lng = val1; lat = val2; }
-                                        else { lat = val1; lng = val2; }
-                                    }
-                                }
-                                if (isNaN(lat) || isNaN(lng)) {
-                                    lat = parseFloat(row['lat'] || row['緯度'] || row['Y'] || NaN);
-                                    lng = parseFloat(row['lng'] || row['經度'] || row['X'] || NaN);
-                                }
-                                return {
-                                    station_code: row['station_code'] || row['站點代碼'] || '',
-                                    station_name: row['station_name'] || row['站點名稱'] || 'Moovo 站點',
-                                    district: row['district'] || row['行政區'] || '',
-                                    station_type: row['station_type'] || row['站點類型'] || '',
-                                    location_description: row['location_description'] || row['位置與周邊地標'] || row['位置說明'] || '',
-                                    bike_models: row['bike_models'] || row['提供車款'] || '',
-                                    rental_methods: row['rental_methods'] || row['租借方式'] || '',
-                                    rate_info: row['rate_info'] || row['費率與優惠'] || '',
-                                    operating_status: row['operating_status'] || row['營運狀態'] || '正常營運',
-                                    description: row['description'] || row['網站小卡文案簡介'] || row['簡介'] || '',
-                                    tags: row['tags'] || row['特色標籤'] || '',
-                                    map_url: row['map_url'] || row['Google地圖連結'] || '',
-                                    lat: lat, lng: lng
-                                };
-                            }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
-                            resolve(parsed);
-                        } catch(e) { reject(e); }
-                    },
-                    error: function(err) { reject(err); }
-                });
-            });
-        };
-
-        try {
-            loadedMoovoStations = await fetchFile('moovo_yunlin_stations_cards_2.csv');
-        } catch (e) {
+        const fileNames = ['moovo_yunlin_stations_cards_2.csv', 'moovo_yunlin_stations_cards.csv'];
+        for (let fileName of fileNames) {
             try {
-                loadedMoovoStations = await fetchFile('moovo_yunlin_stations_cards.csv');
-            } catch (err) {
-                loadedMoovoStations = [];
+                const res = await fetch(fileName);
+                if (!res.ok) continue;
+                const text = await res.text();
+                if (!text || text.trim().length === 0) continue;
+
+                const parsedResults = Papa.parse(text, { header: true, skipEmptyLines: true });
+                if (parsedResults && parsedResults.data && parsedResults.data.length > 0) {
+                    const parsed = parsedResults.data.map(row => {
+                        let lat = NaN, lng = NaN;
+                        const rawCoords = getRowVal(row, ['經緯度座標', 'coordinates', '座標', '經緯度']);
+                        if (rawCoords) {
+                            const coords = rawCoords.replace(/，/g, ',').split(',');
+                            if (coords.length >= 2) {
+                                let val1 = parseFloat(coords[0].trim());
+                                let val2 = parseFloat(coords[1].trim());
+                                if (!isNaN(val1) && !isNaN(val2)) {
+                                    if (val1 > 100) { lng = val1; lat = val2; }
+                                    else { lat = val1; lng = val2; }
+                                }
+                            }
+                        }
+                        if (isNaN(lat) || isNaN(lng)) {
+                            lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
+                            lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
+                        }
+                        return {
+                            station_code: getRowVal(row, ['站點代碼', 'code', 'id']),
+                            station_name: getRowVal(row, ['站點名稱', '名稱', 'store_name', 'title', 'name']) || 'Moovo 站點',
+                            district: getRowVal(row, ['行政區', 'district', '區']),
+                            station_type: getRowVal(row, ['站點類型', '細項', '分類', 'type']),
+                            location_description: getRowVal(row, ['位置與周邊地標', '詳細地址/位置', '位置說明', '地址', 'location', 'address']),
+                            bike_models: getRowVal(row, ['提供車款', '車款', 'models']),
+                            rental_methods: getRowVal(row, ['租借方式', '租借']),
+                            rate_info: getRowVal(row, ['費率與優惠', '費率', '優惠']),
+                            operating_status: getRowVal(row, ['營運狀態', '狀態', 'status']) || '正常營運',
+                            description: getRowVal(row, ['網站小卡文案簡介', '特色簡介', '簡介', '文案', 'description']),
+                            tags: getRowVal(row, ['特色標籤', '標籤', 'tags']),
+                            map_url: getRowVal(row, ['Google地圖連結', '地圖連結', '導航', 'map']),
+                            lat: lat, lng: lng
+                        };
+                    }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+
+                    if (parsed.length > 0) {
+                        loadedMoovoStations = parsed;
+                        console.log(`✅ 成功載入 MOOVO 站點資料 (${fileName})：共 ${parsed.length} 筆`);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn(`無讀取 ${fileName}`, e);
             }
         }
+        console.warn("⚠️ 無法讀取 MOOVO CSV 檔案，將使用預設清單。");
     }
 
     async function loadWaterToiletData() {
-        return new Promise((resolve) => {
-            Papa.parse('yunlin_bike_all_in_one_master.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    try {
+        return new Promise(async (resolve) => {
+            try {
+                const res = await fetch('yunlin_bike_all_in_one_master.csv');
+                if (!res.ok) throw new Error();
+                const text = await res.text();
+                Papa.parse(text, {
+                    header: true, skipEmptyLines: true,
+                    complete: function(results) {
                         loadedWaterToiletHubs = results.data.map(row => {
                             let lat = NaN, lng = NaN;
-                            const getVal = (keywords) => {
-                                for (let key in row) {
-                                    for (let kw of keywords) {
-                                        if (key.includes(kw)) return row[key];
-                                    }
-                                }
-                                return '';
-                            };
-
-                            const rawCoords = getVal(['經緯度座標', '座標', 'coordinates', '經緯度']);
+                            const rawCoords = getRowVal(row, ['經緯度座標', '座標', 'coordinates', '經緯度']);
                             if (rawCoords) {
                                 const coords = rawCoords.replace(/，/g, ',').split(',');
                                 if (coords.length >= 2) {
@@ -1844,32 +1770,31 @@
                                 }
                             }
                             if (isNaN(lat) || isNaN(lng)) {
-                                lat = parseFloat(getVal(['緯度(Latitude)', '緯度', 'Lat', 'lat', 'Y']) || NaN);
-                                lng = parseFloat(getVal(['經度(Longitude)', '經度', 'Lng', 'lng', 'X']) || NaN);
+                                lat = parseFloat(getRowVal(row, ['緯度', 'lat', 'y']));
+                                lng = parseFloat(getRowVal(row, ['經度', 'lng', 'x']));
                             }
 
                             return {
-                                station_code: getVal(['站點代碼', 'code', 'id']) || '',
-                                category: getVal(['來源分類', '分類']) || '友善水/廁據點',
-                                district: getVal(['行政區', 'district']) || '',
-                                name: getVal(['站點名稱', '名稱', 'title']) || '友善水/廁站點',
-                                sub_category: getVal(['站點細項分類', '細項']) || '',
-                                address: getVal(['詳細地址/位置', '詳細地址', '位置', '地址']) || '',
-                                water_info: getVal(['飲水機補水資訊', '飲水']) || '',
-                                toilet_info: getVal(['洗手間/公廁資訊', '公廁', '廁所']) || '',
-                                bike_facility_info: getVal(['充氣/單車設施', '單車設施', '打氣']) || '',
-                                hours: getVal(['開放/營業時間', '營業時間', '開放時間']) || '',
-                                description: getVal(['網站小卡文案簡介', '簡介', '文案']) || '',
-                                tags: getVal(['特色標籤', '標籤', 'tags']) || '',
-                                map_url: getVal(['Google地圖連結', '地圖連結']) || '',
+                                station_code: getRowVal(row, ['站點代碼', 'code', 'id']),
+                                category: getRowVal(row, ['來源分類', '分類']) || '友善水/廁據點',
+                                district: getRowVal(row, ['行政區', 'district']),
+                                name: getRowVal(row, ['站點名稱', '名稱', 'title']) || '友善水/廁站點',
+                                sub_category: getRowVal(row, ['站點細項分類', '細項']),
+                                address: getRowVal(row, ['詳細地址/位置', '詳細地址', '位置', '地址']),
+                                water_info: getRowVal(row, ['飲水機補水資訊', '飲水']),
+                                toilet_info: getRowVal(row, ['洗手間/公廁資訊', '公廁', '廁所']),
+                                bike_facility_info: getRowVal(row, ['充氣/單車設施', '單車設施', '打氣']),
+                                hours: getRowVal(row, ['開放/營業時間', '營業時間', '開放時間']),
+                                description: getRowVal(row, ['網站小卡文案簡介', '簡介', '文案']),
+                                tags: getRowVal(row, ['特色標籤', '標籤', 'tags']),
+                                map_url: getRowVal(row, ['Google地圖連結', '地圖連結']),
                                 lat: lat, lng: lng
                             };
                         }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
-                    } catch(e) { console.warn("Parse waterToilet err", e); }
-                    resolve();
-                },
-                error: function() { loadedWaterToiletHubs = []; resolve(); }
-            });
+                        resolve();
+                    }
+                });
+            } catch(e) { loadedWaterToiletHubs = []; resolve(); }
         });
     }
 
