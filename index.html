@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V4.0</title>
+    <title>雲林信仰跟著卡打車打卡 V4.1</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -257,7 +257,7 @@
             z-index: 9999; display: none; justify-content: center; align-items: center;
         }
         .custom-modal-card {
-            background: white; border-radius: 16px; padding: 24px; max-width: 380px; width: 85%;
+            background: white; border-radius: 16px; padding: 24px; max-width: 400px; width: 88%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 2px solid var(--sos-red);
             text-align: center;
         }
@@ -318,8 +318,8 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡</h1>
-        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線 (V4.0)</p>
+        <h1>雲林信仰跟著卡打車打卡 V4.1</h1>
+        <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線</p>
     </header>
 
     <div class="map-wrapper">
@@ -429,17 +429,28 @@
     </div>
 </div>
 
-<!-- 自訂原生 SOS 救援彈窗 -->
+<!-- V4.1 升級：自訂 SOS 救援彈窗（整合步驟一：實時 GPS 定位顯示） -->
 <div id="sosModal" class="custom-modal-overlay">
     <div class="custom-modal-card">
-        <h3 style="margin-top:0; color:var(--sos-red); font-size: 1.2rem;">🆘 SOS 救援資訊</h3>
-        <p style="text-align: left; line-height: 1.6; font-size: 0.95rem; color:#334155;">
+        <h3 style="margin-top:0; color:var(--sos-red); font-size: 1.25rem;">🆘 SOS 救援雷達系統</h3>
+        
+        <!-- 步驟一：GPS 定位顯示區塊 -->
+        <div style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:10px; padding:12px; margin: 12px 0; text-align:left;">
+            <div style="font-size:0.8rem; color:#64748b; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+                <span>📍 當前實時 GPS 定位座標</span>
+                <button onclick="openSosModal()" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:0.75rem; padding:0; text-decoration:underline;">重新重新定位</button>
+            </div>
+            <div id="sosGpsCoords" style="font-size:1.1rem; color:#0f172a; font-weight:800; margin-top:4px;">⏳ 正在定位中...</div>
+            <div id="sosGpsAddress" style="font-size:0.82rem; color:#475569; margin-top:3px; line-height: 1.4;">正在獲取大約地址說明...</div>
+        </div>
+
+        <p style="text-align: left; line-height: 1.6; font-size: 0.95rem; color:#334155; margin-bottom: 15px;">
             <b>緊急救援專線：</b><a href="tel:110" style="color:#d32f2f; font-weight:bold;">110</a> / <a href="tel:119" style="color:#d32f2f; font-weight:bold;">119</a><br>
             <b>虎尾警察分局：</b><a href="tel:056322042" style="color:#0284c7; font-weight:bold;">05-632-2042</a><br>
             <b>西螺警察分局：</b><a href="tel:055862014" style="color:#0284c7; font-weight:bold;">05-586-2014</a><br>
             <b>北港警察分局：</b><a href="tel:057832015" style="color:#0284c7; font-weight:bold;">05-783-2015</a>
         </p>
-        <button onclick="closeSosModal()" style="margin-top:15px; width: 100%; padding:10px; background:var(--sos-red); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">關閉視窗</button>
+        <button onclick="closeSosModal()" style="width: 100%; padding:11px; background:var(--sos-red); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:0.95rem;">關閉救援視窗</button>
     </div>
 </div>
 
@@ -463,7 +474,49 @@
     let loadedWaterToiletHubs = [];
     let trafficLayer = null;
 
-    function openSosModal() { document.getElementById('sosModal').style.display = 'flex'; }
+    // V4.1 升級：開啟 SOS Modal 時自動呼叫 HTML5 定位
+    function openSosModal() { 
+        const modal = document.getElementById('sosModal');
+        if (modal) modal.style.display = 'flex'; 
+
+        const coordsEl = document.getElementById('sosGpsCoords');
+        const addrEl = document.getElementById('sosGpsAddress');
+        
+        if (coordsEl) coordsEl.innerHTML = "⏳ 正在定位中...";
+        if (addrEl) addrEl.innerHTML = "正在獲取 GPS 座標...";
+
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const lat = position.coords.latitude.toFixed(5);
+                    const lng = position.coords.longitude.toFixed(5);
+                    if (coordsEl) coordsEl.innerHTML = `🌐 經緯度：<b>${lat}, ${lng}</b>`;
+                    
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&accept-language=zh-TW`);
+                        const data = await res.json();
+                        if (data && data.display_name) {
+                            const addressText = data.display_name.split(',').slice(0, 4).join('');
+                            if (addrEl) addrEl.innerHTML = `📍 預估位置：<b>${addressText}</b>`;
+                        } else {
+                            if (addrEl) addrEl.innerHTML = `📍 定位成功！可直接向救援人員提供上述座標。`;
+                        }
+                    } catch(e) {
+                        if (addrEl) addrEl.innerHTML = `📍 定位成功！可直接向救援人員提供上述座標。`;
+                    }
+                },
+                (error) => {
+                    if (coordsEl) coordsEl.innerHTML = `<span style="color:#d32f2f;">⚠️ 無法取得定位資訊</span>`;
+                    if (addrEl) addrEl.innerHTML = `請確認手機已開啟 GPS 並允許瀏覽器讀取位置權限。`;
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            if (coordsEl) coordsEl.innerHTML = `<span style="color:#d32f2f;">⚠️ 您的裝置不支援 GPS 定位</span>`;
+            if (addrEl) addrEl.innerHTML = `請透過電話人工說明您的受困地點。`;
+        }
+    }
+
     function closeSosModal() { document.getElementById('sosModal').style.display = 'none'; }
 
     function toggleTrafficLayer(enable) {
