@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V5.2</title>
+    <title>雲林信仰跟著卡打車打卡 V5.3</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -384,7 +384,7 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V5.2</h1>
+        <h1>雲林信仰跟著卡打車打卡 V5.3</h1>
         <p>整合全縣各大據點與必吃美食，智慧 AI 規劃單車環狀路線</p>
     </header>
 
@@ -688,7 +688,7 @@
             <details class="sos-accordion">
                 <summary>☀️ 中暑與熱衰竭處置</summary>
                 <div class="sos-accordion-content">
-                    1. <b>移至陰涼處</b>：立即至樹蔭或超商內休憩，鬆開緊身衣物。<br>
+                    1. <b>移至陰涼處</b>：智慧移動至樹蔭或超商內休憩，鬆開緊身衣物。<br>
                     2. <b>物理降溫</b>：用水擦拭頸部、腋下與大腿溝。<br>
                     3. <b>補充水分</b>：若意識清醒，小口補充含電解質水或運動飲料。
                 </div>
@@ -712,11 +712,94 @@
 
 <script>
     // =========================================================================
-    // ★ V5.2 徹底修復：修正解析順序，確保「經緯度座標」優先於 Google 地圖網址 ★
-    function parseRowCoords(row) {
+    // 1. 全域變數與通用 Helper 函數
+    // =========================================================================
+    let map = null;
+    let markersCluster = null;
+    let currentPathLayer = null;
+    let currentRouteTurfLine = null;
+    let dynamicFoodLayer = null;
+    let sosMapLayer = null;
+    let userGpsMarker = null;
+    let currentUserCoords = null;
+    let currentScanRadius = 2.0; 
+    let loaded100Bowls = []; 
+    let loaded711Stores = [];
+    let loadedFamilyMartStores = [];
+    let loadedSouvenirs = [];
+    let loadedAccommodations = [];
+    let loadedMoovoStations = [];
+    let loadedWaterToiletHubs = [];
+    let loadedBikeRepairShops = [];
+    let trafficLayer = null;
+
+    let audioCtx = null;
+    let isSirenActive = false;
+    let sirenTimer = null;
+
+    // 通用精確欄位提取 (自動忽略 UTF-8 BOM \ufeff)
+    function getExactCol(row, exactKeys) {
+        if (!row) return '';
+        for (let key in row) {
+            const cleanKey = key.replace(/^\ufeff/, '').trim().toLowerCase();
+            for (let ek of exactKeys) {
+                if (cleanKey === ek.toLowerCase()) {
+                    return String(row[key] || '').trim();
+                }
+            }
+        }
+        return '';
+    }
+
+    // 驗證經緯度並在倒置時自動校正（臺灣緯度 20~26，經度 119~123）
+    function validateAndSwap(p1, p2) {
+        if (isNaN(p1) || isNaN(p2)) return null;
+        let lat = p1 > 100 ? p2 : p1;
+        let lng = p1 > 100 ? p1 : p2;
+        if (lat >= 20 && lat <= 26 && lng >= 119 && lng <= 123) {
+            return { lat, lng };
+        }
+        return null;
+    }
+
+    // 萬用地理座標提取器：解算 Google 地圖連結 (!3d緯度!4d經度) 與數值對
+    function extractLatLng(str) {
+        if (!str) return null;
+        str = String(str).trim();
+
+        // 1. Google 地圖 !3d (緯度) !4d (經度) 格式
+        let m = str.match(/!3d([0-9]{2}\.[0-9]+)!4d([0-9]{3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+
+        // 2. Google 地圖 @lat,lng 格式
+        m = str.match(/@([0-9]{2}\.[0-9]+),([0-9]{3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+
+        // 3. 網址 query/destination/q/ll 參數格式
+        m = str.match(/(?:query|destination|q|ll)=([0-9]{2,3}\.[0-9]+)[\s,]+([0-9]{2,3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+
+        // 4. 一般經緯度數字對格式
+        m = str.match(/([0-9]{2,3}\.[0-9]+)[\s,]+([0-9]{2,3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+
+        return null;
+    }
+
+    // ★ V5.3 核心：TWD67 ➔ WGS84 座標轉換與高優先權網址解算器 ★
+    function parseRowCoords(row, datasetType = 'default') {
         if (!row) return null;
 
-        // 階段 1：優先尋找獨立「緯度」與「經度」數值欄位
+        // 特殊資料集 (FamilyMart / Moovo)：優先嘗試從 Google地圖連結 提取原生 WGS84 座標
+        if (datasetType === 'familymart' || datasetType === 'moovo') {
+            let mapUrl = getExactCol(row, ['google地圖連結', '地圖連結', 'map_url', 'map', '導航']);
+            if (mapUrl && (mapUrl.includes('!3d') || mapUrl.includes('query='))) {
+                let extracted = extractLatLng(mapUrl);
+                if (extracted) return extracted;
+            }
+        }
+
+        // 階段 1：獨立「緯度」與「經度」數值欄位
         let latVal = getExactCol(row, ['緯度(latitude)', '緯度', 'lat', 'y', 'latitude', '緯度(lat)']);
         let lngVal = getExactCol(row, ['經度(longitude)', '經度', 'lng', 'x', 'longitude', '經度(lng)']);
 
@@ -724,32 +807,38 @@
             let p1 = parseFloat(latVal);
             let p2 = parseFloat(lngVal);
             let valid = validateAndSwap(p1, p2);
-            if (valid) return valid;
+            if (valid) {
+                // 若為 TWD67 資料集且讀取數值欄位，進行雲林區域 TWD67 ➔ WGS84 自動校正
+                if (datasetType === 'familymart' || datasetType === 'moovo') {
+                    return {
+                        lat: valid.lat - 0.0019,
+                        lng: valid.lng - 0.0014
+                    };
+                }
+                return valid;
+            }
         }
 
-        // 階段 2：優先尋找「經緯度座標」/「coordinates」/「座標」複合欄位 (確保在 Google 地圖連結之前解析)
+        // 階段 2：「經緯度座標」複合欄位
         let compositeVal = getExactCol(row, ['經緯度座標', 'coordinates', '座標', '經緯度', 'location']);
         if (compositeVal) {
             let extracted = extractLatLng(compositeVal);
-            if (extracted) return extracted;
+            if (extracted) {
+                if (datasetType === 'familymart' || datasetType === 'moovo') {
+                    return {
+                        lat: extracted.lat - 0.0019,
+                        lng: extracted.lng - 0.0014
+                    };
+                }
+                return extracted;
+            }
         }
 
-        // 階段 3：備援 - 嘗試 Google 地圖連結 (僅在缺乏精準座標欄位時使用)
+        // 階段 3：備援 Google 地圖連結
         let mapUrl = getExactCol(row, ['google地圖連結', '地圖連結', 'map_url', 'map', '導航']);
         if (mapUrl) {
             let extracted = extractLatLng(mapUrl);
             if (extracted) return extracted;
-        }
-
-        // 階段 4：最後掃描全列欄位中是否有包含 "23." 或 "22." 以及 "120." 的座標字串
-        for (let key in row) {
-            // 跳過地圖連結欄位，避免抓到鏡頭中心點
-            if (key.toLowerCase().includes('map') || key.toLowerCase().includes('地圖')) continue;
-            let val = String(row[key] || '').trim();
-            if ((val.includes('23.') || val.includes('22.') || val.includes('24.')) && val.includes('120.')) {
-                let extracted = extractLatLng(val);
-                if (extracted) return extracted;
-            }
         }
 
         return null;
@@ -1017,7 +1106,7 @@
         }
     }
 
-    // ★ 官方精確 6 大廟宇與高鐵據點資料庫 (座標落點完美) ★
+    // 官方精確 6 大廟宇與高鐵據點資料庫 (WGS84 座標)
     const POIs = {
         "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.41649, 23.73633], desc: "MOOVO 租借與歸還點" },
         "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.30190, 23.56810], desc: "媽祖信仰中心" },
@@ -1505,7 +1594,7 @@
                     header: true, skipEmptyLines: true,
                     complete: function(results) {
                         loaded100Bowls = results.data.map(row => {
-                            let coords = parseRowCoords(row);
+                            let coords = parseRowCoords(row, 'food');
                             return {
                                 name: getExactCol(row, ['商家名稱', '店名', '名稱', 'name']) || "在地美食",
                                 item: getExactCol(row, ['入選品名', '品項', '推薦品項', 'item']) || "特色小吃",
@@ -1531,7 +1620,7 @@
                     complete: function(results) {
                         loaded711Stores = results.data.map(row => {
                             const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
-                            let coords = parseRowCoords(row);
+                            let coords = parseRowCoords(row, '711');
                             return {
                                 brand: '7-11',
                                 name: getExactCol(row, ['POIName', '店名', '門市', '名稱']) || "7-11",
@@ -1568,7 +1657,7 @@
                     complete: function(results) {
                         loadedFamilyMartStores = results.data.map(row => {
                             const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
-                            let coords = parseRowCoords(row);
+                            let coords = parseRowCoords(row, 'familymart');
 
                             let storeName = getExactCol(row, ['門市名稱', '店舖名稱', '店舖代號', '店名', 'POIName', '名稱']) || '全家門市';
                             if (!storeName.includes('全家')) storeName = '全家 ' + storeName;
@@ -1612,7 +1701,7 @@
                     header: true, skipEmptyLines: true,
                     complete: function(results) {
                         loadedSouvenirs = results.data.map(row => {
-                            let coords = parseRowCoords(row);
+                            let coords = parseRowCoords(row, 'souvenir');
                             return {
                                 id: getExactCol(row, ['id']),
                                 district: getExactCol(row, ['district', '行政區']),
@@ -1643,7 +1732,7 @@
                     header: true, skipEmptyLines: true,
                     complete: function(results) {
                         loadedAccommodations = results.data.map(row => {
-                            let coords = parseRowCoords(row);
+                            let coords = parseRowCoords(row, 'accommodation');
                             return {
                                 id: getExactCol(row, ['id']),
                                 district: getExactCol(row, ['district', '行政區']),
@@ -1676,7 +1765,7 @@
                 const parsedResults = Papa.parse(text, { header: true, skipEmptyLines: true });
                 if (parsedResults && parsedResults.data && parsedResults.data.length > 0) {
                     const parsed = parsedResults.data.map(row => {
-                        let coords = parseRowCoords(row);
+                        let coords = parseRowCoords(row, 'moovo');
 
                         return {
                             station_code: getExactCol(row, ['站點代碼', 'code', 'id']),
@@ -1714,7 +1803,7 @@
                 complete: function(results) {
                     try {
                         loadedWaterToiletHubs = results.data.map(row => {
-                            let coords = parseRowCoords(row);
+                            let coords = parseRowCoords(row, 'waterToilet');
 
                             return {
                                 station_code: getExactCol(row, ['站點代碼', 'code', 'id']),
@@ -1748,7 +1837,7 @@
                 complete: function(results) {
                     try {
                         loadedBikeRepairShops = results.data.map(row => {
-                            let coords = parseRowCoords(row);
+                            let coords = parseRowCoords(row, 'bikeRepair');
                             return {
                                 id: getExactCol(row, ['id', '站點代碼', 'code']),
                                 district: getExactCol(row, ['district', '行政區']),
