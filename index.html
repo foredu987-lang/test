@@ -439,6 +439,7 @@
     let currentScanRadius = 2.0; // 預設掃描半徑 (公里)
     let loaded100Bowls = []; 
     let loaded711Stores = [];
+    let loadedFamilyMartStores = [];
     let loadedSouvenirs = [];
     let loadedAccommodations = [];
     let loadedMoovoStations = [];
@@ -689,8 +690,8 @@
                 group.clearLayers();
                 
                 let dataSource = fallbackServiceData[key] || [];
-                if (key === 'convenience' && loaded711Stores.length > 0) {
-                    dataSource = loaded711Stores;
+                if (key === 'convenience') {
+                    dataSource = [...loaded711Stores, ...loadedFamilyMartStores];
                 } else if (key === 'souvenir' && loadedSouvenirs.length > 0) {
                     dataSource = loadedSouvenirs;
                 } else if (key === 'accommodation' && loadedAccommodations.length > 0) {
@@ -704,7 +705,11 @@
                 dataSource.forEach(item => {
                     if (turf.pointToLineDistance(turf.point([item.lng, item.lat]), currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
                         const config = serviceConfig[key] || { icon: "📍", color: "#2196F3" };
-                        const icon = L.divIcon({ html: `<div style="background:${config.color}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
+                        let iconColor = config.color;
+                        if (key === 'convenience' && item.brand === 'FamilyMart') {
+                            iconColor = "#0284c7"; // 全家專屬藍綠色主題
+                        }
+                        const icon = L.divIcon({ html: `<div style="background:${iconColor}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
                         
                         let popupContent = `<b>${item.name || item.store_name || item.stay_name || item.station_name || '據點'}</b>`;
                         
@@ -789,65 +794,65 @@
                                 </div>
                             `;
                         }
-
-                        // 4. MOOVO 站點專屬 UI 卡片
-                        else if (key === 'bikeShop' && (item.station_name || item.station_code)) {
-                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
-                            let statusColor = (item.operating_status || '').includes('施工') || (item.operating_status || '').includes('暫停') ? '#ef4444' : '#16a34a';
-                            
-                            popupContent = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
-                                    <span style="font-size:0.75rem; color:#8d6e63; font-weight:bold;">🚲 MOOVO 公共自行車</span>
-                                    <div style="display:flex; gap:4px;">
-                                        ${item.operating_status ? `<span style="background:${statusColor}; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.operating_status}</span>` : ''}
-                                        ${item.district ? `<span style="background:#388e3c; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
-                                    </div>
-                                </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${item.station_name}</b><br>
-                                ${item.station_type ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">🏷️ 分類：${item.station_type}</div>` : ''}
-                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
-                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
-                                ${item.bike_models ? `<div style="font-size:0.8rem; color:#334155; margin-top:4px;">🚲 車款：${item.bike_models}</div>` : ''}
-                                ${item.rental_methods ? `<div style="font-size:0.8rem; color:#334155; margin-top:2px;">💳 租借：${item.rental_methods}</div>` : ''}
-                                ${item.rate_info ? `<div style="font-size:0.8rem; color:#15803d; margin-top:2px; font-weight:bold;">💰 優惠：${item.rate_info}</div>` : ''}
-                                ${item.location_description ? `<div style="font-size:0.78rem; color:#64748b; margin-top:4px;">📍 位置：${item.location_description}</div>` : ''}
-                                <div style="margin-top:10px;">
-                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="width:100%; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航前往</button>
-                                </div>
-                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 雲林縣公共自行車 MOOVO 官方網站
-                                </div>
-                            `;
-                        }
-
-                        // 5. 超商客製小卡
+                        // 5. 超商客製小卡 (7-11 & 全家 FamilyMart)
                         else if (key === 'convenience') {
+                            const isFM = item.brand === 'FamilyMart';
+                            const brandTitle = isFM ? '🏪 全家便利商店 FamilyMart' : '🏪 7-11 門市';
+                            const brandColor = isFM ? '#0284c7' : '#FFB300';
+                            const btnColor = isFM ? '#0284c7' : '#00a651';
+
                             let services = [];
-                            if (item.isToilet) services.push("🚻廁所");
-                            if (item.isATM) services.push("🏧ATM");
-                            if (item.isDining) services.push("🪑座位區");
-                            if (item.isIbon) services.push("🖨️ibon");
-                            if (item.isWifi) services.push("📶WiFi");
-                            if (item.isParking) services.push("🅿️停車場");
-                            if (item.isSlurpee) services.push("🥤思樂冰");
-                            if (item.isPowerBank) services.push("🔋行動電源租賃");
-                            if (item.isDonut) services.push("🍩Mister Donut");
-                            if (item.isTea) services.push("🍵現萃茶");
-                            if (item.isSweetPotato) services.push("🍠現蒸地瓜");
-                            if (item.isIceCream) services.push("🍦霜淇淋");
+                            if (isFM) {
+                                if (item.services_summary) {
+                                    services = item.services_summary.split(/[,，\s]+/).filter(Boolean);
+                                } else {
+                                    if (item.isToilet) services.push("🚻洗手間");
+                                    if (item.isDining) services.push("🪑內用座位");
+                                    if (item.isIceCream) services.push("🍦Fami!ce霜淇淋");
+                                    if (item.isCafe) services.push("☕Let's Café");
+                                    if (item.isATM) services.push("🏧ATM");
+                                    if (item.isFamiPort) services.push("🖨️FamiPort");
+                                    if (item.isPowerBank) services.push("🔋行動電源");
+                                    if (item.isGogoro) services.push("⚡Gogoro換電站");
+                                }
+                            } else {
+                                if (item.isToilet) services.push("🚻廁所");
+                                if (item.isATM) services.push("🏧ATM");
+                                if (item.isDining) services.push("🪑座位區");
+                                if (item.isIbon) services.push("🖨️ibon");
+                                if (item.isWifi) services.push("📶WiFi");
+                                if (item.isParking) services.push("🅿️停車場");
+                                if (item.isSlurpee) services.push("🥤思樂冰");
+                                if (item.isPowerBank) services.push("🔋行動電源租賃");
+                                if (item.isDonut) services.push("🍩Mister Donut");
+                                if (item.isTea) services.push("🍵現萃茶");
+                                if (item.isSweetPotato) services.push("🍠現蒸地瓜");
+                                if (item.isIceCream) services.push("🍦霜淇淋");
+                            }
 
                             let serviceText = services.length > 0 
-                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.85rem; color:#444; line-height: 1.4;"><b>提供服務：</b><br>${services.join('、')}</div>` 
+                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.82rem; color:#444; line-height: 1.4;"><b>提供服務：</b><br>${services.join('、')}</div>` 
                                 : '';
                             
+                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+
                             popupContent = `
-                                <div style="font-size:0.75rem; color:${config.color}; font-weight:bold; margin-bottom:3px;">🏪 7-11 門市</div>
-                                <b style="font-size:1.1rem; color:#333;">${item.name}</b><br>
-                                ${serviceText}
-                                <div style="font-size: 0.65rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來源 來自 <a href="https://emap.pcsc.com.tw/" target="_blank" style="color: #00a651; text-decoration: none;">https://emap.pcsc.com.tw/</a>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; gap:4px;">
+                                    <span style="font-size:0.75rem; color:${brandColor}; font-weight:bold;">${brandTitle}</span>
+                                    ${item.district ? `<span style="background:${brandColor}; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
                                 </div>
-                                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="margin-top:8px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 6px 0; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">🗺️ Google 導航</button>
+                                <b style="font-size:1.1rem; color:#1e293b;">${item.name}</b><br>
+                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
+                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:4px 0; line-height:1.4;">${item.description}</p>` : ''}
+                                ${serviceText}
+                                ${item.hours ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">🕒 營業時間：${item.hours}</div>` : ''}
+                                ${item.address ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
+                                <div style="margin-top:10px;">
+                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="width:100%; text-align:center; background:${btnColor}; border:none; color:white; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航前往</button>
+                                </div>
+                                <div style="font-size: 0.65rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                    ℹ️ 資料來源 來自 ${isFM ? '全家便利商店官方網站' : '<a href="https://emap.pcsc.com.tw/" target="_blank" style="color: #00a651; text-decoration: none;">https://emap.pcsc.com.tw/</a>'}
+                                </div>
                             `;
                         }
 
@@ -926,6 +931,7 @@
                             };
 
                             return {
+                                brand: '7-11',
                                 name: getVal(['POIName', '店名', '門市']) || "7-11",
                                 lat: parseFloat(getVal(['Y', '緯度', 'Lat'])),
                                 lng: parseFloat(getVal(['X', '經度', 'Lng'])),
@@ -947,6 +953,76 @@
                     resolve();
                 },
                 error: function() { loaded711Stores = []; resolve(); }
+            });
+        });
+    }
+
+    // 載入全家 FamilyMart 擴充資料 CSV
+    async function loadFamilyMartData() {
+        return new Promise((resolve) => {
+            Papa.parse('yunlin_familymart_all_services_cards_complete.csv', {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    try {
+                        loadedFamilyMartStores = results.data.map(row => {
+                            const hasService = (val) => ['1', 'Y', 'TRUE', '是'].includes(String(val || '').trim().toUpperCase());
+                            const getVal = (keywords) => {
+                                for (let key in row) {
+                                    for (let kw of keywords) {
+                                        if (key.includes(kw)) return row[key];
+                                    }
+                                }
+                                return '';
+                            };
+
+                            let lat = NaN, lng = NaN;
+                            const rawCoords = getVal(['經緯度座標', '座標', 'coordinates', '經緯度']);
+                            if (rawCoords) {
+                                const coords = rawCoords.replace(/，/g, ',').split(',');
+                                if (coords.length >= 2) {
+                                    let val1 = parseFloat(coords[0].trim());
+                                    let val2 = parseFloat(coords[1].trim());
+                                    if (val1 > 100) { lng = val1; lat = val2; }
+                                    else { lat = val1; lng = val2; }
+                                }
+                            }
+                            if (isNaN(lat) || isNaN(lng)) {
+                                lat = parseFloat(getVal(['緯度(Latitude)', '緯度', 'Lat', 'lat', 'Y']) || NaN);
+                                lng = parseFloat(getVal(['經度(Longitude)', '經度', 'Lng', 'lng', 'X']) || NaN);
+                            }
+
+                            let storeName = getVal(['門市名稱', '店舖名稱', '店舖代號', '店名', 'POIName', '名稱']) || '全家門市';
+                            if (!storeName.includes('全家')) {
+                                storeName = '全家 ' + storeName;
+                            }
+
+                            return {
+                                brand: 'FamilyMart',
+                                code: getVal(['站點代碼', '店舖代號']) || '',
+                                district: getVal(['行政區', 'district']) || '',
+                                name: storeName,
+                                address: getVal(['詳細地址', '地址']) || '',
+                                hours: getVal(['營業時間']) || '24H',
+                                lat: lat,
+                                lng: lng,
+                                description: getVal(['網站小卡文案簡介', '簡介']) || '',
+                                tags: getVal(['特色標籤', '標籤']) || '',
+                                services_summary: getVal(['全部服務項目彙整', '服務項目']) || '',
+                                map_url: getVal(['Google地圖連結', '地圖連結']) || '',
+                                isToilet: hasService(getVal(['洗手間', '公廁'])),
+                                isDining: hasService(getVal(['內用', '座位'])),
+                                isIceCream: hasService(getVal(['霜淇淋', 'Fami!ce'])),
+                                isCafe: hasService(getVal(['咖啡', 'Let\'s Café'])),
+                                isFamiPort: hasService(getVal(['FamiPort'])),
+                                isATM: hasService(getVal(['ATM'])),
+                                isPowerBank: hasService(getVal(['行動電源'])),
+                                isGogoro: hasService(getVal(['Gogoro', '換電站']))
+                            };
+                        }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                    } catch(e) { console.warn("Parse FamilyMart err", e); }
+                    resolve();
+                },
+                error: function() { loadedFamilyMartStores = []; resolve(); }
             });
         });
     }
@@ -1222,7 +1298,7 @@
             });
 
             fetchWeather();
-            await Promise.all([ loadFoodData(), load711Data(), loadSouvenirData(), loadAccommodationData(), loadMoovoData(), loadWaterToiletData() ]);
+            await Promise.all([ loadFoodData(), load711Data(), loadFamilyMartData(), loadSouvenirData(), loadAccommodationData(), loadMoovoData(), loadWaterToiletData() ]);
 
         } catch (e) {
             console.error("Initialization Failed:", e);
