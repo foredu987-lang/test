@@ -43,10 +43,10 @@
         header h1 { margin: 0; font-size: 1.4rem; letter-spacing: 0.5px; }
         header p { margin: 4px 0 0 0; font-size: 0.85rem; color: #aaa; }
 
-        .map-wrapper { position: relative; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .map-wrapper { position: relative; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
         
-        /* 關鍵修正：維持 absolute 全螢幕定位，防灰底 */
-        #map { flex-grow: 1; width: 100%; height: 100%; z-index: 1; position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        /* 全螢幕地圖定位與彈性佈局保護 */
+        #map { width: 100%; height: 100%; z-index: 1; position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
 
         .top-toolbar {
             position: absolute;
@@ -54,10 +54,13 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 10px;
+            gap: 8px;
             z-index: 1000;
             pointer-events: none; 
             transition: transform 0.2s ease;
+            max-width: 95vw;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .top-toolbar > * { pointer-events: auto; }
 
@@ -86,6 +89,7 @@
             backdrop-filter: blur(4px);
             gap: 4px;
             transition: all 0.3s ease;
+            flex-wrap: wrap;
         }
 
         .service-btn-group.locked {
@@ -96,9 +100,9 @@
         .service-toggle-label {
             display: inline-flex;
             align-items: center;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: bold;
             color: #64748b;
             cursor: pointer;
@@ -116,7 +120,7 @@
         .service-toggle-label.hotel input:checked + span { color: #8E24AA; }
         .service-toggle-label input:checked + span { text-shadow: 0 0 1px currentColor; }
 
-        /* 新增：雷達掃描半徑切換按鈕組 */
+        /* 雷達掃描半徑切換按鈕組 */
         .radius-selector-group {
             display: flex;
             background: rgba(255, 255, 255, 0.95);
@@ -672,18 +676,18 @@
 
                 dataSource.forEach(item => {
                     if (turf.pointToLineDistance(turf.point([item.lng, item.lat]), currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
-                        const config = serviceConfig[key];
+                        const config = serviceConfig[key] || { icon: "📍", color: "#2196F3" };
                         const icon = L.divIcon({ html: `<div style="background:${config.color}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
                         
-                        let popupContent = `<b>${item.name || item.store_name || item.stay_name}</b>`;
+                        let popupContent = `<b>${item.name || item.store_name || item.stay_name || '地點'}</b>`;
                         
-                        // 伴手禮門市專屬 UI 卡片
+                        // 1. 伴手禮門市專屬 UI 卡片
                         if (key === 'souvenir' && item.store_name) {
                             let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
                             
                             popupContent = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                                    <span style="font-size:0.75rem; color:#e65100; font-weight:bold;">🎁 雲林伴手禮名店</span>
+                                    <span style="font-size:0.75rem; color:#e65100; font-weight:bold;">🎁 慢遊雲林伴手禮</span>
                                     ${item.district ? `<span style="background:#e65100; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
                                 </div>
                                 <b style="font-size:1.1rem; color:#1e293b;">${item.store_name}</b><br>
@@ -702,8 +706,8 @@
                             `;
                         }
 
-                        // 精選住宿專屬 UI 卡片
-                        if (key === 'accommodation' && item.stay_name) {
+                        // 2. 精選住宿專屬 UI 卡片
+                        else if (key === 'accommodation' && item.stay_name) {
                             let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
                             
                             popupContent = `
@@ -729,8 +733,15 @@
                             `;
                         }
 
-                        // 超商客製小卡
+                        // 3. 超商客製小卡
+                        else if (key === 'convenience') {
+                            let services = [];
                             if (item.isParking) services.push("🅿️停車場");
+                            if (item.isToilet) services.push("🚻廁所");
+                            if (item.isATM) services.push("🏧ATM");
+                            if (item.isDining) services.push("🪑座位區");
+                            if (item.isIbon) services.push("🖨️ibon");
+                            if (item.isWifi) services.push("📶WiFi");
                             if (item.isSlurpee) services.push("🥤思樂冰");
                             if (item.isPowerBank) services.push("🔋行動電源租賃");
                             if (item.isDonut) services.push("🍩Mister Donut");
@@ -744,7 +755,7 @@
                             
                             popupContent = `
                                 <div style="font-size:0.75rem; color:${config.color}; font-weight:bold; margin-bottom:3px;">🏪 7-11 門市</div>
-                                <b style="font-size:1.1rem; color:#333;">${item.name}</b><br>
+                                <b style="font-size:1.1rem; color:#333;">${item.name || '7-11'}</b><br>
                                 ${serviceText}
                                 <div style="font-size: 0.65rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
                                     ℹ️ 資料來源 來自 <a href="https://emap.pcsc.com.tw/" target="_blank" style="color: #00a651; text-decoration: none;">https://emap.pcsc.com.tw/</a>
@@ -957,7 +968,15 @@
             L.control.zoom({ position: 'bottomright' }).addTo(map);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
             
-            setTimeout(() => { map.invalidateSize(); }, 500);
+            // 安全強化的全螢幕縮放監聽器，防止灰底現象
+            const mapContainer = document.getElementById('map');
+            if (window.ResizeObserver) {
+                new ResizeObserver(() => {
+                    if (map) map.invalidateSize();
+                }).observe(mapContainer);
+            }
+            window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
+            setTimeout(() => { if (map) map.invalidateSize(); }, 300);
 
             markersCluster = L.markerClusterGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 14 }).addTo(map);
             dynamicFoodLayer = L.layerGroup().addTo(map);
