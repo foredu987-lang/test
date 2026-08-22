@@ -440,6 +440,7 @@
     let loaded711Stores = [];
     let loadedSouvenirs = [];
     let loadedAccommodations = [];
+    let loadedMoovoStations = [];
 
     // 切換掃描範圍函數 (2km / 5km)
     function setScanRadius(radius) {
@@ -672,6 +673,8 @@
                     dataSource = loadedSouvenirs;
                 } else if (key === 'accommodation' && loadedAccommodations.length > 0) {
                     dataSource = loadedAccommodations;
+                } else if (key === 'bikeShop' && loadedMoovoStations.length > 0) {
+                    dataSource = loadedMoovoStations;
                 }
 
                 dataSource.forEach(item => {
@@ -679,7 +682,7 @@
                         const config = serviceConfig[key] || { icon: "📍", color: "#2196F3" };
                         const icon = L.divIcon({ html: `<div style="background:${config.color}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
                         
-                        let popupContent = `<b>${item.name || item.store_name || item.stay_name || '地點'}</b>`;
+                        let popupContent = `<b>${item.name || item.store_name || item.stay_name || item.station_name || '地點'}</b>`;
                         
                         // 1. 伴手禮門市專屬 UI 卡片
                         if (key === 'souvenir' && item.store_name) {
@@ -733,39 +736,37 @@
                             `;
                         }
 
-                        // 3. 超商客製小卡
-                        else if (key === 'convenience') {
-                            let services = [];
-                            if (item.isParking) services.push("🅿️停車場");
-                            if (item.isToilet) services.push("🚻廁所");
-                            if (item.isATM) services.push("🏧ATM");
-                            if (item.isDining) services.push("🪑座位區");
-                            if (item.isIbon) services.push("🖨️ibon");
-                            if (item.isWifi) services.push("📶WiFi");
-                            if (item.isSlurpee) services.push("🥤思樂冰");
-                            if (item.isPowerBank) services.push("🔋行動電源租賃");
-                            if (item.isDonut) services.push("🍩Mister Donut");
-                            if (item.isTea) services.push("🍵現萃茶");
-                            if (item.isSweetPotato) services.push("🍠現蒸地瓜");
-                            if (item.isIceCream) services.push("🍦霜淇淋");
-                            
-                            let serviceText = services.length > 0 
-                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.85rem; color:#444; line-height: 1.4;"><b>提供服務：</b><br>${services.join('、')}</div>` 
-                                : '';
+                        // 3. MOOVO 站點專屬 UI 卡片
+                        else if (key === 'bikeShop' && (item.station_name || item.station_code)) {
+                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let statusColor = (item.operating_status || '').includes('施工') || (item.operating_status || '').includes('暫停') ? '#ef4444' : '#16a34a';
                             
                             popupContent = `
-                                <div style="font-size:0.75rem; color:${config.color}; font-weight:bold; margin-bottom:3px;">🏪 7-11 門市</div>
-                                <b style="font-size:1.1rem; color:#333;">${item.name || '7-11'}</b><br>
-                                ${serviceText}
-                                <div style="font-size: 0.65rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來源 來自 <a href="https://emap.pcsc.com.tw/" target="_blank" style="color: #00a651; text-decoration: none;">https://emap.pcsc.com.tw/</a>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
+                                    <span style="font-size:0.75rem; color:#8d6e63; font-weight:bold;">🚲 MOOVO 公共自行車</span>
+                                    <div style="display:flex; gap:4px;">
+                                        ${item.operating_status ? `<span style="background:${statusColor}; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.operating_status}</span>` : ''}
+                                        ${item.district ? `<span style="background:#388e3c; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
+                                    </div>
                                 </div>
-                                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="margin-top:8px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 6px 0; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">🗺️ Google 導航</button>
+                                <b style="font-size:1.1rem; color:#1e293b;">${item.station_name}</b><br>
+                                ${item.station_type ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">🏷️ 分類：${item.station_type}</div>` : ''}
+                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
+                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
+                                ${item.bike_models ? `<div style="font-size:0.8rem; color:#334155; margin-top:4px;">🚲 車款：${item.bike_models}</div>` : ''}
+                                ${item.rental_methods ? `<div style="font-size:0.8rem; color:#334155; margin-top:2px;">💳 租借：${item.rental_methods}</div>` : ''}
+                                ${item.rate_info ? `<div style="font-size:0.8rem; color:#15803d; margin-top:2px; font-weight:bold;">💰 優惠：${item.rate_info}</div>` : ''}
+                                ${item.location_description ? `<div style="font-size:0.78rem; color:#64748b; margin-top:4px;">📍 位置：${item.location_description}</div>` : ''}
+                                <div style="margin-top:10px;">
+                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="width:100%; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航前往</button>
+                                </div>
+                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                    ℹ️ 資料來自 雲林縣公共自行車 MOOVO 官方網站
+                                </div>
                             `;
                         }
 
-                        L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent, { minWidth: 240 }).addTo(group);
-                    }
+                        // 4. 超商客製小卡
                 });
             });
         },
@@ -928,6 +929,48 @@
         });
     }
 
+    async function loadMoovoData() {
+        return new Promise((resolve) => {
+            Papa.parse('moovo_yunlin_stations_cards.csv', {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    loadedMoovoStations = results.data.map(row => {
+                        let lat = NaN, lng = NaN;
+                        const rawCoords = row['coordinates'] || row['經緯度座標'] || row['座標'] || row['經緯度'] || '';
+                        if (rawCoords) {
+                            const coords = rawCoords.replace(/，/g, ',').split(',');
+                            if (coords.length >= 2) {
+                                lat = parseFloat(coords[0].trim());
+                                lng = parseFloat(coords[1].trim());
+                            }
+                        }
+                        if (isNaN(lat) || isNaN(lng)) {
+                            lat = parseFloat(row['lat'] || row['緯度'] || row['Y'] || NaN);
+                            lng = parseFloat(row['lng'] || row['經度'] || row['X'] || NaN);
+                        }
+                        return {
+                            station_code: row['station_code'] || row['站點代碼'] || '',
+                            station_name: row['station_name'] || row['站點名稱'] || 'Moovo 站點',
+                            district: row['district'] || row['行政區'] || '',
+                            station_type: row['station_type'] || row['站點類型'] || '',
+                            location_description: row['location_description'] || row['位置與周邊地標'] || row['位置說明'] || '',
+                            bike_models: row['bike_models'] || row['提供車款'] || '',
+                            rental_methods: row['rental_methods'] || row['租借方式'] || '',
+                            rate_info: row['rate_info'] || row['費率與優惠'] || '',
+                            operating_status: row['operating_status'] || row['營運狀態'] || '正常營運',
+                            description: row['description'] || row['網站小卡文案簡介'] || row['簡介'] || '',
+                            tags: row['tags'] || row['特色標籤'] || '',
+                            map_url: row['map_url'] || row['Google地圖連結'] || '',
+                            lat: lat, lng: lng
+                        };
+                    }).filter(item => !isNaN(item.lat) && !isNaN(item.lng));
+                    resolve();
+                },
+                error: function() { loadedMoovoStations = []; resolve(); }
+            });
+        });
+    }
+
     async function fetchWeather() {
         const widget = document.getElementById('weather-widget');
         try {
@@ -1005,7 +1048,7 @@
             });
 
             fetchWeather();
-            await Promise.all([ loadFoodData(), load711Data(), loadSouvenirData(), loadAccommodationData() ]);
+            await Promise.all([ loadFoodData(), load711Data(), loadSouvenirData(), loadAccommodationData(), loadMoovoData() ]);
 
         } catch (e) {
             console.error("Initialization Failed:", e);
