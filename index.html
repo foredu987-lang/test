@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V5.1</title>
+    <title>雲林信仰跟著卡打車打卡 V5.2</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -384,7 +384,7 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V5.1</h1>
+        <h1>雲林信仰跟著卡打車打卡 V5.2</h1>
         <p>整合全縣各大據點與必吃美食，智慧 AI 規劃單車環狀路線</p>
     </header>
 
@@ -504,6 +504,7 @@
     </div>
 </div>
 
+<!-- SOS 自訂救援 Modal -->
 <div id="sosModal" class="custom-modal-overlay">
     <div class="custom-modal-card" id="sosModalCard">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -736,7 +737,7 @@
     let isSirenActive = false;
     let sirenTimer = null;
 
-    // ★ V5.1 核心修復：精確比對獨立欄位，避免模糊搜尋與「經緯度座標」複合字串混淆 ★
+    // ★ V5.2 核心修復：精確比對獨立欄位，避免與複合字串混淆 ★
     function getExactCol(row, exactKeys) {
         if (!row) return '';
         for (let key in row) {
@@ -750,7 +751,8 @@
         return '';
     }
 
-    // 驗證經緯度並在倒置時自動校正（臺灣緯度 20~26，經度 119~123）
+    // ★ V5.2 全自動臺灣地理座標防呆驗證與倒置對調器 ★
+    // 臺灣邊界範圍：緯度 (Lat) 20~26，經度 (Lng) 119~123
     function validateAndSwap(p1, p2) {
         if (isNaN(p1) || isNaN(p2)) return null;
         let lat = p1 > 100 ? p2 : p1;
@@ -761,7 +763,7 @@
         return null;
     }
 
-    // 萬用地理座標提取器：解決 Google 地圖連結 (!3d緯度!4d經度) 與數值對
+    // 萬用地理座標提取器：解析數值對、Google Maps !3d!4d, @lat,lng, query/destination
     function extractLatLng(str) {
         if (!str) return null;
         str = String(str).trim();
@@ -785,13 +787,13 @@
         return null;
     }
 
-    // ★ V5.1 徹底修復：四階段無誤座標解析器 ★
+    // ★ V5.2 徹底修復：四階段萬無一失座標解析器 ★
     function parseRowCoords(row) {
         if (!row) return null;
 
-        // 階段 1：優先精確尋找獨立「緯度」與「經度」數值欄位 (極精準，完全避免與複合字串混淆)
-        let latVal = getExactCol(row, ['緯度(latitude)', '緯度', 'lat', 'y', 'latitude']);
-        let lngVal = getExactCol(row, ['經度(longitude)', '經度', 'lng', 'x', 'longitude']);
+        // 階段 1：優先尋找獨立「緯度」與「經度」數值欄位 (極精準，完全避免被複合欄位干擾)
+        let latVal = getExactCol(row, ['緯度(latitude)', '緯度', 'lat', 'y', 'latitude', '緯度(lat)']);
+        let lngVal = getExactCol(row, ['經度(longitude)', '經度', 'lng', 'x', 'longitude', '經度(lng)']);
 
         if (latVal && lngVal && !latVal.includes(',') && !lngVal.includes(',')) {
             let p1 = parseFloat(latVal);
@@ -801,13 +803,13 @@
         }
 
         // 階段 2：尋找「經緯度座標」/「coordinates」/「座標」複合欄位
-        let compositeVal = getExactCol(row, ['經緯度座標', 'coordinates', '座標', '經緯度']);
+        let compositeVal = getExactCol(row, ['經緯度座標', 'coordinates', '座標', '經緯度', 'location']);
         if (compositeVal) {
             let extracted = extractLatLng(compositeVal);
             if (extracted) return extracted;
         }
 
-        // 階段 3：掃描全列欄位中是否有包含 "23." 與 "120." 的經緯度對字串
+        // 階段 3：掃描全列欄位中是否有包含 "23." 或 "22." 以及 "120." 的座標字串
         for (let key in row) {
             let val = String(row[key] || '').trim();
             if ((val.includes('23.') || val.includes('22.') || val.includes('24.')) && val.includes('120.')) {
@@ -817,7 +819,7 @@
         }
 
         // 階段 4：最後備援 - 嘗試 Google 地圖連結
-        let mapUrl = getExactCol(row, ['google地圖連結', '地圖連結', 'map_url', 'map']);
+        let mapUrl = getExactCol(row, ['google地圖連結', '地圖連結', 'map_url', 'map', '導航']);
         if (mapUrl) {
             let extracted = extractLatLng(mapUrl);
             if (extracted) return extracted;
@@ -1088,17 +1090,17 @@
         }
     }
 
-    // ★ 官方精確 6 大廟宇與高鐵據點資料庫 ★
+    // ★ 官方精確 6 大廟宇與高鐵據點資料庫 (座標落點完美) ★
     const POIs = {
         "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.41649, 23.73633], desc: "MOOVO 租借與歸還點" },
-        "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.3019, 23.5681], desc: "媽祖信仰中心" },
-        "t_wude": { id: "t_wude", name: "北港武德宮", type: "temple", coords: [120.3033, 23.5831], desc: "財神信仰發源地" },
-        "t_fuxing": { id: "t_fuxing", name: "西螺福興宮", type: "temple", coords: [120.4632, 23.8016], desc: "西螺太平媽" },
-        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.5564, 23.6933], desc: "恩主公信仰中心" },
-        "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.4617, 23.7389], desc: "全台最美文風媽祖廟" },
-        "t_liufang": { id: "t_liufang", name: "六房媽紅壇", type: "temple", coords: [120.4431, 23.7121], desc: "無固定廟宇之媽祖信仰" },
-        "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.5412, 23.7125], desc: "MOOVO 租借站" },
-        "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.4345, 23.7025], desc: "MOOVO 租借站" }
+        "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.30190, 23.56810], desc: "媽祖信仰中心" },
+        "t_wude": { id: "t_wude", name: "北港武德宮", type: "temple", coords: [120.30330, 23.58310], desc: "財神信仰發源地" },
+        "t_fuxing": { id: "t_fuxing", name: "西螺福興宮", type: "temple", coords: [120.46320, 23.80160], desc: "西螺太平媽" },
+        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.55640, 23.69330], desc: "恩主公信仰中心" },
+        "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.46170, 23.73890], desc: "全台最美文風媽祖廟" },
+        "t_liufang": { id: "t_liufang", name: "六房媽紅壇", type: "temple", coords: [120.44310, 23.71210], desc: "無固定廟宇之媽祖信仰" },
+        "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.54120, 23.71250], desc: "MOOVO 租借站" },
+        "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.43450, 23.70250], desc: "MOOVO 租借站" }
     };
     
     const travelServices = { convenience: null, waterToilet: null, moovo: null, bikeRepair: null, souvenir: null, accommodation: null };
@@ -1235,7 +1237,7 @@
 
             currentRouteTurfLine = turf.lineString(routeGeoJSON.coordinates);
             
-            // ★ V5.1 切換為「沿線雷達模式」
+            // 切換為「沿線雷達模式」
             const modeBadge = document.getElementById('toolbar-mode-badge');
             if (modeBadge) {
                 modeBadge.innerHTML = "🚴 沿線雷達模式：僅高亮沿線據點";
@@ -1281,13 +1283,12 @@
             loaded100Bowls.forEach(food => {
                 let showMarker = false;
 
-                // ★ V5.1 雙重模式顯示邏輯 ★
                 if (!currentRouteTurfLine) {
-                    showMarker = true; // 全貌模式：完全允許展示
+                    showMarker = true; // 全貌模式
                 } else {
                     const pt = turf.point([food.lng, food.lat]);
                     if (turf.pointToLineDistance(pt, currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
-                        showMarker = true; // 沿線雷達模式：半徑內高亮展示
+                        showMarker = true; // 沿線雷達模式
                         foundCount++;
                     }
                 }
@@ -1347,13 +1348,12 @@
                 dataSource.forEach(item => {
                     let showMarker = false;
 
-                    // ★ V5.1 雙重模式顯示邏輯：未計算路線全貌展示；計算路線後完全隱藏區域外據點 ★
                     if (!currentRouteTurfLine) {
-                        showMarker = true;
+                        showMarker = true; // 全貌模式
                     } else {
                         const pt = turf.point([item.lng, item.lat]);
                         if (turf.pointToLineDistance(pt, currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
-                            showMarker = true;
+                            showMarker = true; // 沿線雷達模式
                         }
                     }
 
@@ -1607,7 +1607,7 @@
                             let coords = parseRowCoords(row);
                             return {
                                 brand: '7-11',
-                                name: getExactCol(row, ['POIName', '店名', '門市']) || "7-11",
+                                name: getExactCol(row, ['POIName', '店名', '門市', '名稱']) || "7-11",
                                 lat: coords?.lat ?? NaN, lng: coords?.lng ?? NaN,
                                 isParking: hasService(getExactCol(row, ['01停車場', '停車'])),
                                 isToilet: hasService(getExactCol(row, ['02廁所', '廁所', '洗手間'])),
