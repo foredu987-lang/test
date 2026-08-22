@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V4.2</title>
+    <title>雲林信仰跟著卡打車打卡 V4.3</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -251,7 +251,7 @@
         }
         .btn-sos:hover { background: #b71c1c; transform: translateY(-2px); }
 
-        /* SOS 自訂彈出視窗（Modal） CSS 修正 */
+        /* SOS 自訂彈出視窗（Modal） CSS */
         .custom-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
@@ -283,6 +283,26 @@
         .sos-btn-call:hover { background: #dc2626; }
         .sos-btn-nav { flex: 1; display: inline-flex; align-items: center; justify-content: center; background: #3b82f6; color: white; border: none; padding: 6px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
         .sos-btn-nav:hover { background: #2563eb; }
+
+        /* V4.3 升級：地圖救援專屬標記樣式 */
+        .sos-map-btn {
+            width: 100%;
+            padding: 8px;
+            background: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        .sos-map-btn:hover { background: #0369a1; }
 
         .story-card-drawer {
             position: absolute; top: 50%; left: -450px; transform: translateY(-50%);
@@ -329,6 +349,12 @@
         .leaflet-popup-content-wrapper { border-radius: 12px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
         .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; color: var(--moovo-dark); display: none; backdrop-filter: blur(2px); }
 
+        @keyframes pulseSOS {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244,63,94,0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(244,63,94,0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244,63,94,0); }
+        }
+
         @media (max-width: 768px) {
             .story-card-drawer { width: calc(100% - 40px); height: 80vh; left: 20px !important; bottom: -100%; top: auto; transform: none; transition: bottom 0.4s; }
             .story-card-drawer.open { bottom: 20px; }
@@ -340,7 +366,7 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V4.2</h1>
+        <h1>雲林信仰跟著卡打車打卡 V4.3</h1>
         <p>整合各大廟宇與在地必吃名單，智慧 AI 規劃單車專屬路線</p>
     </header>
 
@@ -451,7 +477,7 @@
     </div>
 </div>
 
-<!-- V4.2 自訂 SOS 救援彈窗 -->
+<!-- V4.3 自訂 SOS 救援彈窗 -->
 <div id="sosModal" class="custom-modal-overlay">
     <div class="custom-modal-card">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -469,6 +495,15 @@
             </div>
             <div id="sosGpsCoords" style="font-size:1rem; color:#0f172a; font-weight:800; margin-top:3px;">⏳ 正在定位中...</div>
             <div id="sosGpsAddress" style="font-size:0.8rem; color:#475569; margin-top:2px; line-height: 1.3;">正在獲取大約地址說明...</div>
+            
+            <!-- V4.3 升級：最近救援資源即時計算結果 -->
+            <div id="sosNearestBox" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #bbf7d0; font-size: 0.8rem; color: #15803d; display: none;">
+                <div id="sosNearestHosp">🏥 最近急診：計算中...</div>
+                <div id="sosNearestPol" style="margin-top:2px;">👮 最近驛站：計算中...</div>
+            </div>
+
+            <!-- V4.3 升級：地圖開啟救援圖層按鈕 -->
+            <button class="sos-map-btn" onclick="toggleSosMapLayer()">🗺️ 在地圖上顯示救援雷達圖層</button>
         </div>
 
         <div class="sos-modal-scroll">
@@ -618,11 +653,17 @@
 <script src="https://cdn.jsdelivr.net/npm/leaflet-ant-path@1.3.0/dist/leaflet-ant-path.min.js"></script>
 
 <script>
+    // =========================================================================
+    // 1. 全域變數與資料設定
+    // =========================================================================
     let map = null;
     let markersCluster = null;
     let currentPathLayer = null;
     let currentRouteTurfLine = null;
     let dynamicFoodLayer = null;
+    let sosMapLayer = null; // V4.3 升級：SOS 地圖圖層
+    let userGpsMarker = null;
+    let currentUserCoords = null;
     let currentScanRadius = 2.0; 
     let loaded100Bowls = []; 
     let loaded711Stores = [];
@@ -633,6 +674,26 @@
     let loadedWaterToiletHubs = [];
     let trafficLayer = null;
 
+    // V4.3 升級：救援資源地理座標資料庫
+    const sosEmergencyResources = {
+        hospitals: [
+            { name: "臺大醫院雲林分院 (斗六院區)", coords: [120.5367, 23.7011], phone: "05-532-3911", addr: "斗六市雲林路二段579號" },
+            { name: "臺大醫院雲林分院 (虎尾院區)", coords: [120.4285, 23.7371], phone: "05-633-0002", addr: "虎尾鎮學府路99號" },
+            { name: "天主教若瑟醫院 (虎尾院區)", coords: [120.4338, 23.7017], phone: "05-633-7333", addr: "虎尾鎮新生路74號" },
+            { name: "雲林基督教醫院 (西螺院區)", coords: [120.4608, 23.7941], phone: "05-587-1111", addr: "西螺鎮市場南路375號" },
+            { name: "中國醫藥大學北港附設醫院", coords: [120.3061, 23.5785], phone: "05-783-7901", addr: "北港鎮新德路123號" }
+        ],
+        police: [
+            { name: "虎尾警察分局", coords: [120.4335, 23.7088], phone: "05-632-2042", area: "虎尾、土庫、褒忠、元長" },
+            { name: "西螺警察分局", coords: [120.4612, 23.7981], phone: "05-586-2014", area: "西螺、二崙、崙背" },
+            { name: "北港警察分局", coords: [120.3021, 23.5712], phone: "05-783-2015", area: "北港、水林、口湖" },
+            { name: "斗六警察分局", coords: [120.5431, 23.7095], phone: "05-532-2042", area: "斗六、林內、莿桐" }
+        ],
+        repairs: [
+            { name: "捷安特 虎尾單車專賣店", coords: [120.4325, 23.7073], phone: "05-632-1234", desc: "緊急換胎、鏈條檢修" }
+        ]
+    };
+
     // 開啟 SOS Modal 並呼叫 HTML5 定位
     function openSosModal() { 
         const modal = document.getElementById('sosModal');
@@ -640,6 +701,7 @@
 
         const coordsEl = document.getElementById('sosGpsCoords');
         const addrEl = document.getElementById('sosGpsAddress');
+        const nearestBox = document.getElementById('sosNearestBox');
         
         if (coordsEl) coordsEl.innerHTML = "⏳ 正在定位中...";
         if (addrEl) addrEl.innerHTML = "正在獲取 GPS 座標...";
@@ -647,12 +709,18 @@
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
-                    const lat = position.coords.latitude.toFixed(5);
-                    const lng = position.coords.longitude.toFixed(5);
-                    if (coordsEl) coordsEl.innerHTML = `🌐 經緯度：<b>${lat}, ${lng}</b>`;
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    currentUserCoords = [lng, lat];
+
+                    if (coordsEl) coordsEl.innerHTML = `🌐 經緯度：<b>${lat.toFixed(5)}, ${lng.toFixed(5)}</b>`;
                     
+                    // V4.3 升級：計算距離最近的急診與警察分局
+                    calculateNearestResources(lat, lng);
+                    if (nearestBox) nearestBox.style.display = 'block';
+
                     try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&accept-language=zh-TW`);
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=zh-TW`);
                         const data = await res.json();
                         if (data && data.display_name) {
                             const addressText = data.display_name.split(',').slice(0, 4).join('');
@@ -667,12 +735,112 @@
                 (error) => {
                     if (coordsEl) coordsEl.innerHTML = `<span style="color:#d32f2f;">⚠️ 無法取得定位資訊</span>`;
                     if (addrEl) addrEl.innerHTML = `請確認手機已開啟 GPS 並允許瀏覽器讀取位置權限。`;
+                    if (nearestBox) nearestBox.style.display = 'none';
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         } else {
             if (coordsEl) coordsEl.innerHTML = `<span style="color:#d32f2f;">⚠️ 您的裝置不支援 GPS 定位</span>`;
             if (addrEl) addrEl.innerHTML = `請透過電話人工說明您的受困地點。`;
+            if (nearestBox) nearestBox.style.display = 'none';
+        }
+    }
+
+    // V4.3 升級：利用 Turf.js 計算離目前 GPS 最近的急診醫院與警察分局
+    function calculateNearestResources(userLat, userLng) {
+        if (typeof turf === 'undefined') return;
+        const userPt = turf.point([userLng, userLat]);
+
+        let minHospDist = Infinity;
+        let nearestHosp = null;
+        sosEmergencyResources.hospitals.forEach(h => {
+            const dist = turf.distance(userPt, turf.point(h.coords), { units: 'kilometers' });
+            if (dist < minHospDist) {
+                minHospDist = dist;
+                nearestHosp = h;
+            }
+        });
+
+        let minPolDist = Infinity;
+        let nearestPol = null;
+        sosEmergencyResources.police.forEach(p => {
+            const dist = turf.distance(userPt, turf.point(p.coords), { units: 'kilometers' });
+            if (dist < minPolDist) {
+                minPolDist = dist;
+                nearestPol = p;
+            }
+        });
+
+        const hospEl = document.getElementById('sosNearestHosp');
+        const polEl = document.getElementById('sosNearestPol');
+
+        if (hospEl && nearestHosp) {
+            hospEl.innerHTML = `🏥 最近急診：<b>${nearestHosp.name}</b> (約 <b>${minHospDist.toFixed(1)} km</b>)`;
+        }
+        if (polEl && nearestPol) {
+            polEl.innerHTML = `👮 最近驛站：<b>${nearestPol.name}</b> (約 <b>${minPolDist.toFixed(1)} km</b>)`;
+        }
+    }
+
+    // V4.3 升級：切換/開啟地圖 SOS 緊急救援圖層
+    function toggleSosMapLayer() {
+        closeSosModal();
+        if (!map) return;
+
+        if (!sosMapLayer) {
+            sosMapLayer = L.layerGroup();
+        }
+
+        sosMapLayer.clearLayers();
+
+        // 1. 繪製救援醫院 (紅色圖示)
+        sosEmergencyResources.hospitals.forEach(h => {
+            const icon = L.divIcon({ html: `<div style="background:#dc2626; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 6px rgba(220,38,38,0.5);">🏥</div>`, className: '', iconSize: [28,28] });
+            L.marker([h.coords[1], h.coords[0]], { icon }).bindPopup(`
+                <div style="font-size:0.75rem; color:#dc2626; font-weight:bold; margin-bottom:2px;">🏥 24H 急診醫院</div>
+                <b style="font-size:1rem; color:#0f172a;">${h.name}</b><br>
+                <div style="font-size:0.8rem; color:#475569; margin-top:3px;">📍 ${h.addr}</div>
+                <a href="tel:${h.phone}" style="display:block; margin-top:6px; text-align:center; background:#ef4444; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; text-decoration:none;">📞 電話：${h.phone}</a>
+                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${h.coords[1]},${h.coords[0]}')" style="width:100%; margin-top:4px; text-align:center; background:#3b82f6; border:none; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; cursor:pointer;">🧭 地圖導航</button>
+            `).addTo(sosMapLayer);
+        });
+
+        // 2. 繪製警察分局 / 鐵馬驛站 (藍色圖示)
+        sosEmergencyResources.police.forEach(p => {
+            const icon = L.divIcon({ html: `<div style="background:#0284c7; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 6px rgba(2,132,199,0.5);">👮</div>`, className: '', iconSize: [28,28] });
+            L.marker([p.coords[1], p.coords[0]], { icon }).bindPopup(`
+                <div style="font-size:0.75rem; color:#0284c7; font-weight:bold; margin-bottom:2px;">👮 警察分局 (含鐵馬驛站)</div>
+                <b style="font-size:1rem; color:#0f172a;">${p.name}</b><br>
+                <div style="font-size:0.8rem; color:#475569; margin-top:3px;">📍 轄區：${p.area}</div>
+                <a href="tel:${p.phone}" style="display:block; margin-top:6px; text-align:center; background:#0284c7; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; text-decoration:none;">📞 電話：${p.phone}</a>
+                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${p.coords[1]},${p.coords[0]}')" style="width:100%; margin-top:4px; text-align:center; background:#3b82f6; border:none; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; cursor:pointer;">🧭 地圖導航</button>
+            `).addTo(sosMapLayer);
+        });
+
+        // 3. 繪製單車道路救援店家 (綠色圖示)
+        sosEmergencyResources.repairs.forEach(r => {
+            const icon = L.divIcon({ html: `<div style="background:#15803d; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 6px rgba(21,128,61,0.5);">🚲</div>`, className: '', iconSize: [28,28] });
+            L.marker([r.coords[1], r.coords[0]], { icon }).bindPopup(`
+                <div style="font-size:0.75rem; color:#15803d; font-weight:bold; margin-bottom:2px;">🚲 單車緊急維修</div>
+                <b style="font-size:1rem; color:#0f172a;">${r.name}</b><br>
+                <div style="font-size:0.8rem; color:#475569; margin-top:3px;">🛠️ ${r.desc}</div>
+                <a href="tel:${r.phone}" style="display:block; margin-top:6px; text-align:center; background:#15803d; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; text-decoration:none;">📞 電話：${r.phone}</a>
+            `).addTo(sosMapLayer);
+        });
+
+        // 4. 繪製使用者當前 GPS 定位圖示 (閃爍圓點)
+        if (currentUserCoords) {
+            const userIcon = L.divIcon({ html: `<div style="background:#f43f5e; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow: 0 0 0 6px rgba(244,63,94,0.3); animation: pulseSOS 1.5s infinite;"></div>`, className: '', iconSize: [20,20] });
+            if (userGpsMarker) map.removeLayer(userGpsMarker);
+            userGpsMarker = L.marker([currentUserCoords[1], currentUserCoords[0]], { icon: userIcon }).bindPopup('<b>📍 當前求救位置</b>');
+            sosMapLayer.addLayer(userGpsMarker);
+        }
+
+        map.addLayer(sosMapLayer);
+
+        // 縮放地圖涵蓋全救援點
+        if (sosMapLayer.getLayers().length > 0) {
+            map.fitBounds(sosMapLayer.getBounds(), { padding: [50, 50] });
         }
     }
 
