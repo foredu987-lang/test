@@ -456,11 +456,11 @@
                     </div>
                 </section>
 
-                <!-- 路線規劃 (TSP) -->
+                <!-- 路線規劃 (TSP) 擴充為 7 大宮廟 -->
                 <section class="ui-card">
-                    <div class="ui-card-title">🗺️ 智慧路線規劃</div>
+                    <div class="ui-card-title">🗺️ 智慧路線規劃 (7大宮廟)</div>
                     <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">
-                        請勾選您想造訪的廟宇，AI 將自動為您計算最順暢的環狀路線 (起終點為高鐵站)。
+                        請勾選您想造訪的宮廟，AI 將自動為您計算最順暢的環狀路線 (起終點為高鐵站)。
                     </div>
                     
                     <div class="checkbox-group" id="tsp-checklist">
@@ -471,7 +471,7 @@
                             <input type="checkbox" value="t_wude" checked> <span>北港武德宮</span>
                         </label>
                         <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_fuxing"> <span>西螺福興宮</span>
+                            <input type="checkbox" value="t_fuxing" checked> <span>西螺福興宮</span>
                         </label>
                         <label class="ui-checkbox-label">
                             <input type="checkbox" value="t_chifa" checked> <span>虎尾持法媽祖</span>
@@ -481,6 +481,9 @@
                         </label>
                         <label class="ui-checkbox-label">
                             <input type="checkbox" value="t_nansheng"> <span>斗六南聖宮</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="t_zhenan"> <span>褒忠鎮安宮</span>
                         </label>
                     </div>
 
@@ -1068,6 +1071,7 @@
         }
     }
 
+    // ★ 官方精確 7 大宮廟與高鐵據點資料庫 (WGS84 座標) ★
     const POIs = {
         "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.41649, 23.73633], desc: "MOOVO 租借與歸還點" },
         "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.30190, 23.56810], desc: "媽祖信仰中心" },
@@ -1076,6 +1080,7 @@
         "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.55640, 23.69330], desc: "恩主公信仰中心" },
         "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.46170, 23.73890], desc: "全台最美文風媽祖廟" },
         "t_liufang": { id: "t_liufang", name: "六房媽紅壇", type: "temple", coords: [120.44310, 23.71210], desc: "無固定廟宇之媽祖信仰" },
+        "t_zhenan": { id: "t_zhenan", name: "褒忠鎮安宮", type: "temple", coords: [120.31250, 23.71420], desc: "五年千歲信仰總廟" },
         "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.54120, 23.71250], desc: "MOOVO 租借站" },
         "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.43450, 23.70250], desc: "MOOVO 租借站" }
     };
@@ -1214,7 +1219,6 @@
 
             currentRouteTurfLine = turf.lineString(routeGeoJSON.coordinates);
             
-            // 切換為「沿線雷達模式」
             const modeBadge = document.getElementById('toolbar-mode-badge');
             if (modeBadge) {
                 modeBadge.innerHTML = "🚴 沿線雷達模式：僅高亮沿線據點";
@@ -1261,11 +1265,11 @@
                 let showMarker = false;
 
                 if (!currentRouteTurfLine) {
-                    showMarker = true; // 全貌模式
+                    showMarker = true; 
                 } else {
                     const pt = turf.point([food.lng, food.lat]);
                     if (turf.pointToLineDistance(pt, currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
-                        showMarker = true; // 沿線雷達模式
+                        showMarker = true; 
                         foundCount++;
                     }
                 }
@@ -1326,11 +1330,11 @@
                     let showMarker = false;
 
                     if (!currentRouteTurfLine) {
-                        showMarker = true; // 全貌模式
+                        showMarker = true; 
                     } else {
                         const pt = turf.point([item.lng, item.lat]);
                         if (turf.pointToLineDistance(pt, currentRouteTurfLine, {units: 'kilometers'}) <= currentScanRadius) {
-                            showMarker = true; // 沿線雷達模式
+                            showMarker = true; 
                         }
                     }
 
@@ -1411,7 +1415,7 @@
                                 ${item.address ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
                                 <div style="display:flex; gap:6px; margin-top:10px;">
                                     ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
-                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
+                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
                                 </div>
                                 <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
                                     ℹ️ 資料來自 <a href="https://tour.yunlin.gov.tw/mainssl/modules/MySpace/index.php" target="_blank" style="color: #e65100; text-decoration: underline;">慢遊雲林網站</a>
@@ -1436,7 +1440,7 @@
                                 ${item.address ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
                                 <div style="display:flex; gap:6px; margin-top:10px;">
                                     ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
-                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
+                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
                                 </div>
                                 <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
                                     ℹ️ 資料來自 <a href="https://tour.yunlin.gov.tw/mainssl/modules/MySpace/index.php" target="_blank" style="color: #8e24aa; text-decoration: underline;">慢遊雲林網站</a>
@@ -1594,12 +1598,9 @@
                                     loadedAccommodations.push({ ...itemObj, stay_type: subCategory || '精選旅宿' });
                                 }
                             });
-                            console.log("✅ 成功解析單一 Master CSV 大表！");
                             resolve(true);
                             return;
-                        } catch(e) {
-                            console.warn("解析 Master CSV 異常，切換備援機制", e);
-                        }
+                        } catch(e) {}
                     }
                     resolve(false);
                 },
