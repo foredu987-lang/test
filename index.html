@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V5.7</title>
+    <title>雲林信仰跟著卡打車打卡 V6.0</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -383,8 +383,8 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V5.7</h1>
-        <p>整合全縣各大據點與必吃美食，智慧 AI 規劃單車環狀路線</p>
+        <h1>雲林信仰跟著卡打車打卡 V6.0</h1>
+        <p>整合全縣 7 大名廟與在地美食、景點、服務據點，智慧 AI 規劃單車環狀路線</p>
     </header>
 
     <div class="map-wrapper">
@@ -456,11 +456,11 @@
                     </div>
                 </section>
 
-                <!-- 路線規劃 (TSP) 擴充為 7 大宮廟 -->
+                <!-- 路線規劃 (TSP) 7 大宮廟清單 -->
                 <section class="ui-card">
                     <div class="ui-card-title">🗺️ 智慧路線規劃 (7大宮廟)</div>
                     <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">
-                        請勾選您想造訪的宮廟，AI 將自動為您計算最順暢的環狀路線 (起終點為高鐵站)。
+                        請勾選您想造訪的廟宇，AI 將自動為您計算最順暢的環狀路線 (起終點為高鐵站)。
                     </div>
                     
                     <div class="checkbox-group" id="tsp-checklist">
@@ -471,19 +471,19 @@
                             <input type="checkbox" value="t_wude" checked> <span>北港武德宮</span>
                         </label>
                         <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_fuxing" checked> <span>西螺福興宮</span>
+                            <input type="checkbox" value="t_fuxing"> <span>西螺福興宮</span>
                         </label>
                         <label class="ui-checkbox-label">
                             <input type="checkbox" value="t_chifa" checked> <span>虎尾持法媽祖</span>
                         </label>
                         <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_liufang"> <span>六房媽紅壇</span>
+                            <input type="checkbox" value="t_gongfan"> <span>麥寮拱範宮</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="t_shuntian"> <span>土庫順天宮</span>
                         </label>
                         <label class="ui-checkbox-label">
                             <input type="checkbox" value="t_nansheng"> <span>斗六南聖宮</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_zhenan"> <span>褒忠鎮安宮</span>
                         </label>
                     </div>
 
@@ -690,7 +690,7 @@
             <details class="sos-accordion">
                 <summary>☀️ 中暑與熱衰竭處置</summary>
                 <div class="sos-accordion-content">
-                    1. <b>移至陰涼處</b>：智慧移動至樹蔭或超商內休憩，鬆開緊身衣物。<br>
+                    1. <b>移至陰涼處</b>：移動至樹蔭或超商內休憩，鬆開緊身衣物。<br>
                     2. <b>物理降溫</b>：用水擦拭頸部、腋下與大腿溝。<br>
                     3. <b>補充水分</b>：若意識清醒，小口補充含電解質水或運動飲料。
                 </div>
@@ -739,6 +739,7 @@
     let isSirenActive = false;
     let sirenTimer = null;
 
+    // 通用精確欄位提取 (自動忽略 UTF-8 BOM \ufeff)
     function getExactCol(row, exactKeys) {
         if (!row) return '';
         for (let key in row) {
@@ -752,6 +753,7 @@
         return '';
     }
 
+    // 驗證經緯度並在倒置時自動校正（臺灣緯度 20~26，經度 119~123）
     function validateAndSwap(p1, p2) {
         if (isNaN(p1) || isNaN(p2)) return null;
         let lat = p1 > 100 ? p2 : p1;
@@ -762,6 +764,7 @@
         return null;
     }
 
+    // 萬用地理座標提取器：解算 Google 地圖連結 (!3d緯度!4d經度) 與數值對
     function extractLatLng(str) {
         if (!str) return null;
         str = String(str).trim();
@@ -781,6 +784,7 @@
         return null;
     }
 
+    // 直讀式 WGS84 座標解析引擎
     function parseRowCoords(row) {
         if (!row) return null;
 
@@ -1071,16 +1075,16 @@
         }
     }
 
-    // ★ 官方精確 7 大宮廟與高鐵據點資料庫 (WGS84 座標) ★
+    // ★ 七大宮廟與交通樞紐 WGS84 基準座標庫 ★
     const POIs = {
         "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.41649, 23.73633], desc: "MOOVO 租借與歸還點" },
-        "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.30190, 23.56810], desc: "媽祖信仰中心" },
-        "t_wude": { id: "t_wude", name: "北港武德宮", type: "temple", coords: [120.30330, 23.58310], desc: "財神信仰發源地" },
-        "t_fuxing": { id: "t_fuxing", name: "西螺福興宮", type: "temple", coords: [120.46320, 23.80160], desc: "西螺太平媽" },
-        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.55640, 23.69330], desc: "恩主公信仰中心" },
-        "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.46170, 23.73890], desc: "全台最美文風媽祖廟" },
-        "t_liufang": { id: "t_liufang", name: "六房媽紅壇", type: "temple", coords: [120.44310, 23.71210], desc: "無固定廟宇之媽祖信仰" },
-        "t_zhenan": { id: "t_zhenan", name: "褒忠鎮安宮", type: "temple", coords: [120.31250, 23.71420], desc: "五年千歲信仰總廟" },
+        "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.30190, 23.56810], desc: "國定古蹟，全臺媽祖信仰中心" },
+        "t_wude": { id: "t_wude", name: "北港武德宮", type: "temple", coords: [120.30330, 23.58310], desc: "臺灣五路武財神祖廟" },
+        "t_fuxing": { id: "t_fuxing", name: "西螺福興宮", type: "temple", coords: [120.46320, 23.80160], desc: "西螺太平媽祖" },
+        "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.46170, 23.73890], desc: "全臺首座不燒金紙文風媽祖廟" },
+        "t_gongfan": { id: "t_gongfan", name: "麥寮拱範宮", type: "temple", coords: [120.255573, 23.748248], desc: "國定古蹟，海線媽祖信仰重鎮" },
+        "t_shuntian": { id: "t_shuntian", name: "土庫順天宮", type: "temple", coords: [120.390560, 23.676570], desc: "縣定古蹟，歷史悠久土庫媽" },
+        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.55640, 23.69330], desc: "立姿關聖帝君巨像鸞堂重鎮" },
         "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.54120, 23.71250], desc: "MOOVO 租借站" },
         "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.43450, 23.70250], desc: "MOOVO 租借站" }
     };
@@ -1349,7 +1353,7 @@
                         let popupContent = `<b>${item.name || item.store_name || item.stay_name || item.station_name || '據點'}</b>`;
                         
                         if (key === 'bikeRepair' && (item.store_name || item.name)) {
-                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
 
                             popupContent = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
@@ -1372,7 +1376,7 @@
                             `;
                         }
                         else if (key === 'waterToilet' && (item.name || item.station_code)) {
-                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
                             
                             popupContent = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
@@ -1400,7 +1404,7 @@
                             `;
                         }
                         else if (key === 'souvenir' && item.store_name) {
-                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
                             
                             popupContent = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
@@ -1418,12 +1422,12 @@
                                     <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
                                 </div>
                                 <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 <a href="https://tour.yunlin.gov.tw/mainssl/modules/MySpace/index.php" target="_blank" style="color: #e65100; text-decoration: underline;">慢遊雲林網站</a>
+                                    ℹ️ 資料來自 慢遊雲林網站
                                 </div>
                             `;
                         }
                         else if (key === 'accommodation' && item.stay_name) {
-                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
                             
                             popupContent = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
@@ -1443,12 +1447,12 @@
                                     <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
                                 </div>
                                 <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 <a href="https://tour.yunlin.gov.tw/mainssl/modules/MySpace/index.php" target="_blank" style="color: #8e24aa; text-decoration: underline;">慢遊雲林網站</a>
+                                    ℹ️ 資料來自 慢遊雲林網站
                                 </div>
                             `;
                         }
                         else if (key === 'moovo' && (item.station_name || item.station_code || item.name)) {
-                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
                             let statusColor = (item.operating_status || '').includes('施工') || (item.operating_status || '').includes('暫停') ? '#ef4444' : '#16a34a';
                             let titleName = item.station_name || item.name || 'Moovo 站點';
                             let opStatus = item.operating_status || '正常營運';
@@ -1486,9 +1490,9 @@
                             let services = [];
                             if (isFM) {
                                 if (item.services_summary) {
-                                    services = item.services_summary.split(/[,，\s]+/).filter(Boolean);
+                                    services = item.services_summary.split(/[,，\s/]+/).filter(Boolean);
                                 } else {
-                                    if (item.isToilet) services.push("🚻洗手間");
+                                    if (item.isToilet) services.push("🚻洗手頁");
                                     if (item.isDining) services.push("🪑內用座位");
                                     if (item.isIceCream) services.push("🍦Fami!ce霜淇淋");
                                     if (item.isCafe) services.push("☕Let's Café");
@@ -1516,7 +1520,7 @@
                                 ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.82rem; color:#444; line-height: 1.4;"><b>提供服務：</b><br>${services.join('、')}</div>` 
                                 : '';
                             
-                            let tagChips = (item.tags || '').split(/[,，\s]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
 
                             popupContent = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; gap:4px;">
@@ -1533,7 +1537,7 @@
                                     <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="width:100%; text-align:center; background:${btnColor}; border:none; color:white; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航前往</button>
                                 </div>
                                 <div style="font-size: 0.65rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來源 來自 ${isFM ? '全家便利商店官方網站' : '<a href="https://emap.pcsc.com.tw/" target="_blank" style="color: #00a651; text-decoration: none;">https://emap.pcsc.com.tw/</a>'}
+                                    ℹ️ 資料來源 來自官方網站
                                 </div>
                             `;
                         }
@@ -1549,64 +1553,78 @@
         }
     };
 
-    async function loadUnifiedMasterCSV() {
-        return new Promise((resolve) => {
-            Papa.parse('yunlin_all_points_google_maps_unified_master_final.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    if (results && results.data && results.data.length > 0) {
-                        try {
-                            results.data.forEach(row => {
-                                let coords = parseRowCoords(row);
-                                if (!coords) return;
+    // ★ V6.0 核心：優先載入 yunlin_all_points_verified.csv，否則降級讀取 master CSV ★
+    async function loadVerifiedMasterCSV() {
+        const filesToTry = [
+            'yunlin_all_points_verified.csv',
+            'yunlin_all_points_google_maps_unified_master_final.csv'
+        ];
 
-                                const category = getExactCol(row, ['category', '來源分類', '分類']);
-                                const subCategory = getExactCol(row, ['sub_category', '細項', '站點細項分類']);
-                                const name = getExactCol(row, ['name', '店名', '商家名稱', '名稱', 'store_name', 'stay_name', 'station_name']);
-                                const district = getExactCol(row, ['district', '行政區', '區']);
-                                const address = getExactCol(row, ['address', '地址', '詳細地址']);
-                                const phone = getExactCol(row, ['phone', '電話', '聯絡電話']);
-                                const hours = getExactCol(row, ['business_hours', '營業時間', '開放時間']);
-                                const desc = getExactCol(row, ['description', '簡介', '特色簡介', '網站小卡文案簡介']);
-                                const tags = getExactCol(row, ['tags', '標籤', '特色標籤']);
-                                const mapUrl = getExactCol(row, ['google_map_url', 'Google地圖連結', '地圖連結', 'map_url']);
+        for (let fileName of filesToTry) {
+            const success = await new Promise((resolve) => {
+                Papa.parse(fileName, {
+                    download: true, header: true, skipEmptyLines: true,
+                    complete: function(results) {
+                        if (results && results.data && results.data.length > 0) {
+                            try {
+                                results.data.forEach(row => {
+                                    let coords = parseRowCoords(row);
+                                    if (!coords) return;
 
-                                const itemObj = {
-                                    id: row.id || '', category, sub_category: subCategory, name, district, address, phone,
-                                    hours, business_hours: hours, description: desc, tags, map_url: mapUrl,
-                                    lat: coords.lat, lng: coords.lng,
-                                    store_name: name, stay_name: name, station_name: name
-                                };
+                                    const category = getExactCol(row, ['category', '來源分類', '分類']);
+                                    const subCategory = getExactCol(row, ['sub_category', '細項', '站點細項分類']);
+                                    const name = getExactCol(row, ['name', '店名', '商家名稱', '名稱', 'store_name', 'stay_name', 'station_name']);
+                                    const district = getExactCol(row, ['district', '行政區', '區']);
+                                    const address = getExactCol(row, ['address', '地址', '詳細地址']);
+                                    const phone = getExactCol(row, ['phone', '電話', '聯絡電話']);
+                                    const hours = getExactCol(row, ['business_hours', '營業時間', '開放時間']);
+                                    const desc = getExactCol(row, ['description', '簡介', '特色簡介', '網站小卡文案簡介']);
+                                    const tags = getExactCol(row, ['tags', '標籤', '特色標籤']);
+                                    const mapUrl = getExactCol(row, ['google_map_url', 'Google地圖連結', '地圖連結', 'map_url']);
 
-                                if (category.includes('百碗美食') || category.includes('美食')) {
-                                    loaded100Bowls.push({ ...itemObj, item: subCategory || desc || '在地美食' });
-                                } else if (category.includes('超商') || subCategory.includes('7-11') || subCategory.includes('全家')) {
-                                    if (subCategory.includes('全家') || name.includes('全家')) {
-                                        loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
-                                    } else {
-                                        loaded711Stores.push({ ...itemObj, brand: '7-11' });
+                                    const itemObj = {
+                                        id: row.id || '', category, sub_category: subCategory, name, district, address, phone,
+                                        hours, business_hours: hours, description: desc, tags, map_url: mapUrl,
+                                        lat: coords.lat, lng: coords.lng,
+                                        store_name: name, stay_name: name, station_name: name
+                                    };
+
+                                    if (category.includes('百碗美食') || category.includes('美食')) {
+                                        loaded100Bowls.push({ ...itemObj, item: subCategory || desc || '在地美食' });
+                                    } else if (category.includes('超商') || subCategory.includes('7-11') || subCategory.includes('全家')) {
+                                        if (subCategory.includes('全家') || name.includes('全家')) {
+                                            loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
+                                        } else {
+                                            loaded711Stores.push({ ...itemObj, brand: '7-11' });
+                                        }
+                                    } else if (category.includes('友善水') || category.includes('水/廁')) {
+                                        loadedWaterToiletHubs.push({ ...itemObj, water_info: '冷熱水補水', toilet_info: '公共洗手頁' });
+                                    } else if (category.includes('Moovo') || subCategory.includes('Moovo')) {
+                                        loadedMoovoStations.push({ ...itemObj, operating_status: '正常營運' });
+                                    } else if (category.includes('維修') || subCategory.includes('維修')) {
+                                        loadedBikeRepairShops.push({ ...itemObj, services: desc || '單車換胎與檢修' });
+                                    } else if (category.includes('伴手禮')) {
+                                        loadedSouvenirs.push({ ...itemObj, product_name: subCategory || '在地特產' });
+                                    } else if (category.includes('住宿')) {
+                                        loadedAccommodations.push({ ...itemObj, stay_type: subCategory || '精選旅宿' });
                                     }
-                                } else if (category.includes('友善水') || category.includes('水/廁')) {
-                                    loadedWaterToiletHubs.push({ ...itemObj, water_info: '冷熱水補水', toilet_info: '公共洗手間' });
-                                } else if (category.includes('Moovo') || subCategory.includes('Moovo')) {
-                                    loadedMoovoStations.push({ ...itemObj, operating_status: '正常營運' });
-                                } else if (category.includes('維修') || subCategory.includes('維修')) {
-                                    loadedBikeRepairShops.push({ ...itemObj, services: desc || '單車換胎與檢修' });
-                                } else if (category.includes('伴手禮')) {
-                                    loadedSouvenirs.push({ ...itemObj, product_name: subCategory || '在地特產' });
-                                } else if (category.includes('住宿')) {
-                                    loadedAccommodations.push({ ...itemObj, stay_type: subCategory || '精選旅宿' });
-                                }
-                            });
-                            resolve(true);
-                            return;
-                        } catch(e) {}
-                    }
-                    resolve(false);
-                },
-                error: function() { resolve(false); }
+                                });
+                                console.log(`✅ 成功載入驗證資料庫 (${fileName})！`);
+                                resolve(true);
+                                return;
+                            } catch(e) {
+                                console.warn(`解析 ${fileName} 異常`, e);
+                            }
+                        }
+                        resolve(false);
+                    },
+                    error: function() { resolve(false); }
+                });
             });
-        });
+
+            if (success) return true;
+        }
+        return false;
     }
 
     async function fetchWeather() {
@@ -1679,7 +1697,7 @@
                     marker.bindPopup(`
                         <div style="text-align:center;">
                             <b style="font-size:15px;">${poi.name}</b><br>
-                            <button onclick="StoryPOIManager.openPanel('${poi.id || Object.keys(POIs).find(k=>POIs[k]===poi)}', 'temple')" style="margin-top:8px; background:#4CAF50; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">📖 探索故事</button>
+                            <button onclick="StoryPOIManager.openPanel('${poi.id || Object.keys(POIs).find(k=>POIs[k]===poi)}', 'temple')" style="margin-top:8px; background:#4CAF50; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">📖 專屬故事</button>
                         </div>
                     `);
                 } else {
@@ -1689,7 +1707,7 @@
             });
 
             fetchWeather();
-            await loadUnifiedMasterCSV();
+            await loadVerifiedMasterCSV();
 
         } catch (e) {
             console.error("Initialization Failed:", e);
