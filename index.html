@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V6.0</title>
+    <title>雲林信仰跟著卡打車打卡 V6.2</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -383,7 +383,7 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V6.0</h1>
+        <h1>雲林信仰跟著卡打車打卡 V6.2</h1>
         <p>整合全縣 7 大名廟與在地美食、景點、服務據點，智慧 AI 規劃單車環狀路線</p>
     </header>
 
@@ -394,11 +394,12 @@
         <!-- 正上方工具列 -->
         <div class="top-toolbar" id="topToolbar">
             <div class="toolbar-info-box" id="toolbar-mode-badge">
-                🗺️ 全縣探索模式：自由點選勾選展示
+                🗺️ 全縣探索模式：展示所選類別之全縣據點
             </div>
-            <!-- 掃描範圍切換鈕 -->
+            <!-- 掃描範圍切換鈕 (預設全部顯示) -->
             <div class="radius-selector-group" id="radius-group" title="選擇沿線掃描範圍">
-                <button class="radius-btn active" id="btn-rad-2" onclick="setScanRadius(2.0)">2 公里</button>
+                <button class="radius-btn active" id="btn-rad-all" onclick="setScanRadius('all')">全部</button>
+                <button class="radius-btn" id="btn-rad-2" onclick="setScanRadius(2.0)">2 公里</button>
                 <button class="radius-btn" id="btn-rad-5" onclick="setScanRadius(5.0)">5 公里</button>
             </div>
             <div id="radar-group" class="service-btn-group">
@@ -724,7 +725,7 @@
     let sosMapLayer = null;
     let userGpsMarker = null;
     let currentUserCoords = null;
-    let currentScanRadius = 2.0; 
+    let currentScanRadius = 'all'; // 預設：全區模式 (全部顯示)
     let loaded100Bowls = []; 
     let loaded711Stores = [];
     let loadedFamilyMartStores = [];
@@ -1063,16 +1064,31 @@
         else map.removeLayer(trafficLayer);
     }
 
+    // V6.2 升級：擴充「全部 / 2km / 5km」掃描範圍切換與頂部提示動態調整
     function setScanRadius(radius) {
         currentScanRadius = radius;
         document.querySelectorAll('.radius-btn').forEach(btn => btn.classList.remove('active'));
+        if (radius === 'all') document.getElementById('btn-rad-all')?.classList.add('active');
         if (radius === 2.0) document.getElementById('btn-rad-2')?.classList.add('active');
         if (radius === 5.0) document.getElementById('btn-rad-5')?.classList.add('active');
 
-        if (currentRouteTurfLine) {
-            TravelServiceManager.updateMarkers();
-            renderFoodRadar();
+        const modeBadge = document.getElementById('toolbar-mode-badge');
+        if (modeBadge) {
+            if (radius === 'all') {
+                modeBadge.innerHTML = "🗺️ 全縣探索模式：展示所選類別之全縣據點";
+                modeBadge.style.background = "rgba(236, 253, 245, 0.95)";
+                modeBadge.style.borderColor = "#a7f3d0";
+                modeBadge.style.color = "#065f46";
+            } else {
+                modeBadge.innerHTML = `🚴 沿線雷達模式：僅展示路線 ${radius} 公里內據點`;
+                modeBadge.style.background = "rgba(254, 243, 199, 0.95)";
+                modeBadge.style.borderColor = "#fde68a";
+                modeBadge.style.color = "#92400e";
+            }
         }
+
+        TravelServiceManager.updateMarkers();
+        renderFoodRadar();
     }
 
     // ★ 七大宮廟與交通樞紐 WGS84 基準座標庫 ★
@@ -1084,7 +1100,7 @@
         "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.46170, 23.73890], desc: "全臺首座不燒金紙文風媽祖廟" },
         "t_gongfan": { id: "t_gongfan", name: "麥寮拱範宮", type: "temple", coords: [120.255573, 23.748248], desc: "國定古蹟，海線媽祖信仰重鎮" },
         "t_shuntian": { id: "t_shuntian", name: "土庫順天宮", type: "temple", coords: [120.390560, 23.676570], desc: "縣定古蹟，歷史悠久土庫媽" },
-        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.55640, 23.69330], desc: "立姿關聖帝君巨像鸞堂重鎮" },
+        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.558720, 23.700843], desc: "立姿關聖帝君巨像鸞堂重鎮" },
         "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.54120, 23.71250], desc: "MOOVO 租借站" },
         "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.43450, 23.70250], desc: "MOOVO 租借站" }
     };
@@ -1223,14 +1239,6 @@
 
             currentRouteTurfLine = turf.lineString(routeGeoJSON.coordinates);
             
-            const modeBadge = document.getElementById('toolbar-mode-badge');
-            if (modeBadge) {
-                modeBadge.innerHTML = "🚴 沿線雷達模式：僅高亮沿線據點";
-                modeBadge.style.background = "rgba(254, 243, 199, 0.95)";
-                modeBadge.style.borderColor = "#fde68a";
-                modeBadge.style.color = "#92400e";
-            }
-            
             TravelServiceManager.updateMarkers();
             const foundCount = renderFoodRadar();
 
@@ -1238,7 +1246,7 @@
                 ✨ <b style="color: #388E3C;">最佳路線計算完成！</b><br>
                 📏 總長度：${distKm} 公里<br>
                 🚴 預估時間：${timeMin} 分鐘<br>
-                ${foundCount > 0 ? `<div style="color:#c2185b; font-weight:bold; margin-top:5px;">🎯 掃描到路線 ${currentScanRadius} 公里內有 ${foundCount} 家美食！</div>` : ''}
+                ${currentScanRadius !== 'all' && foundCount > 0 ? `<div style="color:#c2185b; font-weight:bold; margin-top:5px;">🎯 掃描到路線 ${currentScanRadius} 公里內有 ${foundCount} 家美食！</div>` : ''}
             `;
             infoEl.style.display = 'block';
 
@@ -1268,7 +1276,7 @@
             loaded100Bowls.forEach(food => {
                 let showMarker = false;
 
-                if (!currentRouteTurfLine) {
+                if (currentScanRadius === 'all' || !currentRouteTurfLine) {
                     showMarker = true; 
                 } else {
                     const pt = turf.point([food.lng, food.lat]);
@@ -1333,7 +1341,7 @@
                 dataSource.forEach(item => {
                     let showMarker = false;
 
-                    if (!currentRouteTurfLine) {
+                    if (currentScanRadius === 'all' || !currentRouteTurfLine) {
                         showMarker = true; 
                     } else {
                         const pt = turf.point([item.lng, item.lat]);
@@ -1553,78 +1561,68 @@
         }
     };
 
-    // ★ V6.0 核心：優先載入 yunlin_all_points_verified.csv，否則降級讀取 master CSV ★
+    // V6.2 升級：僅鎖定載入 yunlin_all_points_verified.csv 資料庫
     async function loadVerifiedMasterCSV() {
-        const filesToTry = [
-            'yunlin_all_points_verified.csv',
-            'yunlin_all_points_google_maps_unified_master_final.csv'
-        ];
+        return new Promise((resolve) => {
+            Papa.parse('yunlin_all_points_verified.csv', {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    if (results && results.data && results.data.length > 0) {
+                        try {
+                            results.data.forEach(row => {
+                                let coords = parseRowCoords(row);
+                                if (!coords) return;
 
-        for (let fileName of filesToTry) {
-            const success = await new Promise((resolve) => {
-                Papa.parse(fileName, {
-                    download: true, header: true, skipEmptyLines: true,
-                    complete: function(results) {
-                        if (results && results.data && results.data.length > 0) {
-                            try {
-                                results.data.forEach(row => {
-                                    let coords = parseRowCoords(row);
-                                    if (!coords) return;
+                                const category = getExactCol(row, ['category', '來源分類', '分類']);
+                                const subCategory = getExactCol(row, ['sub_category', '細項', '站點細項分類']);
+                                const name = getExactCol(row, ['name', '店名', '商家名稱', '名稱', 'store_name', 'stay_name', 'station_name']);
+                                const district = getExactCol(row, ['district', '行政區', '區']);
+                                const address = getExactCol(row, ['address', '地址', '詳細地址']);
+                                const phone = getExactCol(row, ['phone', '電話', '聯絡電話']);
+                                const hours = getExactCol(row, ['business_hours', '營業時間', '開放時間']);
+                                const desc = getExactCol(row, ['description', '簡介', '特色簡介', '網站小卡文案簡介']);
+                                const tags = getExactCol(row, ['tags', '標籤', '特色標籤']);
+                                const mapUrl = getExactCol(row, ['google_map_url', 'Google地圖連結', '地圖連結', 'map_url']);
 
-                                    const category = getExactCol(row, ['category', '來源分類', '分類']);
-                                    const subCategory = getExactCol(row, ['sub_category', '細項', '站點細項分類']);
-                                    const name = getExactCol(row, ['name', '店名', '商家名稱', '名稱', 'store_name', 'stay_name', 'station_name']);
-                                    const district = getExactCol(row, ['district', '行政區', '區']);
-                                    const address = getExactCol(row, ['address', '地址', '詳細地址']);
-                                    const phone = getExactCol(row, ['phone', '電話', '聯絡電話']);
-                                    const hours = getExactCol(row, ['business_hours', '營業時間', '開放時間']);
-                                    const desc = getExactCol(row, ['description', '簡介', '特色簡介', '網站小卡文案簡介']);
-                                    const tags = getExactCol(row, ['tags', '標籤', '特色標籤']);
-                                    const mapUrl = getExactCol(row, ['google_map_url', 'Google地圖連結', '地圖連結', 'map_url']);
+                                const itemObj = {
+                                    id: row.id || '', category, sub_category: subCategory, name, district, address, phone,
+                                    hours, business_hours: hours, description: desc, tags, map_url: mapUrl,
+                                    lat: coords.lat, lng: coords.lng,
+                                    store_name: name, stay_name: name, station_name: name
+                                };
 
-                                    const itemObj = {
-                                        id: row.id || '', category, sub_category: subCategory, name, district, address, phone,
-                                        hours, business_hours: hours, description: desc, tags, map_url: mapUrl,
-                                        lat: coords.lat, lng: coords.lng,
-                                        store_name: name, stay_name: name, station_name: name
-                                    };
-
-                                    if (category.includes('百碗美食') || category.includes('美食')) {
-                                        loaded100Bowls.push({ ...itemObj, item: subCategory || desc || '在地美食' });
-                                    } else if (category.includes('超商') || subCategory.includes('7-11') || subCategory.includes('全家')) {
-                                        if (subCategory.includes('全家') || name.includes('全家')) {
-                                            loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
-                                        } else {
-                                            loaded711Stores.push({ ...itemObj, brand: '7-11' });
-                                        }
-                                    } else if (category.includes('友善水') || category.includes('水/廁')) {
-                                        loadedWaterToiletHubs.push({ ...itemObj, water_info: '冷熱水補水', toilet_info: '公共洗手頁' });
-                                    } else if (category.includes('Moovo') || subCategory.includes('Moovo')) {
-                                        loadedMoovoStations.push({ ...itemObj, operating_status: '正常營運' });
-                                    } else if (category.includes('維修') || subCategory.includes('維修')) {
-                                        loadedBikeRepairShops.push({ ...itemObj, services: desc || '單車換胎與檢修' });
-                                    } else if (category.includes('伴手禮')) {
-                                        loadedSouvenirs.push({ ...itemObj, product_name: subCategory || '在地特產' });
-                                    } else if (category.includes('住宿')) {
-                                        loadedAccommodations.push({ ...itemObj, stay_type: subCategory || '精選旅宿' });
+                                if (category.includes('百碗美食') || category.includes('美食')) {
+                                    loaded100Bowls.push({ ...itemObj, item: subCategory || desc || '在地美食' });
+                                } else if (category.includes('超商') || subCategory.includes('7-11') || subCategory.includes('全家')) {
+                                    if (subCategory.includes('全家') || name.includes('全家')) {
+                                        loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
+                                    } else {
+                                        loaded711Stores.push({ ...itemObj, brand: '7-11' });
                                     }
-                                });
-                                console.log(`✅ 成功載入驗證資料庫 (${fileName})！`);
-                                resolve(true);
-                                return;
-                            } catch(e) {
-                                console.warn(`解析 ${fileName} 異常`, e);
-                            }
+                                } else if (category.includes('友善水') || category.includes('水/廁')) {
+                                    loadedWaterToiletHubs.push({ ...itemObj, water_info: '冷熱水補水', toilet_info: '公共洗手頁' });
+                                } else if (category.includes('Moovo') || subCategory.includes('Moovo')) {
+                                    loadedMoovoStations.push({ ...itemObj, operating_status: '正常營運' });
+                                } else if (category.includes('維修') || subCategory.includes('維修')) {
+                                    loadedBikeRepairShops.push({ ...itemObj, services: desc || '單車換胎與檢修' });
+                                } else if (category.includes('伴手禮')) {
+                                    loadedSouvenirs.push({ ...itemObj, product_name: subCategory || '在地特產' });
+                                } else if (category.includes('住宿')) {
+                                    loadedAccommodations.push({ ...itemObj, stay_type: subCategory || '精選旅宿' });
+                                }
+                            });
+                            console.log(`✅ 成功載入驗證資料庫 (yunlin_all_points_verified.csv)！`);
+                            resolve(true);
+                            return;
+                        } catch(e) {
+                            console.warn(`解析 yunlin_all_points_verified.csv 異常`, e);
                         }
-                        resolve(false);
-                    },
-                    error: function() { resolve(false); }
-                });
+                    }
+                    resolve(false);
+                },
+                error: function() { resolve(false); }
             });
-
-            if (success) return true;
-        }
-        return false;
+        });
     }
 
     async function fetchWeather() {
