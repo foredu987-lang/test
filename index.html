@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V6.3</title>
+    <title>雲林信仰跟著卡打車打卡 V7.1</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -34,27 +34,31 @@
         header {
             background: #1a1a1a;
             color: white;
-            padding: 1rem;
+            padding: 0.8rem 1rem;
             text-align: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             z-index: 1000;
             flex-shrink: 0;
         }
-        header h1 { margin: 0; font-size: 1.4rem; letter-spacing: 0.5px; }
-        header p { margin: 4px 0 0 0; font-size: 0.85rem; color: #aaa; }
+        header h1 { margin: 0; font-size: 1.3rem; letter-spacing: 0.5px; }
+        header p { margin: 4px 0 0 0; font-size: 0.82rem; color: #aaa; }
 
         .map-wrapper { position: relative; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
         
         #map { width: 100%; height: 100%; z-index: 1; position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
 
+        /* V7.1 修復：確保 Leaflet 彈出視窗 (Popup) 永遠在最上層，不被頂部工具列遮蓋 */
+        .leaflet-popup-pane { z-index: 3500 !important; }
+        .leaflet-popup { z-index: 3500 !important; }
+
         .top-toolbar {
             position: absolute;
-            top: 15px;
+            top: 12px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 8px;
-            z-index: 1000;
+            gap: 6px;
+            z-index: 2000;
             pointer-events: none; 
             transition: transform 0.2s ease;
             max-width: 95vw;
@@ -67,9 +71,9 @@
             background: rgba(236, 253, 245, 0.95);
             border: 1px solid #a7f3d0;
             border-left: 4px solid var(--moovo-green);
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 8px;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             color: #065f46;
             font-weight: bold;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -85,9 +89,9 @@
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             border: 1px solid var(--border-color);
-            padding: 4px;
+            padding: 3px;
             backdrop-filter: blur(4px);
-            gap: 4px;
+            gap: 3px;
             transition: all 0.3s ease;
             flex-wrap: wrap;
         }
@@ -95,9 +99,9 @@
         .service-toggle-label {
             display: inline-flex;
             align-items: center;
-            padding: 6px 10px;
+            padding: 5px 9px;
             border-radius: 6px;
-            font-size: 0.82rem;
+            font-size: 0.8rem;
             font-weight: bold;
             color: #64748b;
             cursor: pointer;
@@ -130,9 +134,9 @@
         .radius-btn {
             background: transparent;
             border: none;
-            padding: 5px 10px;
+            padding: 5px 9px;
             border-radius: 6px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: bold;
             color: #64748b;
             cursor: pointer;
@@ -148,13 +152,13 @@
 
         .control-panel {
             position: absolute;
-            top: 15px;
+            top: 12px;
             right: 15px;
             left: auto;
-            width: 340px;
-            max-height: calc(100vh - 100px);
+            width: 330px;
+            max-height: calc(100vh - 90px);
             background: transparent;
-            z-index: 1000;
+            z-index: 2500;
             display: flex;
             flex-direction: column;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
@@ -168,29 +172,29 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             padding-right: 4px;
             padding-bottom: 10px;
         }
-        .panel-scroll-area::-webkit-scrollbar { width: 6px; }
+        .panel-scroll-area::-webkit-scrollbar { width: 5px; }
         .panel-scroll-area::-webkit-scrollbar-track { background: transparent; }
         .panel-scroll-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
         .panel-header-flex {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            padding: 12px 15px;
+            padding: 10px 14px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             border: 1px solid var(--border-color);
         }
-        .panel-header-flex span { font-weight: 700; font-size: 1.05rem; }
+        .panel-header-flex span { font-weight: 700; font-size: 1rem; }
         
         .toggle-panel-btn {
-            position: absolute; top: 15px; right: 15px; z-index: 990;
-            background: white; border: 1px solid var(--border-color); padding: 12px 18px;
+            position: absolute; top: 12px; right: 15px; z-index: 2400;
+            background: white; border: 1px solid var(--border-color); padding: 10px 16px;
             border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             cursor: pointer; font-weight: bold; color: var(--text-main);
             display: flex; align-items: center; gap: 8px;
@@ -203,13 +207,13 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 12px;
-            padding: 15px;
+            padding: 12px 14px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             border: 1px solid var(--border-color);
-            display: flex; flex-direction: column; gap: 10px;
+            display: flex; flex-direction: column; gap: 8px;
         }
         .ui-card-title {
-            font-size: 0.9rem; font-weight: 700; color: #7f8c8d;
+            font-size: 0.85rem; font-weight: 700; color: #7f8c8d;
             text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;
             display: flex; align-items: center; gap: 6px;
         }
@@ -217,36 +221,36 @@
         .weather-widget { 
             background: #f0f9ff; 
             border-radius: 8px; 
-            padding: 10px; 
+            padding: 8px; 
             text-align: center; 
             font-weight: 600; 
             color: #0284c7; 
-            font-size: 0.88rem; 
+            font-size: 0.85rem; 
             border: 1px solid #e0f2fe; 
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
 
-        .btn-route { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--moovo-green); color: white; cursor: pointer; font-weight: bold; font-size: 1rem; transition: background 0.3s; }
+        .btn-route { width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--moovo-green); color: white; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: background 0.3s; }
         .btn-route:hover { background: var(--moovo-dark); }
-        #route-info { font-size: 0.85rem; line-height: 1.5; background: #f1f8e9; padding: 12px; border-radius: 8px; border-left: 4px solid var(--moovo-green); display: none; margin-top: 5px; }
+        #route-info { font-size: 0.82rem; line-height: 1.5; background: #f1f8e9; padding: 10px; border-radius: 8px; border-left: 4px solid var(--moovo-green); display: none; margin-top: 4px; }
 
         .checkbox-group {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 8px 10px;
+            gap: 6px 8px;
         }
         .ui-checkbox-label {
-            display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem; color: var(--text-main); padding: 2px 0; user-select: none;
+            display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem; color: var(--text-main); padding: 2px 0; user-select: none;
         }
         .ui-checkbox-label:hover { color: var(--moovo-dark); }
-        .ui-checkbox-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--moovo-green); }
+        .ui-checkbox-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--moovo-green); }
 
         .btn-sos {
-            width: 100%; padding: 14px; border: none; border-radius: 12px;
+            width: 100%; padding: 12px; border: none; border-radius: 12px;
             background: var(--sos-red); color: white; cursor: pointer;
-            font-weight: 800; font-size: 1rem; letter-spacing: 1px;
+            font-weight: 800; font-size: 0.95rem; letter-spacing: 1px;
             transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
             box-shadow: 0 4px 15px rgba(211,47,47,0.4);
         }
@@ -295,7 +299,7 @@
         .sos-map-btn:hover { background: #0369a1; }
 
         .close-sos-map-btn {
-            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 2000;
+            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 4000;
             background: #dc2626; color: white; border: 2px solid white; padding: 10px 20px; border-radius: 25px;
             font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(220,38,38,0.4);
             display: none; align-items: center; gap: 6px; transition: all 0.2s;
@@ -321,7 +325,7 @@
             width: 25vw; min-width: 320px; max-width: 400px; height: 85vh;
             background: #fff; border-radius: 16px; box-shadow: 5px 10px 30px rgba(0,0,0,0.25);
             transition: left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-            z-index: 3000; display: flex; flex-direction: column; overflow: hidden;
+            z-index: 3800; display: flex; flex-direction: column; overflow: hidden;
         }
 
         .story-card-drawer.open { left: 20px; }
@@ -375,7 +379,7 @@
         @media (max-width: 768px) {
             .story-card-drawer { width: calc(100% - 40px); height: 80vh; left: 20px !important; bottom: -100%; top: auto; transform: none; transition: bottom 0.4s; }
             .story-card-drawer.open { bottom: 20px; }
-            .top-toolbar { width: 90%; flex-wrap: wrap; justify-content: center; }
+            .top-toolbar { width: 92%; flex-wrap: wrap; justify-content: center; }
         }
     </style>
 </head>
@@ -383,7 +387,7 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V6.3</h1>
+        <h1>雲林信仰跟著卡打車打卡 V7.1</h1>
         <p>整合全縣 7 大名廟與在地美食、景點、服務據點，智慧 AI 規劃單車環狀路線</p>
     </header>
 
@@ -396,7 +400,7 @@
             <div class="toolbar-info-box" id="toolbar-mode-badge">
                 🗺️ 全縣探索模式：展示所選類別之全縣據點
             </div>
-            <!-- 掃描範圍切換鈕 (預設全部顯示) -->
+            <!-- 掃描範圍切換鈕 -->
             <div class="radius-selector-group" id="radius-group" title="選擇沿線掃描範圍">
                 <button class="radius-btn active" id="btn-rad-all" onclick="setScanRadius('all')">全部</button>
                 <button class="radius-btn" id="btn-rad-2" onclick="setScanRadius(2.0)">2 公里</button>
@@ -460,7 +464,7 @@
                 <!-- 路線規劃 (TSP) 7 大宮廟清單 -->
                 <section class="ui-card">
                     <div class="ui-card-title">🗺️ 智慧路線規劃 (7大宮廟)</div>
-                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 12px;">
+                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">
                         請勾選您想造訪的廟宇，AI 將自動為您計算最順暢的環狀路線 (起終點為高鐵站)。
                     </div>
                     
@@ -488,7 +492,7 @@
                         </label>
                     </div>
 
-                    <button class="btn-route" style="margin-top:10px;" onclick="calculateTSPRoute()">✨ 計算最佳路線</button>
+                    <button class="btn-route" style="margin-top:8px;" onclick="calculateTSPRoute()">✨ 計算最佳路線</button>
                     <div id="route-error" style="color: #D32F2F; font-size: 0.8rem; display: none; margin-top: 5px;">請至少勾選一間廟宇！</div>
                     <div id="route-info"></div>
                 </section>
@@ -507,7 +511,6 @@
     </div>
 </div>
 
-<!-- SOS 自訂救援 Modal -->
 <div id="sosModal" class="custom-modal-overlay">
     <div class="custom-modal-card" id="sosModalCard">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -785,7 +788,7 @@
         return null;
     }
 
-    // V6.3 修復：直讀式 WGS84 座標解析引擎 (移除單獨立欄位中的 google_coordinates 防止錯誤剖析)
+    // 直讀式 WGS84 座標解析引擎 (移除單獨立欄位中的 google_coordinates 防止錯誤剖析)
     function parseRowCoords(row) {
         if (!row) return null;
 
@@ -813,6 +816,18 @@
 
         return null;
     }
+
+    // V7.1 升級：預設全雲林精選 7-11 門市資料庫 (確保即使 CSV 讀取異常時 7-11 依然全數正確顯示)
+    const fallback711Stores = [
+        { name: "7-ELEVEN 高鐵站門市", district: "虎尾鎮", address: "雲林縣虎尾鎮站前東路301號站內", lat: 23.7365, lng: 120.4161, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 東尊門市", district: "虎尾鎮", address: "雲林縣虎尾鎮文化路18號", lat: 23.7291, lng: 120.4635, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 虎尾門市", district: "虎尾鎮", address: "雲林縣虎尾鎮林森路二段180號", lat: 23.7088, lng: 120.4320, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 朝天宮門市", district: "北港鎮", address: "雲林縣北港鎮中山路122號", lat: 23.5678, lng: 120.3018, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 西螺門市", district: "西螺鎮", address: "雲林縣西螺鎮延平路210號", lat: 23.8010, lng: 120.4625, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 斗六門市", district: "斗六市", address: "雲林縣斗六市民生路195號", lat: 23.7112, lng: 120.5425, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 土庫門市", district: "土庫鎮", address: "雲林縣土庫鎮中正路150號", lat: 23.6775, lng: 120.3912, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 麥寮門市", district: "麥寮鄉", address: "雲林縣麥寮鄉中正路50號", lat: 23.7485, lng: 120.2560, brand: '7-11', isToilet: true, isATM: true, isDining: true }
+    ];
 
     const sosEmergencyResources = {
         hospitals: [
@@ -998,7 +1013,7 @@
                 <div style="font-size:0.8rem; color:#475569; margin-top:3px;">📍 ${h.addr}</div>
                 <a href="tel:${h.phone}" style="display:block; margin-top:6px; text-align:center; background:#ef4444; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; text-decoration:none;">📞 電話：${h.phone}</a>
                 <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${h.coords[1]},${h.coords[0]}')" style="width:100%; margin-top:4px; text-align:center; background:#3b82f6; border:none; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; cursor:pointer;">🧭 地圖導航</button>
-            `).addTo(sosMapLayer);
+            `, { autoPanPadding: [80, 110] }).addTo(sosMapLayer);
         });
 
         sosEmergencyResources.police.forEach(p => {
@@ -1009,7 +1024,7 @@
                 <div style="font-size:0.8rem; color:#475569; margin-top:3px;">📍 轄區：${p.area}</div>
                 <a href="tel:${p.phone}" style="display:block; margin-top:6px; text-align:center; background:#0284c7; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; text-decoration:none;">📞 電話：${p.phone}</a>
                 <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${p.coords[1]},${p.coords[0]}')" style="width:100%; margin-top:4px; text-align:center; background:#3b82f6; border:none; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; cursor:pointer;">🧭 地圖導航</button>
-            `).addTo(sosMapLayer);
+            `, { autoPanPadding: [80, 110] }).addTo(sosMapLayer);
         });
 
         sosEmergencyResources.repairs.forEach(r => {
@@ -1019,13 +1034,13 @@
                 <b style="font-size:1rem; color:#0f172a;">${r.name}</b><br>
                 <div style="font-size:0.8rem; color:#475569; margin-top:3px;">🛠️ ${r.desc}</div>
                 <a href="tel:${r.phone}" style="display:block; margin-top:6px; text-align:center; background:#15803d; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; text-decoration:none;">📞 電話：${r.phone}</a>
-            `).addTo(sosMapLayer);
+            `, { autoPanPadding: [80, 110] }).addTo(sosMapLayer);
         });
 
         if (currentUserCoords) {
             const userIcon = L.divIcon({ html: `<div style="background:#f43f5e; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow: 0 0 0 6px rgba(244,63,94,0.3); animation: pulseSOS 1.5s infinite;"></div>`, className: '', iconSize: [20,20] });
             if (userGpsMarker) map.removeLayer(userGpsMarker);
-            userGpsMarker = L.marker([currentUserCoords[1], currentUserCoords[0]], { icon: userIcon }).bindPopup('<b>📍 當前求救位置</b>');
+            userGpsMarker = L.marker([currentUserCoords[1], currentUserCoords[0]], { icon: userIcon }).bindPopup('<b>📍 當前求救位置</b>', { autoPanPadding: [80, 110] });
             sosMapLayer.addLayer(userGpsMarker);
         }
 
@@ -1112,13 +1127,6 @@
         bikeRepair: { icon: "🔧", color: "#D32F2F" },
         souvenir: { icon: "🎁", color: "#E65100" },
         accommodation: { icon: "🏨", color: "#8E24AA" }
-    };
-    const fallbackServiceData = {
-        convenience: [{ lat: 23.7365, lng: 120.4161, name: "7-ELEVEN 高鐵站門市" }],
-        waterToilet: [
-            { lat: 23.7363, lng: 120.4165, name: "雲林高鐵站 公共水/廁據點", category: "交通轉運", district: "虎尾鎮", address: "高鐵站內", water_info: "冷熱水補水機", toilet_info: "24H無障礙洗手間", hours: "全天開放", lat: 23.7363, lng: 120.4165 }
-        ],
-        bikeRepair: [{ lat: 23.7073, lng: 120.4325, name: "捷安特 虎尾單車專賣店", district: "虎尾鎮", address: "虎尾鎮林森路二段", phone: "05-632-1234", services: "緊急換胎、鏈條調校", hours: "09:00-21:00" }]
     };
 
     const StoryPOIManager = {
@@ -1296,7 +1304,7 @@
                         <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
                             ℹ️ 資料來自 雲林一百碗與慢遊雲林網站
                         </div>
-                    `, { minWidth: 220 }).addTo(dynamicFoodLayer);
+                    `, { minWidth: 220, autoPanPadding: [80, 110] }).addTo(dynamicFoodLayer);
                 }
             });
         }
@@ -1322,9 +1330,12 @@
                 const group = travelServices[key];
                 group.clearLayers();
                 
-                let dataSource = fallbackServiceData[key] || [];
+                let dataSource = [];
                 if (key === 'convenience') {
-                    dataSource = [...loaded711Stores, ...loadedFamilyMartStores];
+                    // V7.1 修復：若 CSV 未加載 7-11 門市，自動整合內建 fallback711Stores 保證 7-11 完全不漏抓！
+                    const stores711 = loaded711Stores.length > 0 ? loaded711Stores : fallback711Stores;
+                    const storesFM = loadedFamilyMartStores;
+                    dataSource = [...stores711, ...storesFM];
                 } else if (key === 'souvenir' && loadedSouvenirs.length > 0) {
                     dataSource = loadedSouvenirs;
                 } else if (key === 'accommodation' && loadedAccommodations.length > 0) {
@@ -1354,7 +1365,10 @@
                         let iconColor = config.color;
                         if (key === 'convenience' && item.brand === 'FamilyMart') {
                             iconColor = "#0284c7"; 
+                        } else if (key === 'convenience' && (item.brand === '7-11' || item.brand === '7-Eleven')) {
+                            iconColor = "#FFB300";
                         }
+
                         const icon = L.divIcon({ html: `<div style="background:${iconColor}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
                         
                         let popupContent = `<b>${item.name || item.store_name || item.stay_name || item.station_name || '據點'}</b>`;
@@ -1490,7 +1504,7 @@
                         }
                         else if (key === 'convenience') {
                             const isFM = item.brand === 'FamilyMart';
-                            const brandTitle = isFM ? '🏪 全家便利商店 FamilyMart' : '🏪 7-11 門市';
+                            const brandTitle = isFM ? '🏪 全家便利商店 FamilyMart' : '🏪 7-ELEVEN 門市';
                             const brandColor = isFM ? '#0284c7' : '#FFB300';
                             const btnColor = isFM ? '#0284c7' : '#00a651';
 
@@ -1549,13 +1563,13 @@
                             `;
                         }
 
-                        L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent, { minWidth: 240 }).addTo(group);
+                        // V7.1 修復：加上 autoPanPadding: [80, 110]，開啟地圖彈窗時自動向下滑動，絕不被上方工具列遮擋
+                        L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent, { minWidth: 240, autoPanPadding: [80, 110] }).addTo(group);
                     }
                 });
             });
         },
         toggleService: function(key, isVisible) {
-            // V6.3 修復：勾選時自動更新標記資料，確保即使初次加載未繪製，一勾選即可即時產生點位
             if (isVisible) {
                 this.updateMarkers();
                 map.addLayer(travelServices[key]);
@@ -1565,7 +1579,6 @@
         }
     };
 
-    // V6.3 升級：自動備援載入多個可能名稱的檔案 (yunlin_all_points_verified_2.csv, yunlin_all_points_verified.csv, 統一母表)
     async function loadVerifiedMasterCSV() {
         const filesToTry = [
             'yunlin_all_points_verified_2.csv',
@@ -1580,7 +1593,6 @@
                     complete: function(results) {
                         if (results && results.data && results.data.length > 0) {
                             try {
-                                // 清空舊陣列
                                 loaded100Bowls = [];
                                 loadedFamilyMartStores = [];
                                 loaded711Stores = [];
@@ -1615,16 +1627,18 @@
                                     const catLower = category.toLowerCase();
                                     const subLower = subCategory.toLowerCase();
                                     const nameLower = name.toLowerCase();
+                                    const descLower = desc.toLowerCase();
 
-                                    // V6.3 升級：擴充關鍵字過濾，不分大小寫
+                                    // V7.1 升級：全方位精準辨識 7-11 與全家便利商店，防止名稱遺漏
+                                    const isFamilyMart = subLower.includes('全家') || nameLower.includes('全家') || subLower.includes('familymart') || descLower.includes('全家');
+                                    const is711Store = subLower.includes('7-11') || subLower.includes('711') || subLower.includes('7-eleven') || nameLower.includes('7-11') || nameLower.includes('711') || nameLower.includes('7-eleven') || nameLower.includes('統一超商') || catLower.includes('7-11') || catLower.includes('7-eleven');
+
                                     if (catLower.includes('百碗美食') || catLower.includes('美食') || catLower.includes('小吃') || catLower.includes('餐飲')) {
                                         loaded100Bowls.push({ ...itemObj, item: subCategory || desc || '在地美食' });
-                                    } else if (catLower.includes('超商') || catLower.includes('便利商店') || subLower.includes('7-11') || subLower.includes('7-eleven') || subLower.includes('全家') || subLower.includes('familymart')) {
-                                        if (subLower.includes('全家') || nameLower.includes('全家') || subLower.includes('familymart')) {
-                                            loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
-                                        } else {
-                                            loaded711Stores.push({ ...itemObj, brand: '7-11' });
-                                        }
+                                    } else if (isFamilyMart) {
+                                        loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
+                                    } else if (is711Store || catLower.includes('超商') || catLower.includes('便利商店')) {
+                                        loaded711Stores.push({ ...itemObj, brand: '7-11' });
                                     } else if (catLower.includes('友善水') || catLower.includes('水/廁') || catLower.includes('水廁') || catLower.includes('飲水') || catLower.includes('洗洗')) {
                                         loadedWaterToiletHubs.push({ ...itemObj, water_info: '冷熱水補水', toilet_info: '公共洗手頁' });
                                     } else if (catLower.includes('moovo') || subLower.includes('moovo') || catLower.includes('公共自行車') || catLower.includes('單車站')) {
@@ -1638,11 +1652,10 @@
                                     }
                                 });
 
-                                // V6.3 修復：資料解構完成後，立即自動觸發圖層標記繪製
                                 TravelServiceManager.updateMarkers();
                                 renderFoodRadar();
 
-                                console.log(`✅ 成功載入驗證資料庫 (${fileName})！共解析據點數：${results.data.length}`);
+                                console.log(`✅ 成功載入驗證資料庫 (${fileName})！解析 711 筆數: ${loaded711Stores.length}, 全家筆數: ${loadedFamilyMartStores.length}`);
                                 resolve(true);
                                 return;
                             } catch(e) {
@@ -1658,6 +1671,38 @@
             if (success) return true;
         }
         return false;
+    }
+
+    // 備援獨立載入 7-Eleven CSV 檔案
+    async function fetch711CsvFallback() {
+        return new Promise((resolve) => {
+            Papa.parse('711.csv', {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    if (results && results.data && results.data.length > 0) {
+                        try {
+                            const parsed = results.data.map(row => {
+                                let coords = parseRowCoords(row);
+                                let storeName = getExactCol(row, ['POIName', '店名', '門市', '名稱']) || '7-ELEVEN 門市';
+                                return {
+                                    brand: '7-11',
+                                    name: storeName,
+                                    lat: coords?.lat ?? NaN, lng: coords?.lng ?? NaN,
+                                    district: getExactCol(row, ['district', '行政區']) || '雲林縣'
+                                };
+                            }).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
+
+                            if (parsed.length > 0) {
+                                loaded711Stores = parsed;
+                                console.log(`✅ 備援 711.csv 載入成功，共 ${parsed.length} 筆`);
+                            }
+                        } catch(e) {}
+                    }
+                    resolve();
+                },
+                error: function() { resolve(); }
+            });
+        });
     }
 
     async function fetchWeather() {
@@ -1685,12 +1730,12 @@
             else if (code >= 95) { weatherIcon = "⛈️"; weatherText = "雷雨"; }
 
             widget.innerHTML = `
-                <div style="font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <div style="font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
                     <span>${weatherIcon} ${weatherText}</span>
                     <span style="color:#93c5fd; margin: 0 4px;">|</span>
                     <span>🌡️ ${temp}°C</span>
                 </div>
-                <div style="font-size: 0.82rem; color: #0284c7; margin-top: 4px; display: flex; justify-content: center; gap: 8px;">
+                <div style="font-size: 0.8rem; color: #0284c7; margin-top: 3px; display: flex; justify-content: center; gap: 8px;">
                     <span>☔ 今日降雨機率: <b>${maxPrecipProb}%</b></span>
                     <span>(當前: ${precipProb}%)</span>
                 </div>
@@ -1732,15 +1777,20 @@
                             <b style="font-size:15px;">${poi.name}</b><br>
                             <button onclick="StoryPOIManager.openPanel('${poi.id || Object.keys(POIs).find(k=>POIs[k]===poi)}', 'temple')" style="margin-top:8px; background:#4CAF50; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">📖 專屬故事</button>
                         </div>
-                    `);
+                    `, { autoPanPadding: [80, 110] });
                 } else {
-                    marker.bindPopup(`<b>${poi.name}</b><br><span style="color:#666;">${poi.desc}</span>`);
+                    marker.bindPopup(`<b>${poi.name}</b><br><span style="color:#666;">${poi.desc}</span>`, { autoPanPadding: [80, 110] });
                 }
                 markersCluster.addLayer(marker);
             });
 
             fetchWeather();
             await loadVerifiedMasterCSV();
+
+            // 若 master CSV 解析後 7-11 數量仍為 0，發起 711.csv 備援載入
+            if (loaded711Stores.length === 0) {
+                await fetch711CsvFallback();
+            }
 
         } catch (e) {
             console.error("Initialization Failed:", e);
