@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V6.2</title>
+    <title>雲林信仰跟著卡打車打卡 V6.3</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -383,7 +383,7 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V6.2</h1>
+        <h1>雲林信仰跟著卡打車打卡 V6.3</h1>
         <p>整合全縣 7 大名廟與在地美食、景點、服務據點，智慧 AI 規劃單車環狀路線</p>
     </header>
 
@@ -408,27 +408,27 @@
                     <span>😋 美食</span>
                 </label>
                 <label class="service-toggle-label conv">
-                    <input type="checkbox" onchange="TravelServiceManager.toggleService('convenience', this.checked)">
+                    <input type="checkbox" id="chk-conv" onchange="TravelServiceManager.toggleService('convenience', this.checked)">
                     <span>🏪 超商</span>
                 </label>
                 <label class="service-toggle-label waterToilet">
-                    <input type="checkbox" onchange="TravelServiceManager.toggleService('waterToilet', this.checked)">
+                    <input type="checkbox" id="chk-wt" onchange="TravelServiceManager.toggleService('waterToilet', this.checked)">
                     <span>💧🚻 友善水/廁</span>
                 </label>
                 <label class="service-toggle-label moovo">
-                    <input type="checkbox" onchange="TravelServiceManager.toggleService('moovo', this.checked)">
+                    <input type="checkbox" id="chk-moovo" onchange="TravelServiceManager.toggleService('moovo', this.checked)">
                     <span>🚲 Moovo站點</span>
                 </label>
                 <label class="service-toggle-label repair">
-                    <input type="checkbox" onchange="TravelServiceManager.toggleService('bikeRepair', this.checked)">
+                    <input type="checkbox" id="chk-repair" onchange="TravelServiceManager.toggleService('bikeRepair', this.checked)">
                     <span>🔧 單車維修</span>
                 </label>
                 <label class="service-toggle-label souvenir">
-                    <input type="checkbox" onchange="TravelServiceManager.toggleService('souvenir', this.checked)">
+                    <input type="checkbox" id="chk-souvenir" onchange="TravelServiceManager.toggleService('souvenir', this.checked)">
                     <span>🎁 伴手禮</span>
                 </label>
                 <label class="service-toggle-label hotel">
-                    <input type="checkbox" onchange="TravelServiceManager.toggleService('accommodation', this.checked)">
+                    <input type="checkbox" id="chk-hotel" onchange="TravelServiceManager.toggleService('accommodation', this.checked)">
                     <span>🏨 住宿</span>
                 </label>
             </div>
@@ -785,14 +785,14 @@
         return null;
     }
 
-    // 直讀式 WGS84 座標解析引擎
+    // V6.3 修復：直讀式 WGS84 座標解析引擎 (移除單獨立欄位中的 google_coordinates 防止錯誤剖析)
     function parseRowCoords(row) {
         if (!row) return null;
 
-        let xVal = getExactCol(row, ['x', '經度', 'longitude', 'lng', '經度(longitude)', 'google_coordinates']);
+        let xVal = getExactCol(row, ['x', '經度', 'longitude', 'lng', '經度(longitude)']);
         let yVal = getExactCol(row, ['y', '緯度', 'latitude', 'lat', '緯度(latitude)']);
 
-        if (xVal && yVal && !xVal.includes(',') && !yVal.includes(',')) {
+        if (xVal && yVal && !xVal.includes(',') && !yVal.includes(',') && !xVal.includes('/')) {
             let p1 = parseFloat(xVal);
             let p2 = parseFloat(yVal);
             let valid = validateAndSwap(p1, p2);
@@ -1064,7 +1064,6 @@
         else map.removeLayer(trafficLayer);
     }
 
-    // V6.2 升級：擴充「全部 / 2km / 5km」掃描範圍切換與頂部提示動態調整
     function setScanRadius(radius) {
         currentScanRadius = radius;
         document.querySelectorAll('.radius-btn').forEach(btn => btn.classList.remove('active'));
@@ -1556,73 +1555,109 @@
             });
         },
         toggleService: function(key, isVisible) {
-            if (isVisible) map.addLayer(travelServices[key]);
-            else map.removeLayer(travelServices[key]);
+            // V6.3 修復：勾選時自動更新標記資料，確保即使初次加載未繪製，一勾選即可即時產生點位
+            if (isVisible) {
+                this.updateMarkers();
+                map.addLayer(travelServices[key]);
+            } else {
+                map.removeLayer(travelServices[key]);
+            }
         }
     };
 
-    // V6.2 升級：僅鎖定載入 yunlin_all_points_verified.csv 資料庫
+    // V6.3 升級：自動備援載入多個可能名稱的檔案 (yunlin_all_points_verified_2.csv, yunlin_all_points_verified.csv, 統一母表)
     async function loadVerifiedMasterCSV() {
-        return new Promise((resolve) => {
-            Papa.parse('yunlin_all_points_verified.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    if (results && results.data && results.data.length > 0) {
-                        try {
-                            results.data.forEach(row => {
-                                let coords = parseRowCoords(row);
-                                if (!coords) return;
+        const filesToTry = [
+            'yunlin_all_points_verified_2.csv',
+            'yunlin_all_points_verified.csv',
+            'yunlin_all_points_google_maps_unified_master_final.csv'
+        ];
 
-                                const category = getExactCol(row, ['category', '來源分類', '分類']);
-                                const subCategory = getExactCol(row, ['sub_category', '細項', '站點細項分類']);
-                                const name = getExactCol(row, ['name', '店名', '商家名稱', '名稱', 'store_name', 'stay_name', 'station_name']);
-                                const district = getExactCol(row, ['district', '行政區', '區']);
-                                const address = getExactCol(row, ['address', '地址', '詳細地址']);
-                                const phone = getExactCol(row, ['phone', '電話', '聯絡電話']);
-                                const hours = getExactCol(row, ['business_hours', '營業時間', '開放時間']);
-                                const desc = getExactCol(row, ['description', '簡介', '特色簡介', '網站小卡文案簡介']);
-                                const tags = getExactCol(row, ['tags', '標籤', '特色標籤']);
-                                const mapUrl = getExactCol(row, ['google_map_url', 'Google地圖連結', '地圖連結', 'map_url']);
+        for (let fileName of filesToTry) {
+            const success = await new Promise((resolve) => {
+                Papa.parse(fileName, {
+                    download: true, header: true, skipEmptyLines: true,
+                    complete: function(results) {
+                        if (results && results.data && results.data.length > 0) {
+                            try {
+                                // 清空舊陣列
+                                loaded100Bowls = [];
+                                loadedFamilyMartStores = [];
+                                loaded711Stores = [];
+                                loadedWaterToiletHubs = [];
+                                loadedMoovoStations = [];
+                                loadedBikeRepairShops = [];
+                                loadedSouvenirs = [];
+                                loadedAccommodations = [];
 
-                                const itemObj = {
-                                    id: row.id || '', category, sub_category: subCategory, name, district, address, phone,
-                                    hours, business_hours: hours, description: desc, tags, map_url: mapUrl,
-                                    lat: coords.lat, lng: coords.lng,
-                                    store_name: name, stay_name: name, station_name: name
-                                };
+                                results.data.forEach(row => {
+                                    let coords = parseRowCoords(row);
+                                    if (!coords) return;
 
-                                if (category.includes('百碗美食') || category.includes('美食')) {
-                                    loaded100Bowls.push({ ...itemObj, item: subCategory || desc || '在地美食' });
-                                } else if (category.includes('超商') || subCategory.includes('7-11') || subCategory.includes('全家')) {
-                                    if (subCategory.includes('全家') || name.includes('全家')) {
-                                        loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
-                                    } else {
-                                        loaded711Stores.push({ ...itemObj, brand: '7-11' });
+                                    const category = getExactCol(row, ['category', '來源分類', '分類']);
+                                    const subCategory = getExactCol(row, ['sub_category', '細項', '站點細項分類']);
+                                    const name = getExactCol(row, ['name', '店名', '商家名稱', '名稱', 'store_name', 'stay_name', 'station_name']);
+                                    const district = getExactCol(row, ['district', '行政區', '區']);
+                                    const address = getExactCol(row, ['address', '地址', '詳細地址']);
+                                    const phone = getExactCol(row, ['phone', '電話', '聯絡電話']);
+                                    const hours = getExactCol(row, ['business_hours', '營業時間', '開放時間']);
+                                    const desc = getExactCol(row, ['description', '簡介', '特色簡介', '網站小卡文案簡介']);
+                                    const tags = getExactCol(row, ['tags', '標籤', '特色標籤']);
+                                    const mapUrl = getExactCol(row, ['google_map_url', 'Google地圖連結', '地圖連結', 'map_url']);
+
+                                    const itemObj = {
+                                        id: row.id || '', category, sub_category: subCategory, name, district, address, phone,
+                                        hours, business_hours: hours, description: desc, tags, map_url: mapUrl,
+                                        lat: coords.lat, lng: coords.lng,
+                                        store_name: name, stay_name: name, station_name: name
+                                    };
+
+                                    const catLower = category.toLowerCase();
+                                    const subLower = subCategory.toLowerCase();
+                                    const nameLower = name.toLowerCase();
+
+                                    // V6.3 升級：擴充關鍵字過濾，不分大小寫
+                                    if (catLower.includes('百碗美食') || catLower.includes('美食') || catLower.includes('小吃') || catLower.includes('餐飲')) {
+                                        loaded100Bowls.push({ ...itemObj, item: subCategory || desc || '在地美食' });
+                                    } else if (catLower.includes('超商') || catLower.includes('便利商店') || subLower.includes('7-11') || subLower.includes('7-eleven') || subLower.includes('全家') || subLower.includes('familymart')) {
+                                        if (subLower.includes('全家') || nameLower.includes('全家') || subLower.includes('familymart')) {
+                                            loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
+                                        } else {
+                                            loaded711Stores.push({ ...itemObj, brand: '7-11' });
+                                        }
+                                    } else if (catLower.includes('友善水') || catLower.includes('水/廁') || catLower.includes('水廁') || catLower.includes('飲水') || catLower.includes('洗洗')) {
+                                        loadedWaterToiletHubs.push({ ...itemObj, water_info: '冷熱水補水', toilet_info: '公共洗手頁' });
+                                    } else if (catLower.includes('moovo') || subLower.includes('moovo') || catLower.includes('公共自行車') || catLower.includes('單車站')) {
+                                        loadedMoovoStations.push({ ...itemObj, operating_status: '正常營運' });
+                                    } else if (catLower.includes('維修') || subLower.includes('維修') || catLower.includes('救援')) {
+                                        loadedBikeRepairShops.push({ ...itemObj, services: desc || '單車換胎與檢修' });
+                                    } else if (catLower.includes('伴手禮') || catLower.includes('特產')) {
+                                        loadedSouvenirs.push({ ...itemObj, product_name: subCategory || '在地特產' });
+                                    } else if (catLower.includes('住宿') || catLower.includes('旅宿') || catLower.includes('飯店') || catLower.includes('民宿')) {
+                                        loadedAccommodations.push({ ...itemObj, stay_type: subCategory || '精選旅宿' });
                                     }
-                                } else if (category.includes('友善水') || category.includes('水/廁')) {
-                                    loadedWaterToiletHubs.push({ ...itemObj, water_info: '冷熱水補水', toilet_info: '公共洗手頁' });
-                                } else if (category.includes('Moovo') || subCategory.includes('Moovo')) {
-                                    loadedMoovoStations.push({ ...itemObj, operating_status: '正常營運' });
-                                } else if (category.includes('維修') || subCategory.includes('維修')) {
-                                    loadedBikeRepairShops.push({ ...itemObj, services: desc || '單車換胎與檢修' });
-                                } else if (category.includes('伴手禮')) {
-                                    loadedSouvenirs.push({ ...itemObj, product_name: subCategory || '在地特產' });
-                                } else if (category.includes('住宿')) {
-                                    loadedAccommodations.push({ ...itemObj, stay_type: subCategory || '精選旅宿' });
-                                }
-                            });
-                            console.log(`✅ 成功載入驗證資料庫 (yunlin_all_points_verified.csv)！`);
-                            resolve(true);
-                            return;
-                        } catch(e) {
-                            console.warn(`解析 yunlin_all_points_verified.csv 異常`, e);
+                                });
+
+                                // V6.3 修復：資料解構完成後，立即自動觸發圖層標記繪製
+                                TravelServiceManager.updateMarkers();
+                                renderFoodRadar();
+
+                                console.log(`✅ 成功載入驗證資料庫 (${fileName})！共解析據點數：${results.data.length}`);
+                                resolve(true);
+                                return;
+                            } catch(e) {
+                                console.warn(`解析 ${fileName} 異常`, e);
+                            }
                         }
-                    }
-                    resolve(false);
-                },
-                error: function() { resolve(false); }
+                        resolve(false);
+                    },
+                    error: function() { resolve(false); }
+                });
             });
-        });
+
+            if (success) return true;
+        }
+        return false;
     }
 
     async function fetchWeather() {
