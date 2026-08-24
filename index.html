@@ -15,6 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
     <style>
+        /* STREAMING_CHUNK:Styling layout and interactive components... */
         :root {
             --moovo-green: #4CAF50;
             --moovo-dark: #388E3C;
@@ -47,7 +48,6 @@
         
         #map { width: 100%; height: 100%; z-index: 1; position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
 
-        /* V7.1 修復：確保 Leaflet 彈出視窗 (Popup) 永遠在最上層，不被頂部工具列遮蓋 */
         .leaflet-popup-pane { z-index: 3500 !important; }
         .leaflet-popup { z-index: 3500 !important; }
 
@@ -386,6 +386,7 @@
 </head>
 <body>
 
+<!-- STREAMING_CHUNK:Rendering main application DOM elements... -->
 <div id="app-container">
     <header>
         <h1>雲林信仰跟著卡打車打卡 V7.1</h1>
@@ -722,9 +723,7 @@
 <script src="https://cdn.jsdelivr.net/npm/leaflet-ant-path@1.3.0/dist/leaflet-ant-path.min.js"></script>
 
 <script>
-    // =========================================================================
-    // 1. 全域變數與通用 Helper 函數
-    // =========================================================================
+    // STREAMING_CHUNK:Configuring state variables and coordinate parser...
     let map = null;
     let markersCluster = null;
     let currentPathLayer = null;
@@ -823,17 +822,19 @@
         return null;
     }
 
-    // V7.1 升級：預設全雲林精選 7-11 門市資料庫 (確保即使 CSV 讀取異常時 7-11 依然全數正確顯示)
-    const fallback711Stores = [
-        { name: "7-ELEVEN 高鐵站門市", district: "虎尾鎮", address: "雲林縣虎尾鎮站前東路301號站內", lat: 23.7365, lng: 120.4161, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 東尊門市", district: "虎尾鎮", address: "雲林縣虎尾鎮文化路18號", lat: 23.7291, lng: 120.4635, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 虎尾門市", district: "虎尾鎮", address: "雲林縣虎尾鎮林森路二段180號", lat: 23.7088, lng: 120.4320, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 朝天宮門市", district: "北港鎮", address: "雲林縣北港鎮中山路122號", lat: 23.5678, lng: 120.3018, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 西螺門市", district: "西螺鎮", address: "雲林縣西螺鎮延平路210號", lat: 23.8010, lng: 120.4625, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 斗六門市", district: "斗六市", address: "雲林縣斗六市民生路195號", lat: 23.7112, lng: 120.5425, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 土庫門市", district: "土庫鎮", address: "雲林縣土庫鎮中正路150號", lat: 23.6775, lng: 120.3912, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 麥寮門市", district: "麥寮鄉", address: "雲林縣麥寮鄉中正路50號", lat: 23.7485, lng: 120.2560, brand: '7-11', isToilet: true, isATM: true, isDining: true }
-    ];
+    // STREAMING_CHUNK:Defining POIs and emergency resources...
+    const POIs = {
+        "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.41649, 23.73633], desc: "MOOVO 租借與歸還點" },
+        "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.30190, 23.56810], desc: "國定古蹟，全臺媽祖信仰中心" },
+        "t_wude": { id: "t_wude", name: "北港武德宮", type: "temple", coords: [120.30330, 23.58310], desc: "臺灣五路武財神祖廟" },
+        "t_fuxing": { id: "t_fuxing", name: "西螺福興宮", type: "temple", coords: [120.46320, 23.80160], desc: "西螺太平媽祖" },
+        "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.46170, 23.73890], desc: "全臺首座不燒金紙文風媽祖廟" },
+        "t_gongfan": { id: "t_gongfan", name: "麥寮拱範宮", type: "temple", coords: [120.255573, 23.748248], desc: "國定古蹟，海線媽祖信仰重鎮" },
+        "t_shuntian": { id: "t_shuntian", name: "土庫順天宮", type: "temple", coords: [120.390560, 23.676570], desc: "縣定古蹟，歷史悠久土庫媽" },
+        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.558720, 23.700843], desc: "立姿關聖帝君巨像鸞堂重鎮" },
+        "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.54120, 23.71250], desc: "MOOVO 租借站" },
+        "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.43450, 23.70250], desc: "MOOVO 租借站" }
+    };
 
     const sosEmergencyResources = {
         hospitals: [
@@ -843,6 +844,17 @@
             { name: "雲林基督教醫院 (西螺院區)", coords: [120.4608, 23.7941], phone: "05-587-1111", addr: "西螺鎮市場南路375號" },
             { name: "中國醫藥大學北港附設醫院", coords: [120.3061, 23.5785], phone: "05-783-7901", addr: "北港鎮新德路123號" }
         ],
+        police: [
+            { name: "虎尾警察分局", coords: [120.4335, 23.7088], phone: "05-632-2042", area: "虎尾、土庫、褒忠、元長" },
+            { name: "西螺警察分局", coords: [120.4612, 23.7981], phone: "05-586-2014", area: "西螺、二崙、崙背" },
+            { name: "北港警察分局", coords: [120.3021, 23.5712], phone: "05-783-2015", area: "北港、水林、口湖" },
+            { name: "斗六警察分局", coords: [120.5431, 23.7095], phone: "05-532-2042", area: "斗六、林內、莿桐" }
+        ],
+        repairs: [
+            { name: "捷安特 虎尾單車專賣店", coords: [120.4325, 23.7073], phone: "05-632-1234", desc: "緊急換胎、鏈條檢修" }
+        ]
+    };
+
     const travelServices = { convenience: null, waterToilet: null, moovo: null, bikeRepair: null, souvenir: null, accommodation: null, attraction: null };
     const serviceConfig = {
         convenience: { icon: "🏪", color: "#FFB300" },
@@ -854,6 +866,18 @@
         attraction: { icon: "🏞️", color: "#0284c7" }
     };
 
+    const fallback711Stores = [
+        { name: "7-ELEVEN 高鐵站門市", district: "虎尾鎮", address: "雲林縣虎尾鎮站前東路301號站內", lat: 23.7365, lng: 120.4161, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 東尊門市", district: "虎尾鎮", address: "雲林縣虎尾鎮文化路18號", lat: 23.7291, lng: 120.4635, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 虎尾門市", district: "虎尾鎮", address: "雲林縣虎尾鎮林森路二段180號", lat: 23.7088, lng: 120.4320, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 朝天宮門市", district: "北港鎮", address: "雲林縣北港鎮中山路122號", lat: 23.5678, lng: 120.3018, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 西螺門市", district: "西螺鎮", address: "雲林縣西螺鎮延平路210號", lat: 23.8010, lng: 120.4625, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 斗六門市", district: "斗六市", address: "雲林縣斗六市民生路195號", lat: 23.7112, lng: 120.5425, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 土庫門市", district: "土庫鎮", address: "雲林縣土庫鎮中正路150號", lat: 23.6775, lng: 120.3912, brand: '7-11', isToilet: true, isATM: true, isDining: true },
+        { name: "7-ELEVEN 麥寮門市", district: "麥寮鄉", address: "雲林縣麥寮鄉中正路50號", lat: 23.7485, lng: 120.2560, brand: '7-11', isToilet: true, isATM: true, isDining: true }
+    ];
+
+    // STREAMING_CHUNK:Implementing SOS audio alarm and GPS tracking...
     function toggleSiren() {
         const sirenBtn = document.getElementById('sirenToggleBtn');
         const modalCard = document.getElementById('sosModalCard');
@@ -966,6 +990,7 @@
         }
     }
 
+    // STREAMING_CHUNK:Calculating nearest hospital and police station...
     function calculateNearestResources(userLat, userLng) {
         if (typeof turf === 'undefined') return;
         const userPt = turf.point([userLng, userLat]);
@@ -1111,30 +1136,7 @@
         renderFoodRadar();
     }
 
-    // ★ 七大宮廟與交通樞紐 WGS84 基準座標庫 ★
-    const POIs = {
-        "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.41649, 23.73633], desc: "MOOVO 租借與歸還點" },
-        "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.30190, 23.56810], desc: "國定古蹟，全臺媽祖信仰中心" },
-        "t_wude": { id: "t_wude", name: "北港武德宮", type: "temple", coords: [120.30330, 23.58310], desc: "臺灣五路武財神祖廟" },
-        "t_fuxing": { id: "t_fuxing", name: "西螺福興宮", type: "temple", coords: [120.46320, 23.80160], desc: "西螺太平媽祖" },
-        "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.46170, 23.73890], desc: "全臺首座不燒金紙文風媽祖廟" },
-        "t_gongfan": { id: "t_gongfan", name: "麥寮拱範宮", type: "temple", coords: [120.255573, 23.748248], desc: "國定古蹟，海線媽祖信仰重鎮" },
-        "t_shuntian": { id: "t_shuntian", name: "土庫順天宮", type: "temple", coords: [120.390560, 23.676570], desc: "縣定古蹟，歷史悠久土庫媽" },
-        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.558720, 23.700843], desc: "立姿關聖帝君巨像鸞堂重鎮" },
-        "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.54120, 23.71250], desc: "MOOVO 租借站" },
-        "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.43450, 23.70250], desc: "MOOVO 租借站" }
-    };
-    
-    const travelServices = { convenience: null, waterToilet: null, moovo: null, bikeRepair: null, souvenir: null, accommodation: null };
-    const serviceConfig = {
-        convenience: { icon: "🏪", color: "#FFB300" },
-        waterToilet: { icon: "💧", color: "#00ACC1" },
-        moovo: { icon: "🚲", color: "#388E3C" },
-        bikeRepair: { icon: "🔧", color: "#D32F2F" },
-        souvenir: { icon: "🎁", color: "#E65100" },
-        accommodation: { icon: "🏨", color: "#8E24AA" }
-    };
-
+    // STREAMING_CHUNK:Configuring StoryPOIManager and route planner...
     const StoryPOIManager = {
         fetchStoryData: async function(poiId) {
             try {
@@ -1325,6 +1327,7 @@
         return foundCount;
     }
 
+    // STREAMING_CHUNK:Managing travel service markers and layer rendering...
     const TravelServiceManager = {
         init: function() {
             Object.keys(travelServices).forEach(key => {
@@ -1338,7 +1341,6 @@
                 
                 let dataSource = [];
                 if (key === 'convenience') {
-                    // V7.1 修復：若 CSV 未加載 7-11 門市，自動整合內建 fallback711Stores 保證 7-11 完全不漏抓！
                     const stores711 = loaded711Stores.length > 0 ? loaded711Stores : fallback711Stores;
                     const storesFM = loadedFamilyMartStores;
                     dataSource = [...stores711, ...storesFM];
@@ -1456,7 +1458,29 @@
                             `;
                         }
                         else if (key === 'accommodation' && item.stay_name) {
-                            /* ... existing code for accommodation ... */
+                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            
+                            popupContent = `
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
+                                    <span style="font-size:0.75rem; color:#8e24aa; font-weight:bold;">🏨 雲林精選住宿</span>
+                                    <div style="display:flex; gap:4px;">
+                                        ${item.stay_type ? `<span style="background:#8e24aa; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.stay_type}</span>` : ''}
+                                        ${item.district ? `<span style="background:#4a148c; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
+                                    </div>
+                                </div>
+                                <b style="font-size:1.1rem; color:#1e293b;">${item.stay_name}</b><br>
+                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
+                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
+                                ${item.check_in_out ? `<div style="font-size:0.8rem; color:#64748b; margin-top:4px;">🕒 入退房：${item.check_in_out}</div>` : ''}
+                                ${item.address ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
+                                <div style="display:flex; gap:6px; margin-top:10px;">
+                                    ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
+                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
+                                </div>
+                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                                    ℹ️ 資料來自 慢遊雲林網站
+                                </div>
+                            `;
                         }
                         else if (key === 'attraction' && (item.name || item.store_name)) {
                             let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
@@ -1575,7 +1599,6 @@
                             `;
                         }
 
-                        // V7.1 修復：加上 autoPanPadding: [80, 110]，開啟地圖彈窗時自動向下滑動，絕不被上方工具列遮擋
                         L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent, { minWidth: 240, autoPanPadding: [80, 110] }).addTo(group);
                     }
                 });
@@ -1591,6 +1614,7 @@
         }
     };
 
+    // STREAMING_CHUNK:Loading and parsing master CSV datasets and fallback sources...
     async function loadVerifiedMasterCSV() {
         const filesToTry = [
             'yunlin_all_points_verified_2.csv',
@@ -1613,6 +1637,7 @@
                                 loadedBikeRepairShops = [];
                                 loadedSouvenirs = [];
                                 loadedAccommodations = [];
+                                loadedAttractions = [];
 
                                 results.data.forEach(row => {
                                     let coords = parseRowCoords(row);
@@ -1641,7 +1666,6 @@
                                     const nameLower = name.toLowerCase();
                                     const descLower = desc.toLowerCase();
 
-                                    // V7.1 升級：全方位精準辨識 7-11 與全家便利商店，防止名稱遺漏
                                     const isFamilyMart = subLower.includes('全家') || nameLower.includes('全家') || subLower.includes('familymart') || descLower.includes('全家');
                                     const is711Store = subLower.includes('7-11') || subLower.includes('711') || subLower.includes('7-eleven') || nameLower.includes('7-11') || nameLower.includes('711') || nameLower.includes('7-eleven') || nameLower.includes('統一超商') || catLower.includes('7-11') || catLower.includes('7-eleven');
 
@@ -1690,7 +1714,6 @@
         return false;
     }
 
-    // 備援獨立載入 7-Eleven CSV 檔案
     async function fetch711CsvFallback() {
         return new Promise((resolve) => {
             Papa.parse('711.csv', {
@@ -1722,7 +1745,6 @@
         });
     }
 
-    // 備援獨立載入 友善水/廁 CSV 檔案 (yunlin_cycling_water_and_restroom_spots_verified.csv)
     async function fetchWaterToiletCsvFallback() {
         return new Promise((resolve) => {
             Papa.parse('yunlin_cycling_water_and_restroom_spots_verified.csv', {
@@ -1763,7 +1785,6 @@
         });
     }
 
-    // 備援獨立載入 景點 CSV 檔案 (yunlin_attractions_cards_verified.csv)
     async function fetchAttractionsCsvFallback() {
         return new Promise((resolve) => {
             Papa.parse('yunlin_attractions_cards_verified.csv', {
@@ -1802,6 +1823,7 @@
         });
     }
 
+    // STREAMING_CHUNK:Fetching Open-Meteo weather forecast and initializing Leaflet map...
     async function fetchWeather() {
         const widget = document.getElementById('weather-widget');
         try {
@@ -1884,17 +1906,14 @@
             fetchWeather();
             await loadVerifiedMasterCSV();
 
-            // 若 master CSV 解析後 7-11 數量仍為 0，發起 711.csv 備援載入
             if (loaded711Stores.length === 0) {
                 await fetch711CsvFallback();
             }
 
-            // 若 master CSV 解析後 友善水/廁數量仍為 0，發起 yunlin_cycling_water_and_restroom_spots_verified.csv 備援載入
             if (loadedWaterToiletHubs.length === 0) {
                 await fetchWaterToiletCsvFallback();
             }
 
-            // 若 master CSV 解析後 景點數量仍為 0，發起 yunlin_attractions_cards_verified.csv 備援載入
             if (loadedAttractions.length === 0) {
                 await fetchAttractionsCsvFallback();
             }
