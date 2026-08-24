@@ -118,6 +118,7 @@
         .service-toggle-label.repair input:checked + span { color: #D32F2F; }
         .service-toggle-label.souvenir input:checked + span { color: #E65100; }
         .service-toggle-label.hotel input:checked + span { color: #8E24AA; }
+        .service-toggle-label.spot input:checked + span { color: #0284c7; }
         .service-toggle-label input:checked + span { text-shadow: 0 0 1px currentColor; }
 
         .radius-selector-group {
@@ -435,6 +436,10 @@
                     <input type="checkbox" id="chk-hotel" onchange="TravelServiceManager.toggleService('accommodation', this.checked)">
                     <span>🏨 住宿</span>
                 </label>
+                <label class="service-toggle-label spot">
+                    <input type="checkbox" id="chk-spot" onchange="TravelServiceManager.toggleService('attraction', this.checked)">
+                    <span>🏞️ 景點</span>
+                </label>
             </div>
         </div>
 
@@ -737,6 +742,7 @@
     let loadedMoovoStations = [];
     let loadedWaterToiletHubs = [];
     let loadedBikeRepairShops = [];
+    let loadedAttractions = [];
     let trafficLayer = null;
 
     let audioCtx = null;
@@ -837,15 +843,15 @@
             { name: "雲林基督教醫院 (西螺院區)", coords: [120.4608, 23.7941], phone: "05-587-1111", addr: "西螺鎮市場南路375號" },
             { name: "中國醫藥大學北港附設醫院", coords: [120.3061, 23.5785], phone: "05-783-7901", addr: "北港鎮新德路123號" }
         ],
-        police: [
-            { name: "虎尾警察分局", coords: [120.4335, 23.7088], phone: "05-632-2042", area: "虎尾、土庫、褒忠、元長" },
-            { name: "西螺警察分局", coords: [120.4612, 23.7981], phone: "05-586-2014", area: "西螺、二崙、崙背" },
-            { name: "北港警察分局", coords: [120.3021, 23.5712], phone: "05-783-2015", area: "北港、水林、口湖" },
-            { name: "斗六警察分局", coords: [120.5431, 23.7095], phone: "05-532-2042", area: "斗六、林內、莿桐" }
-        ],
-        repairs: [
-            { name: "捷安特 虎尾單車專賣店", coords: [120.4325, 23.7073], phone: "05-632-1234", desc: "緊急換胎、鏈條檢修" }
-        ]
+    const travelServices = { convenience: null, waterToilet: null, moovo: null, bikeRepair: null, souvenir: null, accommodation: null, attraction: null };
+    const serviceConfig = {
+        convenience: { icon: "🏪", color: "#FFB300" },
+        waterToilet: { icon: "💧", color: "#00ACC1" },
+        moovo: { icon: "🚲", color: "#388E3C" },
+        bikeRepair: { icon: "🔧", color: "#D32F2F" },
+        souvenir: { icon: "🎁", color: "#E65100" },
+        accommodation: { icon: "🏨", color: "#8E24AA" },
+        attraction: { icon: "🏞️", color: "#0284c7" }
     };
 
     function toggleSiren() {
@@ -1346,6 +1352,8 @@
                     dataSource = loadedWaterToiletHubs;
                 } else if (key === 'bikeRepair' && loadedBikeRepairShops.length > 0) {
                     dataSource = loadedBikeRepairShops;
+                } else if (key === 'attraction' && loadedAttractions.length > 0) {
+                    dataSource = loadedAttractions;
                 }
 
                 dataSource.forEach(item => {
@@ -1448,27 +1456,31 @@
                             `;
                         }
                         else if (key === 'accommodation' && item.stay_name) {
-                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
-                            
+                            /* ... existing code for accommodation ... */
+                        }
+                        else if (key === 'attraction' && (item.name || item.store_name)) {
+                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                            let spotTitle = item.name || item.store_name || '熱門景點';
+
                             popupContent = `
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
-                                    <span style="font-size:0.75rem; color:#8e24aa; font-weight:bold;">🏨 雲林精選住宿</span>
+                                    <span style="font-size:0.75rem; color:#0284c7; font-weight:bold;">🏞️ 雲林觀光景點</span>
                                     <div style="display:flex; gap:4px;">
-                                        ${item.stay_type ? `<span style="background:#8e24aa; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.stay_type}</span>` : ''}
-                                        ${item.district ? `<span style="background:#4a148c; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
+                                        ${item.sub_category ? `<span style="background:#0284c7; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.sub_category}</span>` : ''}
+                                        ${item.district ? `<span style="background:#0369a1; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
                                     </div>
                                 </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${item.stay_name}</b><br>
+                                <b style="font-size:1.1rem; color:#1e293b;">${spotTitle}</b><br>
                                 ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
                                 ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
-                                ${item.check_in_out ? `<div style="font-size:0.8rem; color:#64748b; margin-top:4px;">🕒 入退房：${item.check_in_out}</div>` : ''}
-                                ${item.address ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
+                                ${item.hours || item.business_hours ? `<div style="font-size:0.78rem; color:#64748b; margin-top:4px;">🕒 開放時間：${item.hours || item.business_hours}</div>` : ''}
+                                ${item.address ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
                                 <div style="display:flex; gap:6px; margin-top:10px;">
-                                    ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
-                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
+                                    ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
+                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="flex:1; text-align:center; background:#3b82f6; border:none; color:white; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航前往</button>
                                 </div>
                                 <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 慢遊雲林網站
+                                    ℹ️ 資料來自 雲林縣觀光景點資訊總表
                                 </div>
                             `;
                         }
@@ -1652,6 +1664,8 @@
                                         loadedSouvenirs.push({ ...itemObj, product_name: subCategory || '在地特產' });
                                     } else if (catLower.includes('住宿') || catLower.includes('旅宿') || catLower.includes('飯店') || catLower.includes('民宿')) {
                                         loadedAccommodations.push({ ...itemObj, stay_type: subCategory || '精選旅宿' });
+                                    } else if (catLower.includes('景點') || catLower.includes('觀光') || catLower.includes('遊憩')) {
+                                        loadedAttractions.push({ ...itemObj, sub_category: subCategory || '觀光景點' });
                                     }
                                 });
 
@@ -1739,6 +1753,45 @@
                             if (parsed.length > 0) {
                                 loadedWaterToiletHubs = parsed;
                                 console.log(`✅ 備援 友善水/廁 CSV 載入成功，共 ${parsed.length} 筆`);
+                            }
+                        } catch(e) {}
+                    }
+                    resolve();
+                },
+                error: function() { resolve(); }
+            });
+        });
+    }
+
+    // 備援獨立載入 景點 CSV 檔案 (yunlin_attractions_cards_verified.csv)
+    async function fetchAttractionsCsvFallback() {
+        return new Promise((resolve) => {
+            Papa.parse('yunlin_attractions_cards_verified.csv', {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    if (results && results.data && results.data.length > 0) {
+                        try {
+                            const parsed = results.data.map(row => {
+                                let coords = parseRowCoords(row);
+                                let name = getExactCol(row, ['name', '景點名稱', '名稱', 'title', 'spot_name', '店名']) || '熱門景點';
+                                return {
+                                    category: getExactCol(row, ['category', '來源分類', '分類']) || '觀光景點',
+                                    sub_category: getExactCol(row, ['sub_category', '細項', '景點細項分類']),
+                                    name: name,
+                                    district: getExactCol(row, ['district', '行政區']) || '雲林縣',
+                                    address: getExactCol(row, ['address', '詳細地址/位置', '詳細地址', '地址']),
+                                    phone: getExactCol(row, ['phone', '電話', '聯絡電話']),
+                                    hours: getExactCol(row, ['hours', 'business_hours', '開放/營業時間', '營業時間', '開放時間']),
+                                    description: getExactCol(row, ['description', '簡介', '特色簡介', '景點簡介', '網站小卡文案簡介']),
+                                    tags: getExactCol(row, ['tags', '標籤', '特色標籤']),
+                                    map_url: getExactCol(row, ['google_map_url', 'map_url', '地圖連結', 'Google地圖連結']),
+                                    lat: coords?.lat ?? NaN, lng: coords?.lng ?? NaN
+                                };
+                            }).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
+
+                            if (parsed.length > 0) {
+                                loadedAttractions = parsed;
+                                console.log(`✅ 備援 景點 CSV 載入成功，共 ${parsed.length} 筆`);
                             }
                         } catch(e) {}
                     }
@@ -1839,6 +1892,11 @@
             // 若 master CSV 解析後 友善水/廁數量仍為 0，發起 yunlin_cycling_water_and_restroom_spots_verified.csv 備援載入
             if (loadedWaterToiletHubs.length === 0) {
                 await fetchWaterToiletCsvFallback();
+            }
+
+            // 若 master CSV 解析後 景點數量仍為 0，發起 yunlin_attractions_cards_verified.csv 備援載入
+            if (loadedAttractions.length === 0) {
+                await fetchAttractionsCsvFallback();
             }
 
         } catch (e) {
