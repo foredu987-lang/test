@@ -1640,7 +1640,10 @@
                                     } else if (is711Store || catLower.includes('超商') || catLower.includes('便利商店')) {
                                         loaded711Stores.push({ ...itemObj, brand: '7-11' });
                                     } else if (catLower.includes('友善水') || catLower.includes('水/廁') || catLower.includes('水廁') || catLower.includes('飲水') || catLower.includes('洗洗')) {
-                                        loadedWaterToiletHubs.push({ ...itemObj, water_info: '冷熱水補水', toilet_info: '公共洗手頁' });
+                                        let waterInfo = getExactCol(row, ['water_info', '飲水機補水資訊', '飲水', '補水']) || '冷熱水補水';
+                                        let toiletInfo = getExactCol(row, ['toilet_info', '洗手間/公廁資訊', '公廁', '廁所']) || '公共洗手頁';
+                                        let bikeFacilityInfo = getExactCol(row, ['bike_facility_info', '充氣/單車設施', '單車設施']);
+                                        loadedWaterToiletHubs.push({ ...itemObj, water_info: waterInfo, toilet_info: toiletInfo, bike_facility_info: bikeFacilityInfo });
                                     } else if (catLower.includes('moovo') || subLower.includes('moovo') || catLower.includes('公共自行車') || catLower.includes('單車站')) {
                                         loadedMoovoStations.push({ ...itemObj, operating_status: '正常營運' });
                                     } else if (catLower.includes('維修') || subLower.includes('維修') || catLower.includes('救援')) {
@@ -1695,6 +1698,47 @@
                             if (parsed.length > 0) {
                                 loaded711Stores = parsed;
                                 console.log(`✅ 備援 711.csv 載入成功，共 ${parsed.length} 筆`);
+                            }
+                        } catch(e) {}
+                    }
+                    resolve();
+                },
+                error: function() { resolve(); }
+            });
+        });
+    }
+
+    // 備援獨立載入 友善水/廁 CSV 檔案 (yunlin_cycling_water_and_restroom_spots_verified.csv)
+    async function fetchWaterToiletCsvFallback() {
+        return new Promise((resolve) => {
+            Papa.parse('yunlin_cycling_water_and_restroom_spots_verified.csv', {
+                download: true, header: true, skipEmptyLines: true,
+                complete: function(results) {
+                    if (results && results.data && results.data.length > 0) {
+                        try {
+                            const parsed = results.data.map(row => {
+                                let coords = parseRowCoords(row);
+                                let name = getExactCol(row, ['name', '站點名稱', '名稱', 'title', '店名']) || '友善水/廁據點';
+                                return {
+                                    category: getExactCol(row, ['category', '來源分類', '分類']) || '友善水/廁據點',
+                                    sub_category: getExactCol(row, ['sub_category', '細項', '站點細項分類']),
+                                    name: name,
+                                    district: getExactCol(row, ['district', '行政區']) || '雲林縣',
+                                    address: getExactCol(row, ['address', '詳細地址/位置', '詳細地址', '地址']),
+                                    water_info: getExactCol(row, ['water_info', '飲水機補水資訊', '飲水', '補水']) || '冷熱水補水',
+                                    toilet_info: getExactCol(row, ['toilet_info', '洗手間/公廁資訊', '公廁', '廁所']) || '公共洗手頁',
+                                    bike_facility_info: getExactCol(row, ['bike_facility_info', '充氣/單車設施', '單車設施']),
+                                    hours: getExactCol(row, ['hours', 'business_hours', '開放/營業時間', '營業時間', '開放時間']),
+                                    description: getExactCol(row, ['description', '簡介', '特色簡介', '網站小卡文案簡介']),
+                                    tags: getExactCol(row, ['tags', '標籤', '特色標籤']),
+                                    map_url: getExactCol(row, ['google_map_url', 'map_url', '地圖連結', 'Google地圖連結']),
+                                    lat: coords?.lat ?? NaN, lng: coords?.lng ?? NaN
+                                };
+                            }).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
+
+                            if (parsed.length > 0) {
+                                loadedWaterToiletHubs = parsed;
+                                console.log(`✅ 備援 友善水/廁 CSV 載入成功，共 ${parsed.length} 筆`);
                             }
                         } catch(e) {}
                     }
@@ -1790,6 +1834,11 @@
             // 若 master CSV 解析後 7-11 數量仍為 0，發起 711.csv 備援載入
             if (loaded711Stores.length === 0) {
                 await fetch711CsvFallback();
+            }
+
+            // 若 master CSV 解析後 友善水/廁數量仍為 0，發起 yunlin_cycling_water_and_restroom_spots_verified.csv 備援載入
+            if (loadedWaterToiletHubs.length === 0) {
+                await fetchWaterToiletCsvFallback();
             }
 
         } catch (e) {
