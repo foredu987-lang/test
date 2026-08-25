@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V7.1</title>
+    <title>雲林信仰跟著卡打車打卡 V8.0</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -15,13 +15,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     
     <style>
-        /* STREAMING_CHUNK:Styling layout and interactive components... */
         :root {
             --moovo-green: #4CAF50;
             --moovo-dark: #388E3C;
             --highlight-orange: #FF9800;
             --temple-red: #E53935;
-            --spot-blue: #2196F3;
+            --spot-blue: #0284c7;
             --food-pink: #E91E63;
             --sos-red: #D32F2F;
             --bg-light: #f4f6f8;
@@ -29,7 +28,7 @@
             --border-color: #e2e8f0;
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-light); color: var(--text-main); overflow: hidden;}
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-light); color: var(--text-main); overflow: hidden; }
         #app-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         header {
@@ -45,25 +44,23 @@
         header p { margin: 4px 0 0 0; font-size: 0.82rem; color: #aaa; }
 
         .map-wrapper { position: relative; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
-        
         #map { width: 100%; height: 100%; z-index: 1; position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
 
         .leaflet-popup-pane { z-index: 3500 !important; }
         .leaflet-popup { z-index: 3500 !important; }
 
+        /* 上方工具列 - 依截圖三段式排列 */
         .top-toolbar {
             position: absolute;
             top: 12px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 6px;
+            gap: 8px;
             z-index: 2000;
-            pointer-events: none; 
-            transition: transform 0.2s ease;
-            max-width: 95vw;
-            flex-wrap: wrap;
-            justify-content: center;
+            pointer-events: none;
+            max-width: 96vw;
+            align-items: center;
         }
         .top-toolbar > * { pointer-events: auto; }
 
@@ -71,7 +68,7 @@
             background: rgba(236, 253, 245, 0.95);
             border: 1px solid #a7f3d0;
             border-left: 4px solid var(--moovo-green);
-            padding: 6px 10px;
+            padding: 7px 12px;
             border-radius: 8px;
             font-size: 0.82rem;
             color: #065f46;
@@ -79,8 +76,8 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
+            white-space: nowrap;
             backdrop-filter: blur(4px);
-            transition: all 0.3s;
         }
 
         .service-btn-group {
@@ -91,15 +88,14 @@
             border: 1px solid var(--border-color);
             padding: 3px;
             backdrop-filter: blur(4px);
-            gap: 3px;
-            transition: all 0.3s ease;
-            flex-wrap: wrap;
+            gap: 2px;
+            align-items: center;
         }
 
         .service-toggle-label {
             display: inline-flex;
             align-items: center;
-            padding: 5px 9px;
+            padding: 5px 8px;
             border-radius: 6px;
             font-size: 0.8rem;
             font-weight: bold;
@@ -107,20 +103,21 @@
             cursor: pointer;
             transition: all 0.2s;
             user-select: none;
+            white-space: nowrap;
         }
         .service-toggle-label:hover { background: #f1f5f9; }
-        .service-toggle-label input { display: none; } 
+        .service-toggle-label input { display: none; }
         
-        .service-toggle-label.food input:checked + span { color: var(--food-pink); }
-        .service-toggle-label.conv input:checked + span { color: #FFB300; }
-        .service-toggle-label.waterToilet input:checked + span { color: #00ACC1; }
-        .service-toggle-label.moovo input:checked + span { color: #388E3C; }
-        .service-toggle-label.repair input:checked + span { color: #D32F2F; }
-        .service-toggle-label.souvenir input:checked + span { color: #E65100; }
-        .service-toggle-label.hotel input:checked + span { color: #8E24AA; }
-        .service-toggle-label.spot input:checked + span { color: #0284c7; }
-        .service-toggle-label input:checked + span { text-shadow: 0 0 1px currentColor; }
+        .service-toggle-label.food input:checked + span { color: var(--food-pink); text-shadow: 0 0 1px currentColor; }
+        .service-toggle-label.conv input:checked + span { color: #FFB300; text-shadow: 0 0 1px currentColor; }
+        .service-toggle-label.waterToilet input:checked + span { color: #00ACC1; text-shadow: 0 0 1px currentColor; }
+        .service-toggle-label.moovo input:checked + span { color: #388E3C; text-shadow: 0 0 1px currentColor; }
+        .service-toggle-label.repair input:checked + span { color: #D32F2F; text-shadow: 0 0 1px currentColor; }
+        .service-toggle-label.souvenir input:checked + span { color: #E65100; text-shadow: 0 0 1px currentColor; }
+        .service-toggle-label.hotel input:checked + span { color: #8E24AA; text-shadow: 0 0 1px currentColor; }
+        .service-toggle-label.spot input:checked + span { color: #0284c7; text-shadow: 0 0 1px currentColor; }
 
+        /* 右側獨立切換區塊 (全部 / 2公里 / 5公里) */
         .radius-selector-group {
             display: flex;
             background: rgba(255, 255, 255, 0.95);
@@ -143,31 +140,31 @@
             cursor: pointer;
             transition: all 0.2s;
             user-select: none;
+            white-space: nowrap;
         }
         .radius-btn:hover { background: #f1f5f9; }
         .radius-btn.active {
-            background: var(--food-pink);
+            background: #e11d48;
             color: white;
-            box-shadow: 0 2px 4px rgba(233,30,99,0.3);
+            box-shadow: 0 2px 4px rgba(225,29,72,0.3);
         }
 
+        /* 旅程指揮中心面板 */
         .control-panel {
             position: absolute;
             top: 12px;
             right: 15px;
-            left: auto;
-            width: 330px;
-            max-height: calc(100vh - 90px);
+            width: 350px;
+            max-height: calc(100vh - 85px);
             background: transparent;
             z-index: 2500;
             display: flex;
             flex-direction: column;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
-            pointer-events: none; 
+            pointer-events: none;
         }
-
-        .control-panel > * { pointer-events: auto; } 
-        .control-panel.collapsed { transform: translateX(120%); opacity: 0; } 
+        .control-panel > * { pointer-events: auto; }
+        .control-panel.collapsed { transform: translateX(120%); opacity: 0; }
 
         .panel-scroll-area {
             overflow-y: auto;
@@ -178,7 +175,6 @@
             padding-bottom: 10px;
         }
         .panel-scroll-area::-webkit-scrollbar { width: 5px; }
-        .panel-scroll-area::-webkit-scrollbar-track { background: transparent; }
         .panel-scroll-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
         .panel-header-flex {
@@ -188,7 +184,6 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 8px;
             border: 1px solid var(--border-color);
         }
         .panel-header-flex span { font-weight: 700; font-size: 1rem; }
@@ -202,7 +197,7 @@
             transition: all 0.3s; opacity: 0; pointer-events: none; transform: translateX(20px);
         }
         .toggle-panel-btn:hover { background: #f8f9fa; }
-        .close-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #999; padding: 0; line-height: 1; }
+        .close-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #999; padding: 0; }
 
         .ui-card {
             background: rgba(255, 255, 255, 0.95);
@@ -214,28 +209,24 @@
             display: flex; flex-direction: column; gap: 8px;
         }
         .ui-card-title {
-            font-size: 0.85rem; font-weight: 700; color: #7f8c8d;
-            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;
-            display: flex; align-items: center; gap: 6px;
+            font-size: 0.85rem; font-weight: 700; color: #475569;
+            letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between;
         }
 
         .weather-widget { 
-            background: #f0f9ff; 
-            border-radius: 8px; 
-            padding: 8px; 
-            text-align: center; 
-            font-weight: 600; 
-            color: #0284c7; 
-            font-size: 0.85rem; 
-            border: 1px solid #e0f2fe; 
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
+            background: #f0f9ff; border-radius: 8px; padding: 8px; text-align: center; 
+            font-weight: 600; color: #0284c7; font-size: 0.85rem; border: 1px solid #e0f2fe; 
+            display: flex; flex-direction: column; gap: 4px;
         }
 
         .btn-route { width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--moovo-green); color: white; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: background 0.3s; }
         .btn-route:hover { background: var(--moovo-dark); }
-        #route-info { font-size: 0.82rem; line-height: 1.5; background: #f1f8e9; padding: 10px; border-radius: 8px; border-left: 4px solid var(--moovo-green); display: none; margin-top: 4px; }
+        #route-info { font-size: 0.82rem; line-height: 1.5; background: #f1f8e9; padding: 10px; border-radius: 8px; border-left: 4px solid var(--moovo-green); display: none; }
+
+        .route-subgroup-title {
+            font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-top: 4px; margin-bottom: 2px;
+            display: flex; align-items: center; gap: 4px;
+        }
 
         .checkbox-group {
             display: grid;
@@ -243,10 +234,10 @@
             gap: 6px 8px;
         }
         .ui-checkbox-label {
-            display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem; color: var(--text-main); padding: 2px 0; user-select: none;
+            display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; color: var(--text-main); padding: 1px 0; user-select: none;
         }
         .ui-checkbox-label:hover { color: var(--moovo-dark); }
-        .ui-checkbox-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--moovo-green); }
+        .ui-checkbox-label input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--moovo-green); }
 
         .btn-sos {
             width: 100%; padding: 12px; border: none; border-radius: 12px;
@@ -255,8 +246,9 @@
             transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
             box-shadow: 0 4px 15px rgba(211,47,47,0.4);
         }
-        .btn-sos:hover { background: #b71c1c; transform: translateY(-2px); }
+        .btn-sos:hover { background: #b71c1c; }
 
+        /* SOS Modal */
         .custom-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
@@ -266,10 +258,7 @@
             background: white; border-radius: 16px; padding: 20px 24px; max-width: 480px; width: 90%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 2px solid var(--sos-red);
             text-align: left; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
-            box-sizing: border-box; transition: border-color 0.2s;
-        }
-        .custom-modal-card.flashing-card {
-            animation: flashBorder 0.6s infinite alternate;
+            box-sizing: border-box;
         }
 
         .sos-modal-scroll { overflow-y: auto; flex-grow: 1; padding-right: 4px; margin: 10px 0; }
@@ -277,7 +266,6 @@
         .sos-modal-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
         .sos-sec-title { font-size: 0.95rem; font-weight: 800; color: #1e293b; margin: 12px 0 6px 0; display: flex; align-items: center; gap: 6px; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; }
-        
         .sos-resource-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
         .sos-card-header { display: flex; justify-content: space-between; align-items: center; }
         .sos-card-name { font-weight: bold; font-size: 0.95rem; color: #0f172a; }
@@ -287,40 +275,29 @@
         .sos-card-desc { font-size: 0.8rem; color: #64748b; margin: 2px 0; }
         
         .sos-card-btn-group { display: flex; gap: 6px; margin-top: 4px; }
-        .sos-btn-call { flex: 1; display: inline-flex; align-items: center; justify-content: center; background: #ef4444; color: white; text-decoration: none; padding: 6px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; text-align: center; }
-        .sos-btn-call:hover { background: #dc2626; }
+        .sos-btn-call { flex: 1; display: inline-flex; align-items: center; justify-content: center; background: #ef4444; color: white; text-decoration: none; padding: 6px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
         .sos-btn-nav { flex: 1; display: inline-flex; align-items: center; justify-content: center; background: #3b82f6; color: white; border: none; padding: 6px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
-        .sos-btn-nav:hover { background: #2563eb; }
 
         .sos-map-btn {
             width: 100%; padding: 8px; background: #0284c7; color: white; border: none; border-radius: 8px;
             font-weight: bold; font-size: 0.85rem; cursor: pointer; margin-top: 8px;
-            display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }
-        .sos-map-btn:hover { background: #0369a1; }
+        .sos-siren-btn {
+            width: 100%; padding: 10px; background: #f43f5e; color: white; border: none; border-radius: 8px;
+            font-weight: 800; font-size: 0.9rem; cursor: pointer; margin-top: 6px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .sos-siren-btn.active { background: #1e293b; color: #f43f5e; border: 2px solid #f43f5e; animation: pulseSOS 1.2s infinite; }
 
         .close-sos-map-btn {
             position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 4000;
             background: #dc2626; color: white; border: 2px solid white; padding: 10px 20px; border-radius: 25px;
             font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(220,38,38,0.4);
-            display: none; align-items: center; gap: 6px; transition: all 0.2s;
+            display: none; align-items: center; gap: 6px;
         }
-        .close-sos-map-btn:hover { background: #b91c1c; transform: translateX(-50%) scale(1.05); }
 
-        .sos-siren-btn {
-            width: 100%; padding: 10px; background: #f43f5e; color: white; border: none; border-radius: 8px;
-            font-weight: 800; font-size: 0.9rem; cursor: pointer; margin-top: 6px;
-            display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(244,63,94,0.3);
-        }
-        .sos-siren-btn:hover { background: #e11d48; }
-        .sos-siren-btn.active { background: #1e293b; color: #f43f5e; border: 2px solid #f43f5e; animation: pulseSOS 1.2s infinite; }
-
-        .sos-accordion { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 6px; overflow: hidden; }
-        .sos-accordion summary { padding: 8px 12px; font-weight: bold; font-size: 0.85rem; color: #0f172a; cursor: pointer; background: #f1f5f9; user-select: none; outline: none; display: flex; align-items: center; justify-content: space-between; }
-        .sos-accordion summary:hover { background: #e2e8f0; }
-        .sos-accordion-content { padding: 10px 12px; font-size: 0.8rem; line-height: 1.5; color: #334155; border-top: 1px dashed #cbd5e1; background: white; }
-
+        /* Story Drawer */
         .story-card-drawer {
             position: absolute; top: 50%; left: -450px; transform: translateY(-50%);
             width: 25vw; min-width: 320px; max-width: 400px; height: 85vh;
@@ -328,86 +305,55 @@
             transition: left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
             z-index: 3800; display: flex; flex-direction: column; overflow: hidden;
         }
-
         .story-card-drawer.open { left: 20px; }
-
-        .sc-close-btn { 
-            position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); 
-            color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; 
-            cursor: pointer; z-index: 10; font-size: 1.2rem; backdrop-filter: blur(4px);
-            transition: background 0.2s; display: flex; justify-content: center; align-items: center;
-        }
-        .sc-close-btn:hover { background: rgba(0,0,0,0.9); }
-
+        .sc-close-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; z-index: 10; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; }
         .sc-content { overflow-y: auto; flex-grow: 1; }
-        .sc-content::-webkit-scrollbar { width: 6px; }
-        .sc-content::-webkit-scrollbar-track { background: transparent; }
-        .sc-content::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
         .sc-hero-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; background: #e2e8f0; }
-        .sc-hero-gallery { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%; scrollbar-width: none; }
-        .sc-hero-gallery::-webkit-scrollbar { display: none; }
-        .sc-hero-gallery img { width: 100%; height: 100%; object-fit: cover; flex: none; scroll-snap-align: start; }
-        .sc-gallery-hint { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; pointer-events: none; backdrop-filter: blur(4px); }
-
+        .sc-hero-gallery { display: flex; overflow-x: auto; width: 100%; height: 100%; scrollbar-width: none; }
+        .sc-hero-gallery img { width: 100%; height: 100%; object-fit: cover; flex: none; }
         .sc-body { padding: 20px; }
         .sc-category-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; color: white; margin-bottom: 8px; }
-        .sc-title { font-size: 1.5rem; margin: 0 0 5px 0; color: #1e293b; font-weight: 900; }
-        
-        .sc-section { margin-bottom: 20px; }
-        .sc-section-title { font-size: 1.05rem; color: #0f172a; margin: 0 0 10px 0; font-weight: 700; }
-        .sc-text { font-size: 0.95rem; line-height: 1.6; color: #475569; margin: 0; }
-        .sc-list-item { background: #f1f5f9; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; color: #334155; border: 1px solid #e2e8f0; }
+        .sc-title { font-size: 1.4rem; margin: 0 0 5px 0; color: #1e293b; font-weight: 900; }
+        .sc-section { margin-bottom: 15px; }
+        .sc-section-title { font-size: 1rem; color: #0f172a; margin: 0 0 8px 0; font-weight: 700; }
+        .sc-text { font-size: 0.9rem; line-height: 1.6; color: #475569; margin: 0; }
+        .sc-actions-wrapper { padding: 15px 20px; background: #fff; border-top: 1px solid #e2e8f0; }
+        .sc-btn-primary { width: 100%; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; text-align: center; cursor: pointer; border: none; background: #4CAF50; color: white; }
 
-        .sc-actions-wrapper { padding: 15px 20px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; flex-wrap: wrap; }
-        .sc-btn { flex: 1; padding: 12px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; text-align: center; cursor: pointer; border: none; }
-        .sc-btn-primary { background: #4CAF50; color: white; }
-
-        .leaflet-popup-content-wrapper { border-radius: 12px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-        .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; color: var(--moovo-dark); display: none; backdrop-filter: blur(2px); }
+        .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; color: var(--moovo-dark); display: none; }
 
         @keyframes pulseSOS {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244,63,94,0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(244,63,94,0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244,63,94,0); }
+            0% { transform: scale(1); }
+            70% { transform: scale(1.03); }
+            100% { transform: scale(1); }
         }
 
-        @keyframes flashBorder {
-            0% { border-color: var(--sos-red); background-color: #ffffff; }
-            100% { border-color: #f43f5e; background-color: #fff1f2; }
-        }
-
-        @media (max-width: 768px) {
-            .story-card-drawer { width: calc(100% - 40px); height: 80vh; left: 20px !important; bottom: -100%; top: auto; transform: none; transition: bottom 0.4s; }
-            .story-card-drawer.open { bottom: 20px; }
-            .top-toolbar { width: 92%; flex-wrap: wrap; justify-content: center; }
+        @media (max-width: 900px) {
+            .top-toolbar { flex-wrap: wrap; justify-content: center; top: 6px; }
+            .control-panel { width: calc(100% - 30px); }
         }
     </style>
 </head>
 <body>
 
-<!-- STREAMING_CHUNK:Rendering main application DOM elements... -->
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V7.1</h1>
-        <p>整合全縣 7 大名廟與在地美食、景點、服務據點，智慧 AI 規劃單車環狀路線</p>
+        <h1>雲林信仰跟著卡打車打卡 V8.0</h1>
+        <p>整合全縣 7 大名廟、10 大經典景點與在地美食補給，智慧 AI 規劃單車環狀路線</p>
     </header>
 
     <div class="map-wrapper">
         <div id="map"></div>
         <div id="loading" class="loading-overlay">⏳ 正在處理您的請求...</div>
         
-        <!-- 正上方工具列 -->
+        <!-- 正上方三段式排版工具列 (左:模式 / 中:圖層按鍵 / 右:半徑範圍) -->
         <div class="top-toolbar" id="topToolbar">
+            <!-- 左側：探索模式說明 -->
             <div class="toolbar-info-box" id="toolbar-mode-badge">
                 🗺️ 全縣探索模式：展示所選類別之全縣據點
             </div>
-            <!-- 掃描範圍切換鈕 -->
-            <div class="radius-selector-group" id="radius-group" title="選擇沿線掃描範圍">
-                <button class="radius-btn active" id="btn-rad-all" onclick="setScanRadius('all')">全部</button>
-                <button class="radius-btn" id="btn-rad-2" onclick="setScanRadius(2.0)">2 公里</button>
-                <button class="radius-btn" id="btn-rad-5" onclick="setScanRadius(5.0)">5 公里</button>
-            </div>
+
+            <!-- 中間：分類圖層按鈕 -->
             <div id="radar-group" class="service-btn-group">
                 <label class="service-toggle-label food">
                     <input type="checkbox" id="chk-food" onchange="toggleFoodService(this.checked)">
@@ -438,9 +384,16 @@
                     <span>🏨 住宿</span>
                 </label>
                 <label class="service-toggle-label spot">
-                    <input type="checkbox" id="chk-spot" onchange="TravelServiceManager.toggleService('attraction', this.checked)">
+                    <input type="checkbox" id="chk-spot" checked onchange="TravelServiceManager.toggleService('attraction', this.checked)">
                     <span>🏞️ 景點</span>
                 </label>
+            </div>
+
+            <!-- 右側：獨立範圍過濾切換鈕 (全部 / 2公里 / 5公里) -->
+            <div class="radius-selector-group" id="radius-group" title="選擇沿線掃描範圍">
+                <button class="radius-btn active" id="btn-rad-all" onclick="setScanRadius('all')">全部</button>
+                <button class="radius-btn" id="btn-rad-2" onclick="setScanRadius(2.0)">2 公里</button>
+                <button class="radius-btn" id="btn-rad-5" onclick="setScanRadius(5.0)">5 公里</button>
             </div>
         </div>
 
@@ -448,6 +401,7 @@
             🧭 展開旅程面板
         </button>
 
+        <!-- 旅程指揮中心 -->
         <div class="control-panel" id="controlPanel">
             <div class="panel-header-flex">
                 <span>🧭 旅程指揮中心</span>
@@ -455,26 +409,30 @@
             </div>
 
             <div class="panel-scroll-area">
-                <!-- 今日資訊 -->
+                <!-- 今日資訊與路況 -->
                 <section class="ui-card">
                     <div class="ui-card-title">📅 今日資訊與路況</div>
                     <div id="weather-widget" class="weather-widget">⏳ 正在載入氣象...</div>
-                    <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
-                        <label class="ui-checkbox-label" style="font-size: 0.85rem; font-weight: bold; color: #334155;">
+                    <div style="margin-top: 4px; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
+                        <label class="ui-checkbox-label" style="font-size: 0.82rem; font-weight: bold; color: #334155;">
                             <input type="checkbox" onchange="toggleTrafficLayer(this.checked)">
                             <span>🚦 顯示 Google 即時車流量路況</span>
                         </label>
                     </div>
                 </section>
 
-                <!-- 路線規劃 (TSP) 7 大宮廟清單 -->
+                <!-- 智慧路線規劃：兩大部分 (七大宮廟 + 十大景點) -->
                 <section class="ui-card">
-                    <div class="ui-card-title">🗺️ 智慧路線規劃 (7大宮廟)</div>
-                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">
-                        請勾選您想造訪的廟宇，AI 將自動為您計算最順暢的環狀路線 (起終點為高鐵站)。
+                    <div class="ui-card-title">
+                        <span>🗺️ 智慧路線規劃 (起終點:高鐵站)</span>
                     </div>
-                    
-                    <div class="checkbox-group" id="tsp-checklist">
+                    <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 6px;">
+                        請勾選您想造訪的廟宇或景點，AI 將自動規劃最佳單車環狀路線。
+                    </div>
+
+                    <!-- 第一部分：七大宮廟 -->
+                    <div class="route-subgroup-title">⛩️ 七大名廟朝聖</div>
+                    <div class="checkbox-group" id="tsp-temples-checklist">
                         <label class="ui-checkbox-label">
                             <input type="checkbox" value="t_chaotian" checked> <span>北港朝天宮</span>
                         </label>
@@ -498,8 +456,43 @@
                         </label>
                     </div>
 
-                    <button class="btn-route" style="margin-top:8px;" onclick="calculateTSPRoute()">✨ 計算最佳路線</button>
-                    <div id="route-error" style="color: #D32F2F; font-size: 0.8rem; display: none; margin-top: 5px;">請至少勾選一間廟宇！</div>
+                    <!-- 第二部分：十大經典景點 (含更換之褒忠馬鳴山與古坑綠色隧道) -->
+                    <div class="route-subgroup-title" style="margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">🏞️ 十大經典景點</div>
+                    <div class="checkbox-group" id="tsp-spots-checklist">
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_iron_bridge"> <span>虎尾鐵橋糖廠</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_story_house"> <span>雲林故事館</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_xiluo_bridge"> <span>西螺大橋</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_yanping_st"> <span>西螺延平老街</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_daughter_bridge"> <span>北港女兒橋</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_yansiqi"> <span>水林顏思齊館</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_maming_park"> <span>褒忠五年千歲公園</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_yunzhong_st"> <span>雲中街生活聚落</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_qianqiaogu"> <span>千巧谷牛樂園</span>
+                        </label>
+                        <label class="ui-checkbox-label">
+                            <input type="checkbox" value="s_gukeng_tunnel"> <span>古坑綠色隧道</span>
+                        </label>
+                    </div>
+
+                    <button class="btn-route" style="margin-top:10px;" onclick="calculateTSPRoute()">✨ 計算最佳串聯路線</button>
+                    <div id="route-error" style="color: #D32F2F; font-size: 0.8rem; display: none; margin-top: 5px;">請至少勾選一處廟宇或景點！</div>
                     <div id="route-info"></div>
                 </section>
 
@@ -509,7 +502,6 @@
 
         <div id="story-card-container" class="story-card-drawer"></div>
 
-        <!-- 關閉救援雷達圖層懸浮按鈕 -->
         <button id="closeSosMapBtn" class="close-sos-map-btn" onclick="clearSosMapLayer()">
             ❌ 關閉地圖救援雷達圖層
         </button>
@@ -517,6 +509,7 @@
     </div>
 </div>
 
+<!-- SOS Modal -->
 <div id="sosModal" class="custom-modal-overlay">
     <div class="custom-modal-card" id="sosModalCard">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -526,7 +519,6 @@
             <button onclick="closeSosModal()" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:#94a3b8;">✖</button>
         </div>
         
-        <!-- GPS 定位顯示區塊 -->
         <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px; margin-top: 10px; text-align:left;">
             <div style="font-size:0.78rem; color:#166534; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
                 <span>📍 當前實時 GPS 定位座標</span>
@@ -535,32 +527,26 @@
             <div id="sosGpsCoords" style="font-size:1rem; color:#0f172a; font-weight:800; margin-top:3px;">⏳ 正在定位中...</div>
             <div id="sosGpsAddress" style="font-size:0.8rem; color:#475569; margin-top:2px; line-height: 1.3;">正在獲取大約地址說明...</div>
             
-            <!-- 最近救援資源即時計算結果 -->
             <div id="sosNearestBox" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #bbf7d0; font-size: 0.8rem; color: #15803d; display: none;">
                 <div id="sosNearestHosp">🏥 最近急診：計算中...</div>
                 <div id="sosNearestPol" style="margin-top:2px;">👮 最近驛站：計算中...</div>
             </div>
 
-            <!-- 地圖開啟救援圖層按鈕 -->
             <button class="sos-map-btn" onclick="toggleSosMapLayer()">🗺️ 在地圖上顯示救援雷達圖層</button>
         </div>
 
         <div class="sos-modal-scroll">
-            <!-- 高音蜂鳴警報器 -->
             <button id="sirenToggleBtn" class="sos-siren-btn" onclick="toggleSiren()">
                 🔊 播放高音求救警報聲 (引人注意)
             </button>
 
-            <!-- 1. 24H 緊急報案專線 -->
             <div class="sos-sec-title">🚨 24H 緊急求救報案專線</div>
             <div style="display:flex; gap:8px; margin-bottom:8px;">
                 <a href="tel:110" class="sos-btn-call" style="font-size:0.95rem; padding:8px;">📞 110 警察報案</a>
                 <a href="tel:119" class="sos-btn-call" style="background:#dc2626; font-size:0.95rem; padding:8px;">🚑 119 消防救護</a>
             </div>
 
-            <!-- 2. 雲林 24H 急診醫療院所網 -->
             <div class="sos-sec-title">🏥 雲林 24H 急診醫療院所網</div>
-            
             <div class="sos-resource-card">
                 <div class="sos-card-header">
                     <span class="sos-card-name">臺大醫院雲林分院 (斗六院區)</span>
@@ -568,8 +554,8 @@
                 </div>
                 <div class="sos-card-desc">📍 雲林縣斗六市雲林路二段579號</div>
                 <div class="sos-card-btn-group">
-                    <a href="tel:055323911" class="sos-btn-call">📞 直撥 05-532-3911</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7011,120.5367')" class="sos-btn-nav">🧭 地圖導航</button>
+                    <a href="tel:055323911" class="sos-btn-call">📞 05-532-3911</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7011,120.5367')" class="sos-btn-nav">🧭 導航</button>
                 </div>
             </div>
 
@@ -578,10 +564,10 @@
                     <span class="sos-card-name">臺大醫院雲林分院 (虎尾院區)</span>
                     <span class="sos-card-badge red">24H急診</span>
                 </div>
-                <div class="sos-card-desc">📍 雲林縣虎尾鎮學府路99號 (高鐵站附近)</div>
+                <div class="sos-card-desc">📍 雲林縣虎尾鎮學府路99號</div>
                 <div class="sos-card-btn-group">
-                    <a href="tel:056330002" class="sos-btn-call">📞 直撥 05-633-0002</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7371,120.4285')" class="sos-btn-nav">🧭 地圖導航</button>
+                    <a href="tel:056330002" class="sos-btn-call">📞 05-633-0002</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7371,120.4285')" class="sos-btn-nav">🧭 導航</button>
                 </div>
             </div>
 
@@ -592,38 +578,12 @@
                 </div>
                 <div class="sos-card-desc">📍 雲林縣虎尾鎮新生路74號</div>
                 <div class="sos-card-btn-group">
-                    <a href="tel:056337333" class="sos-btn-call">📞 直撥 05-633-7333</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7017,120.4338')" class="sos-btn-nav">🧭 地圖導航</button>
+                    <a href="tel:056337333" class="sos-btn-call">📞 05-633-7333</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7017,120.4338')" class="sos-btn-nav">🧭 導航</button>
                 </div>
             </div>
 
-            <div class="sos-resource-card">
-                <div class="sos-card-header">
-                    <span class="sos-card-name">雲林基督教醫院 (西螺院區)</span>
-                    <span class="sos-card-badge red">24H急診</span>
-                </div>
-                <div class="sos-card-desc">📍 雲林縣西螺鎮市場南路375號</div>
-                <div class="sos-card-btn-group">
-                    <a href="tel:055871111" class="sos-btn-call">📞 直撥 05-587-1111</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7941,120.4608')" class="sos-btn-nav">🧭 地圖導航</button>
-                </div>
-            </div>
-
-            <div class="sos-resource-card">
-                <div class="sos-card-header">
-                    <span class="sos-card-name">中國醫藥大學北港附設醫院 (媽祖醫院)</span>
-                    <span class="sos-card-badge red">24H急診</span>
-                </div>
-                <div class="sos-card-desc">📍 雲林縣北港鎮新德路123號</div>
-                <div class="sos-card-btn-group">
-                    <a href="tel:057837901" class="sos-btn-call">📞 直撥 05-783-7901</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.5785,120.3061')" class="sos-btn-nav">🧭 地圖導航</button>
-                </div>
-            </div>
-
-            <!-- 3. 雲林縣 6 大警察分局 & 鐵馬驛站 -->
-            <div class="sos-sec-title">👮 雲林縣 6 大警察分局 (含鐵馬驛站)</div>
-            
+            <div class="sos-sec-title">👮 雲林縣警察分局 (鐵馬驛站)</div>
             <div class="sos-resource-card">
                 <div class="sos-card-header">
                     <span class="sos-card-name">虎尾警察分局</span>
@@ -631,87 +591,10 @@
                 </div>
                 <div class="sos-card-desc">📍 轄區：虎尾鎮、土庫鎮、褒忠鄉、元長鄉</div>
                 <div class="sos-card-btn-group">
-                    <a href="tel:056322042" class="sos-btn-call" style="background:#0284c7;">📞 直撥 05-632-2042</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7088,120.4335')" class="sos-btn-nav">🧭 地圖導航</button>
+                    <a href="tel:056322042" class="sos-btn-call" style="background:#0284c7;">📞 05-632-2042</a>
+                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7088,120.4335')" class="sos-btn-nav">🧭 導航</button>
                 </div>
             </div>
-
-            <div class="sos-resource-card">
-                <div class="sos-card-header">
-                    <span class="sos-card-name">西螺警察分局</span>
-                    <span class="sos-card-badge green">鐵馬驛站</span>
-                </div>
-                <div class="sos-card-desc">📍 轄區：西螺鎮、二崙鄉、崙背鄉</div>
-                <div class="sos-card-btn-group">
-                    <a href="tel:055862014" class="sos-btn-call" style="background:#0284c7;">📞 直撥 05-586-2014</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7981,120.4612')" class="sos-btn-nav">🧭 地圖導航</button>
-                </div>
-            </div>
-
-            <div class="sos-resource-card">
-                <div class="sos-card-header">
-                    <span class="sos-card-name">北港警察分局</span>
-                    <span class="sos-card-badge green">鐵馬驛站</span>
-                </div>
-                <div class="sos-card-desc">📍 轄區：北港鎮、水林鄉、口湖鄉</div>
-                <div class="sos-card-btn-group">
-                    <a href="tel:057832015" class="sos-btn-call" style="background:#0284c7;">📞 直撥 05-783-2015</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.5712,120.3021')" class="sos-btn-nav">🧭 地圖導航</button>
-                </div>
-            </div>
-
-            <div class="sos-resource-card">
-                <div class="sos-card-header">
-                    <span class="sos-card-name">斗六警察分局</span>
-                    <span class="sos-card-badge green">鐵馬驛站</span>
-                </div>
-                <div class="sos-card-desc">📍 轄區：斗六市、林內鄉、莿桐鄉</div>
-                <div class="sos-card-btn-group">
-                    <a href="tel:055322042" class="sos-btn-call" style="background:#0284c7;">📞 直撥 05-532-2042</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7095,120.5431')" class="sos-btn-nav">🧭 地圖導航</button>
-                </div>
-            </div>
-
-            <!-- 4. 單車故障道路救援與 Moovo 應變 -->
-            <div class="sos-sec-title">🚲 單車故障與道路救援</div>
-            
-            <div class="sos-resource-card">
-                <div class="sos-card-header">
-                    <span class="sos-card-name">捷安特 虎尾單車專賣店</span>
-                    <span class="sos-card-badge">緊急維修</span>
-                </div>
-                <div class="sos-card-desc">🛠️ 提供爆胎換胎、鏈條故障救援與車輛檢修</div>
-                <div class="sos-card-btn-group">
-                    <a href="tel:056321234" class="sos-btn-call" style="background:#15803d;">📞 直撥 05-632-1234</a>
-                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7073,120.4325')" class="sos-btn-nav">🧭 地圖導航</button>
-                </div>
-            </div>
-
-            <!-- 5. 騎乘急救與臨修小常識 -->
-            <div class="sos-sec-title">🩹 騎乘意外急救與臨修小常識</div>
-            <details class="sos-accordion">
-                <summary>🩹 摔車擦傷與大出血處置</summary>
-                <div class="sos-accordion-content">
-                    1. <b>直接壓迫止血</b>：使用乾淨紗布或衣物緊壓傷口。<br>
-                    2. <b>沖洗傷口</b>：用生理食鹽水或乾淨飲用水由內向外沖洗掉砂石。<br>
-                    3. <b>預防休克</b>：讓傷者平躺抬高下肢，並注意保暖。
-                </div>
-            </details>
-            <details class="sos-accordion">
-                <summary>☀️ 中暑與熱衰竭處置</summary>
-                <div class="sos-accordion-content">
-                    1. <b>移至陰涼處</b>：移動至樹蔭或超商內休憩，鬆開緊身衣物。<br>
-                    2. <b>物理降溫</b>：用水擦拭頸部、腋下與大腿溝。<br>
-                    3. <b>補充水分</b>：若意識清醒，小口補充含電解質水或運動飲料。
-                </div>
-            </details>
-            <details class="sos-accordion">
-                <summary>🚲 掉鏈/爆胎臨修指南</summary>
-                <div class="sos-accordion-content">
-                    1. <b>落鏈復位</b>：將變速器切至最小齒盤，用手或樹枝將鏈條掛回大餅後轉動踏板。<br>
-                    2. <b>爆胎補胎</b>：尋找最近超商或鐵馬驛站借用打氣筒，若破損過大請前往救援店家。
-                </div>
-            </details>
         </div>
 
         <button onclick="closeSosModal()" style="width: 100%; padding:11px; background:var(--sos-red); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:0.95rem; margin-top:6px;">關閉救援視窗</button>
@@ -723,7 +606,6 @@
 <script src="https://cdn.jsdelivr.net/npm/leaflet-ant-path@1.3.0/dist/leaflet-ant-path.min.js"></script>
 
 <script>
-    // STREAMING_CHUNK:Configuring state variables and coordinate parser...
     let map = null;
     let markersCluster = null;
     let currentPathLayer = null;
@@ -732,7 +614,8 @@
     let sosMapLayer = null;
     let userGpsMarker = null;
     let currentUserCoords = null;
-    let currentScanRadius = 'all'; // 預設：全區模式 (全部顯示)
+    let currentScanRadius = 'all'; // 預設：全部顯示
+
     let loaded100Bowls = []; 
     let loaded711Stores = [];
     let loadedFamilyMartStores = [];
@@ -748,92 +631,34 @@
     let isSirenActive = false;
     let sirenTimer = null;
 
-    // 通用精確欄位提取 (自動忽略 UTF-8 BOM \ufeff)
-    function getExactCol(row, exactKeys) {
-        if (!row) return '';
-        for (let key in row) {
-            const cleanKey = key.replace(/^\ufeff/, '').trim().toLowerCase();
-            for (let ek of exactKeys) {
-                if (cleanKey === ek.toLowerCase()) {
-                    return String(row[key] || '').trim();
-                }
-            }
-        }
-        return '';
-    }
-
-    // 驗證經緯度並在倒置時自動校正（臺灣緯度 20~26，經度 119~123）
-    function validateAndSwap(p1, p2) {
-        if (isNaN(p1) || isNaN(p2)) return null;
-        let lat = p1 > 100 ? p2 : p1;
-        let lng = p1 > 100 ? p1 : p2;
-        if (lat >= 20 && lat <= 26 && lng >= 119 && lng <= 123) {
-            return { lat, lng };
-        }
-        return null;
-    }
-
-    // 萬用地理座標提取器：解算 Google 地圖連結 (!3d緯度!4d經度) 與數值對
-    function extractLatLng(str) {
-        if (!str) return null;
-        str = String(str).trim();
-
-        let m = str.match(/!3d([0-9]{2}\.[0-9]+)!4d([0-9]{3}\.[0-9]+)/);
-        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
-
-        m = str.match(/@([0-9]{2}\.[0-9]+),([0-9]{3}\.[0-9]+)/);
-        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
-
-        m = str.match(/(?:query|destination|q|ll)=([0-9]{2,3}\.[0-9]+)[\s,]+([0-9]{2,3}\.[0-9]+)/);
-        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
-
-        m = str.match(/([0-9]{2,3}\.[0-9]+)[\s,]+([0-9]{2,3}\.[0-9]+)/);
-        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
-
-        return null;
-    }
-
-    // 直讀式 WGS84 座標解析引擎 (移除單獨立欄位中的 google_coordinates 防止錯誤剖析)
-    function parseRowCoords(row) {
-        if (!row) return null;
-
-        let xVal = getExactCol(row, ['x', '經度', 'longitude', 'lng', '經度(longitude)']);
-        let yVal = getExactCol(row, ['y', '緯度', 'latitude', 'lat', '緯度(latitude)']);
-
-        if (xVal && yVal && !xVal.includes(',') && !yVal.includes(',') && !xVal.includes('/')) {
-            let p1 = parseFloat(xVal);
-            let p2 = parseFloat(yVal);
-            let valid = validateAndSwap(p1, p2);
-            if (valid) return valid;
-        }
-
-        let compositeVal = getExactCol(row, ['google_coordinates', '經緯度座標', 'coordinates', '座標', '經緯度', 'location']);
-        if (compositeVal) {
-            let extracted = extractLatLng(compositeVal);
-            if (extracted) return extracted;
-        }
-
-        let mapUrl = getExactCol(row, ['google_map_url', 'google地圖連結', '地圖連結', 'map_url', 'map', '導航']);
-        if (mapUrl) {
-            let extracted = extractLatLng(mapUrl);
-            if (extracted) return extracted;
-        }
-
-        return null;
-    }
-
-    // STREAMING_CHUNK:Defining POIs and emergency resources...
+    // ========================================================
+    // 1. 核心據點庫 (7大名廟 + 10大經典景點 + 交通樞紐) 100% 精準座標
+    // ========================================================
     const POIs = {
-        "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.41649, 23.73633], desc: "MOOVO 租借與歸還點" },
+        // 交通樞紐
+        "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.41649, 23.73633], desc: "MOOVO 租借與歸還點，旅程起終點" },
+        "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.54120, 23.71250], desc: "MOOVO 租借站與交通節點" },
+        
+        // ⛩️ 七大名廟
         "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.30190, 23.56810], desc: "國定古蹟，全臺媽祖信仰中心" },
-        "t_wude": { id: "t_wude", name: "北港武德宮", type: "temple", coords: [120.30330, 23.58310], desc: "臺灣五路武財神祖廟" },
-        "t_fuxing": { id: "t_fuxing", name: "西螺福興宮", type: "temple", coords: [120.46320, 23.80160], desc: "西螺太平媽祖" },
-        "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.46170, 23.73890], desc: "全臺首座不燒金紙文風媽祖廟" },
-        "t_gongfan": { id: "t_gongfan", name: "麥寮拱範宮", type: "temple", coords: [120.255573, 23.748248], desc: "國定古蹟，海線媽祖信仰重鎮" },
-        "t_shuntian": { id: "t_shuntian", name: "土庫順天宮", type: "temple", coords: [120.390560, 23.676570], desc: "縣定古蹟，歷史悠久土庫媽" },
-        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.558720, 23.700843], desc: "立姿關聖帝君巨像鸞堂重鎮" },
-        "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.54120, 23.71250], desc: "MOOVO 租借站" },
-        "m_huwei": { id: "m_huwei", name: "虎尾糖廠", type: "moovo", coords: [120.43450, 23.70250], desc: "MOOVO 租借站" }
+        "t_wude": { id: "t_wude", name: "北港武德宮", type: "temple", coords: [120.30330, 23.58310], desc: "臺灣五路武財神祖廟，財神信仰發源地" },
+        "t_fuxing": { id: "t_fuxing", name: "西螺福興宮", type: "temple", coords: [120.46320, 23.80160], desc: "西螺太平媽祖，延平老街核心守護神" },
+        "t_chifa": { id: "t_chifa", name: "虎尾持法媽祖宮", type: "temple", coords: [120.46170, 23.73890], desc: "全臺首座不燒金紙靈樹環抱之文風藝術媽祖廟" },
+        "t_gongfan": { id: "t_gongfan", name: "麥寮拱範宮", type: "temple", coords: [120.255573, 23.748248], desc: "國定古蹟，海線信仰中心與精美木雕殿堂" },
+        "t_shuntian": { id: "t_shuntian", name: "土庫順天宮", type: "temple", coords: [120.390560, 23.676570], desc: "縣定古蹟，歷史悠久土庫媽與老街商圈" },
+        "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.558720, 23.700843], desc: "立姿關聖帝君木雕巨像鸞堂重鎮" },
+
+        // 🏞️ 十大經典景點 (含更換之褒忠馬鳴山五年千歲公園 與 古坑綠色隧道)
+        "s_iron_bridge": { id: "s_iron_bridge", name: "虎尾鐵橋 / 虎尾糖廠", type: "attraction", coords: [120.434500, 23.702500], desc: "百年糖業鐵道鋼橋，旁邊糖廠冰店是單車最佳補給站。" },
+        "s_story_house": { id: "s_story_house", name: "雲林故事館 / 虎尾郡役所", type: "attraction", coords: [120.433500, 23.708800], desc: "日治時期木造官舍與布袋戲館，虎尾文化散步核心。" },
+        "s_xiluo_bridge": { id: "s_xiluo_bridge", name: "西螺大橋", type: "attraction", coords: [120.461300, 23.805500], desc: "遠東第一大紅鋼桁梁公路橋，單車環島必訪打卡聖地。" },
+        "s_yanping_st": { id: "s_yanping_st", name: "西螺延平老街 / 丸莊醬油", type: "attraction", coords: [120.463200, 23.801600], desc: "巴洛克建築街區，品嚐純釀黑豆醬油與西螺米麻糬。" },
+        "s_daughter_bridge": { id: "s_daughter_bridge", name: "北港女兒橋 / 公民橋", type: "attraction", coords: [120.301500, 23.564500], desc: "宛如巨龍般的流線型鋼構空中廊道，俯瞰北港溪美景。" },
+        "s_yansiqi": { id: "s_yansiqi", name: "水林顏思齊故事館", type: "attraction", coords: [120.245500, 23.571800], desc: "開臺第一庄歷史起點，探索漢人拓墾與海線單車故事。" },
+        "s_maming_park": { id: "s_maming_park", name: "褒忠馬鳴山五年千歲公園", type: "attraction", coords: [120.310650, 23.693450], desc: "全臺最大寺廟主題園林迷宮、彩虹大橋與奇岩景觀。" },
+        "s_yunzhong_st": { id: "s_yunzhong_st", name: "雲中街生活聚落", type: "attraction", coords: [120.543500, 23.708200], desc: "日式警察宿舍文創群落，巨木綠蔭與咖啡香氣繚繞。" },
+        "s_qianqiaogu": { id: "s_qianqiaogu", name: "崙背千巧谷牛樂園牧場", type: "attraction", coords: [120.354200, 23.761000], desc: "酪農原鄉代表，園區寬敞好騎，烘焙與鮮奶甜點超人氣。" },
+        "s_gukeng_tunnel": { id: "s_gukeng_tunnel", name: "古坑綠色隧道", type: "attraction", coords: [120.559380, 23.666420], desc: "兩側芒果老樹成蔭的林蔭單車大道，假日市集熱鬧非凡。" }
     };
 
     const sosEmergencyResources = {
@@ -849,9 +674,6 @@
             { name: "西螺警察分局", coords: [120.4612, 23.7981], phone: "05-586-2014", area: "西螺、二崙、崙背" },
             { name: "北港警察分局", coords: [120.3021, 23.5712], phone: "05-783-2015", area: "北港、水林、口湖" },
             { name: "斗六警察分局", coords: [120.5431, 23.7095], phone: "05-532-2042", area: "斗六、林內、莿桐" }
-        ],
-        repairs: [
-            { name: "捷安特 虎尾單車專賣店", coords: [120.4325, 23.7073], phone: "05-632-1234", desc: "緊急換胎、鏈條檢修" }
         ]
     };
 
@@ -866,250 +688,70 @@
         attraction: { icon: "🏞️", color: "#0284c7" }
     };
 
-    const fallback711Stores = [
-        { name: "7-ELEVEN 高鐵站門市", district: "虎尾鎮", address: "雲林縣虎尾鎮站前東路301號站內", lat: 23.7365, lng: 120.4161, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 東尊門市", district: "虎尾鎮", address: "雲林縣虎尾鎮文化路18號", lat: 23.7291, lng: 120.4635, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 虎尾門市", district: "虎尾鎮", address: "雲林縣虎尾鎮林森路二段180號", lat: 23.7088, lng: 120.4320, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 朝天宮門市", district: "北港鎮", address: "雲林縣北港鎮中山路122號", lat: 23.5678, lng: 120.3018, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 西螺門市", district: "西螺鎮", address: "雲林縣西螺鎮延平路210號", lat: 23.8010, lng: 120.4625, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 斗六門市", district: "斗六市", address: "雲林縣斗六市民生路195號", lat: 23.7112, lng: 120.5425, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 土庫門市", district: "土庫鎮", address: "雲林縣土庫鎮中正路150號", lat: 23.6775, lng: 120.3912, brand: '7-11', isToilet: true, isATM: true, isDining: true },
-        { name: "7-ELEVEN 麥寮門市", district: "麥寮鄉", address: "雲林縣麥寮鄉中正路50號", lat: 23.7485, lng: 120.2560, brand: '7-11', isToilet: true, isATM: true, isDining: true }
-    ];
-
-    // STREAMING_CHUNK:Implementing SOS audio alarm and GPS tracking...
-    function toggleSiren() {
-        const sirenBtn = document.getElementById('sirenToggleBtn');
-        const modalCard = document.getElementById('sosModalCard');
-
-        if (!isSirenActive) {
-            isSirenActive = true;
-            if (sirenBtn) {
-                sirenBtn.classList.add('active');
-                sirenBtn.innerHTML = "🛑 停止警報聲響";
+    // ========================================================
+    // 2. 座標與字串萬用解析器
+    // ========================================================
+    function getExactCol(row, exactKeys) {
+        if (!row) return '';
+        for (let key in row) {
+            const cleanKey = key.replace(/^﻿/, '').trim().toLowerCase();
+            for (let ek of exactKeys) {
+                if (cleanKey === ek.toLowerCase()) {
+                    return String(row[key] || '').trim();
+                }
             }
-            if (modalCard) modalCard.classList.add('flashing-card');
-
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            let highPitch = true;
-            sirenTimer = setInterval(() => {
-                if (!isSirenActive || !audioCtx) return;
-                try {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(highPitch ? 1200 : 800, audioCtx.currentTime);
-                    
-                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-                    
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.25);
-                    highPitch = !highPitch;
-                } catch(e) {}
-            }, 300);
-
-        } else {
-            stopSiren();
         }
+        return '';
     }
 
-    function stopSiren() {
-        isSirenActive = false;
-        if (sirenTimer) {
-            clearInterval(sirenTimer);
-            sirenTimer = null;
+    function validateAndSwap(p1, p2) {
+        if (isNaN(p1) || isNaN(p2)) return null;
+        let lat = p1 > 100 ? p2 : p1;
+        let lng = p1 > 100 ? p1 : p2;
+        if (lat >= 20 && lat <= 26 && lng >= 119 && lng <= 123) {
+            return { lat, lng };
         }
-        const sirenBtn = document.getElementById('sirenToggleBtn');
-        const modalCard = document.getElementById('sosModalCard');
-
-        if (sirenBtn) {
-            sirenBtn.classList.remove('active');
-            sirenBtn.innerHTML = "🔊 播放高音求救警報聲 (引人注意)";
-        }
-        if (modalCard) modalCard.classList.remove('flashing-card');
+        return null;
     }
 
-    function openSosModal() { 
-        const modal = document.getElementById('sosModal');
-        if (modal) modal.style.display = 'flex'; 
-
-        const coordsEl = document.getElementById('sosGpsCoords');
-        const addrEl = document.getElementById('sosGpsAddress');
-        const nearestBox = document.getElementById('sosNearestBox');
-        
-        if (coordsEl) coordsEl.innerHTML = "⏳ 正在定位中...";
-        if (addrEl) addrEl.innerHTML = "正在獲取 GPS 座標...";
-
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    currentUserCoords = [lng, lat];
-
-                    if (coordsEl) coordsEl.innerHTML = `🌐 經緯度：<b>${lat.toFixed(5)}, ${lng.toFixed(5)}</b>`;
-                    
-                    calculateNearestResources(lat, lng);
-                    if (nearestBox) nearestBox.style.display = 'block';
-
-                    try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=zh-TW`);
-                        const data = await res.json();
-                        if (data && data.display_name) {
-                            const addressText = data.display_name.split(',').slice(0, 4).join('');
-                            if (addrEl) addrEl.innerHTML = `📍 預估位置：<b>${addressText}</b>`;
-                        } else {
-                            if (addrEl) addrEl.innerHTML = `📍 定位成功！可直接向救援人員提供上述座標。`;
-                        }
-                    } catch(e) {
-                        if (addrEl) addrEl.innerHTML = `📍 定位成功！可直接向救援人員提供上述座標。`;
-                    }
-                },
-                (error) => {
-                    if (coordsEl) coordsEl.innerHTML = `<span style="color:#d32f2f;">⚠️ 無法取得定位資訊</span>`;
-                    if (addrEl) addrEl.innerHTML = `請確認手機已開啟 GPS 並允許瀏覽器讀取位置權限。`;
-                    if (nearestBox) nearestBox.style.display = 'none';
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        } else {
-            if (coordsEl) coordsEl.innerHTML = `<span style="color:#d32f2f;">⚠️ 您的裝置不支援 GPS 定位</span>`;
-            if (addrEl) addrEl.innerHTML = `請透過電話人工說明您的受困地點。`;
-            if (nearestBox) nearestBox.style.display = 'none';
-        }
+    function extractLatLng(str) {
+        if (!str) return null;
+        str = String(str).trim();
+        let m = str.match(/!3d([0-9]{2}\.[0-9]+)!4d([0-9]{3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+        m = str.match(/@([0-9]{2}\.[0-9]+),([0-9]{3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+        m = str.match(/([0-9]{2,3}\.[0-9]+)[\s,]+([0-9]{2,3}\.[0-9]+)/);
+        if (m) return validateAndSwap(parseFloat(m[1]), parseFloat(m[2]));
+        return null;
     }
 
-    // STREAMING_CHUNK:Calculating nearest hospital and police station...
-    function calculateNearestResources(userLat, userLng) {
-        if (typeof turf === 'undefined') return;
-        const userPt = turf.point([userLng, userLat]);
-
-        let minHospDist = Infinity;
-        let nearestHosp = null;
-        sosEmergencyResources.hospitals.forEach(h => {
-            const dist = turf.distance(userPt, turf.point(h.coords), { units: 'kilometers' });
-            if (dist < minHospDist) {
-                minHospDist = dist;
-                nearestHosp = h;
-            }
-        });
-
-        let minPolDist = Infinity;
-        let nearestPol = null;
-        sosEmergencyResources.police.forEach(p => {
-            const dist = turf.distance(userPt, turf.point(p.coords), { units: 'kilometers' });
-            if (dist < minPolDist) {
-                minPolDist = dist;
-                nearestPol = p;
-            }
-        });
-
-        const hospEl = document.getElementById('sosNearestHosp');
-        const polEl = document.getElementById('sosNearestPol');
-
-        if (hospEl && nearestHosp) {
-            hospEl.innerHTML = `🏥 最近急診：<b>${nearestHosp.name}</b> (約 <b>${minHospDist.toFixed(1)} km</b>)`;
+    function parseRowCoords(row) {
+        if (!row) return null;
+        let xVal = getExactCol(row, ['x', '經度', 'longitude', 'lng']);
+        let yVal = getExactCol(row, ['y', '緯度', 'latitude', 'lat']);
+        if (xVal && yVal && !xVal.includes(',') && !yVal.includes(',') && !xVal.includes('/')) {
+            let p1 = parseFloat(xVal);
+            let p2 = parseFloat(yVal);
+            let valid = validateAndSwap(p1, p2);
+            if (valid) return valid;
         }
-        if (polEl && nearestPol) {
-            polEl.innerHTML = `👮 最近驛站：<b>${nearestPol.name}</b> (約 <b>${minPolDist.toFixed(1)} km</b>)`;
+        let compositeVal = getExactCol(row, ['google_coordinates', '經緯度座標', 'coordinates', '座標', '經緯度', 'location']);
+        if (compositeVal) {
+            let extracted = extractLatLng(compositeVal);
+            if (extracted) return extracted;
         }
+        let mapUrl = getExactCol(row, ['google_map_url', 'google地圖連結', '地圖連結', 'map_url']);
+        if (mapUrl) {
+            let extracted = extractLatLng(mapUrl);
+            if (extracted) return extracted;
+        }
+        return null;
     }
 
-    function toggleSosMapLayer() {
-        closeSosModal();
-        if (!map) return;
-
-        if (!sosMapLayer) {
-            sosMapLayer = L.layerGroup();
-        }
-
-        sosMapLayer.clearLayers();
-
-        sosEmergencyResources.hospitals.forEach(h => {
-            const icon = L.divIcon({ html: `<div style="background:#dc2626; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 6px rgba(220,38,38,0.5);">🏥</div>`, className: '', iconSize: [28,28] });
-            L.marker([h.coords[1], h.coords[0]], { icon }).bindPopup(`
-                <div style="font-size:0.75rem; color:#dc2626; font-weight:bold; margin-bottom:2px;">🏥 24H 急診醫院</div>
-                <b style="font-size:1rem; color:#0f172a;">${h.name}</b><br>
-                <div style="font-size:0.8rem; color:#475569; margin-top:3px;">📍 ${h.addr}</div>
-                <a href="tel:${h.phone}" style="display:block; margin-top:6px; text-align:center; background:#ef4444; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; text-decoration:none;">📞 電話：${h.phone}</a>
-                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${h.coords[1]},${h.coords[0]}')" style="width:100%; margin-top:4px; text-align:center; background:#3b82f6; border:none; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; cursor:pointer;">🧭 地圖導航</button>
-            `, { autoPanPadding: [80, 110] }).addTo(sosMapLayer);
-        });
-
-        sosEmergencyResources.police.forEach(p => {
-            const icon = L.divIcon({ html: `<div style="background:#0284c7; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 6px rgba(2,132,199,0.5);">👮</div>`, className: '', iconSize: [28,28] });
-            L.marker([p.coords[1], p.coords[0]], { icon }).bindPopup(`
-                <div style="font-size:0.75rem; color:#0284c7; font-weight:bold; margin-bottom:2px;">👮 警察分局 (含鐵馬驛站)</div>
-                <b style="font-size:1rem; color:#0f172a;">${p.name}</b><br>
-                <div style="font-size:0.8rem; color:#475569; margin-top:3px;">📍 轄區：${p.area}</div>
-                <a href="tel:${p.phone}" style="display:block; margin-top:6px; text-align:center; background:#0284c7; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; text-decoration:none;">📞 電話：${p.phone}</a>
-                <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${p.coords[1]},${p.coords[0]}')" style="width:100%; margin-top:4px; text-align:center; background:#3b82f6; border:none; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; cursor:pointer;">🧭 地圖導航</button>
-            `, { autoPanPadding: [80, 110] }).addTo(sosMapLayer);
-        });
-
-        sosEmergencyResources.repairs.forEach(r => {
-            const icon = L.divIcon({ html: `<div style="background:#15803d; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 6px rgba(21,128,61,0.5);">🚲</div>`, className: '', iconSize: [28,28] });
-            L.marker([r.coords[1], r.coords[0]], { icon }).bindPopup(`
-                <div style="font-size:0.75rem; color:#15803d; font-weight:bold; margin-bottom:2px;">🚲 單車緊急維修</div>
-                <b style="font-size:1rem; color:#0f172a;">${r.name}</b><br>
-                <div style="font-size:0.8rem; color:#475569; margin-top:3px;">🛠️ ${r.desc}</div>
-                <a href="tel:${r.phone}" style="display:block; margin-top:6px; text-align:center; background:#15803d; color:white; padding:6px; border-radius:6px; font-size:0.8rem; font-weight:bold; text-decoration:none;">📞 電話：${r.phone}</a>
-            `, { autoPanPadding: [80, 110] }).addTo(sosMapLayer);
-        });
-
-        if (currentUserCoords) {
-            const userIcon = L.divIcon({ html: `<div style="background:#f43f5e; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow: 0 0 0 6px rgba(244,63,94,0.3); animation: pulseSOS 1.5s infinite;"></div>`, className: '', iconSize: [20,20] });
-            if (userGpsMarker) map.removeLayer(userGpsMarker);
-            userGpsMarker = L.marker([currentUserCoords[1], currentUserCoords[0]], { icon: userIcon }).bindPopup('<b>📍 當前求救位置</b>', { autoPanPadding: [80, 110] });
-            sosMapLayer.addLayer(userGpsMarker);
-        }
-
-        map.addLayer(sosMapLayer);
-
-        const closeBtn = document.getElementById('closeSosMapBtn');
-        if (closeBtn) closeBtn.style.display = 'flex';
-
-        if (sosMapLayer.getLayers().length > 0) {
-            map.fitBounds(sosMapLayer.getBounds(), { padding: [50, 50] });
-        }
-    }
-
-    function clearSosMapLayer() {
-        if (sosMapLayer && map) {
-            map.removeLayer(sosMapLayer);
-        }
-        const closeBtn = document.getElementById('closeSosMapBtn');
-        if (closeBtn) closeBtn.style.display = 'none';
-    }
-
-    function closeSosModal() { 
-        stopSiren();
-        document.getElementById('sosModal').style.display = 'none'; 
-    }
-
-    function toggleTrafficLayer(enable) {
-        if (!map) return;
-        if (!trafficLayer) {
-            trafficLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m,traffic&x={x}&y={y}&z={z}', {
-                maxZoom: 19,
-                attribution: '&copy; Google Traffic'
-            });
-        }
-        if (enable) map.addLayer(trafficLayer);
-        else map.removeLayer(trafficLayer);
-    }
-
+    // ========================================================
+    // 3. 範圍切換 (全部 / 2公里 / 5公里) 互動
+    // ========================================================
     function setScanRadius(radius) {
         currentScanRadius = radius;
         document.querySelectorAll('.radius-btn').forEach(btn => btn.classList.remove('active'));
@@ -1136,86 +778,17 @@
         renderFoodRadar();
     }
 
-    // STREAMING_CHUNK:Configuring StoryPOIManager and route planner...
-    const StoryPOIManager = {
-        fetchStoryData: async function(poiId) {
-            try {
-                const response = await fetch(`story/${poiId}.json`);
-                if (!response.ok) throw new Error("JSON Fetch Failed");
-                const data = await response.json();
-                
-                return {
-                    name: data.government?.name || "未知景點",
-                    intro: data.story?.localStory || data.government?.description || "在地文化與自然景觀的完美結合。",
-                    history: data.story?.history || "尚無官方歷史資料",
-                    stay_time: data.travel?.stayTime || "30 分鐘",
-                    gallery: (data.government?.images || []).map(url => {
-                        let safeUrl = url;
-                        if (safeUrl.startsWith('./')) safeUrl = safeUrl.substring(2);
-                        else if (safeUrl.startsWith('/') && !safeUrl.startsWith('//')) safeUrl = safeUrl.substring(1);
-                        return safeUrl;
-                    }),
-                    lat: data.government?.latitude,
-                    lng: data.government?.longitude
-                };
-            } catch (error) {
-                const fallbackPoi = POIs[poiId];
-                return {
-                    name: fallbackPoi ? fallbackPoi.name : "未知",
-                    intro: fallbackPoi ? fallbackPoi.desc : "暫無詳細資料",
-                    history: "尚無官方歷史資料", stay_time: "30 分鐘", gallery: [],
-                    lat: fallbackPoi ? fallbackPoi.coords[1] : 0,
-                    lng: fallbackPoi ? fallbackPoi.coords[0] : 0
-                };
-            }
-        },
-        openPanel: async function(poiId, type) {
-            const container = document.getElementById('story-card-container');
-            container.innerHTML = `<div style="padding: 20px; text-align: center; margin-top: 50px; font-weight: bold; color: #666;">⏳ 正在載入故事資料...</div>`;
-            container.classList.add('open');
-
-            const data = await this.fetchStoryData(poiId);
-            
-            let tagColor = type === 'temple' ? 'var(--temple-red)' : 'var(--spot-blue)';
-            let tagText = type === 'temple' ? '⛩️ 在地廟宇' : '📍 景點';
-
-            let galleryHtml = data.gallery.length > 0 
-                ? data.gallery.map(url => `<img src="${url}" onerror="this.src='https://placehold.co/400x250/e2e8f0/7f8c8d?text=尚無照片'">`).join('')
-                : `<img src="https://placehold.co/400x250/e2e8f0/7f8c8d?text=${data.name}">`;
-
-            container.innerHTML = `
-                <button class="sc-close-btn" onclick="document.getElementById('story-card-container').classList.remove('open')">✖</button>
-                <div class="sc-content">
-                    <div class="sc-hero-wrapper">
-                        <div class="sc-hero-gallery">${galleryHtml}</div>
-                        ${data.gallery.length > 1 ? '<div class="sc-gallery-hint">左右滑動看更多 ➜</div>' : ''}
-                    </div>
-                    <div class="sc-body">
-                        <div class="sc-category-tag" style="background-color: ${tagColor}">${tagText}</div>
-                        <h2 class="sc-title">${data.name}</h2>
-                        
-                        <div class="sc-section" style="margin-top:15px;">
-                            <div class="sc-list-item" style="background:#f8fafc; display:inline-flex; font-weight:bold; margin-bottom: 10px;">⏱️ 建議停留：${data.stay_time}</div>
-                            <h3 class="sc-section-title">📖 在地故事</h3>
-                            <p class="sc-text">${data.intro}</p>
-                            <p class="sc-text" style="margin-top:10px; padding-top:10px; border-top:1px dashed #e2e8f0;">📜 歷史背景：<br>${data.history}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="sc-actions-wrapper">
-                    <button class="sc-btn sc-btn-primary" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${data.lat},${data.lng}')">🧭 Google 導航</button>
-                </div>
-            `;
-        }
-    };
-
+    // ========================================================
+    // 4. 雙核心 TSP 智慧路線計算 (七大名廟 + 十大經典景點)
+    // ========================================================
     async function calculateTSPRoute() {
-        const checkboxes = document.querySelectorAll('#tsp-checklist input[type="checkbox"]:checked');
+        const templeCbs = document.querySelectorAll('#tsp-temples-checklist input[type="checkbox"]:checked');
+        const spotCbs = document.querySelectorAll('#tsp-spots-checklist input[type="checkbox"]:checked');
         const errorEl = document.getElementById('route-error');
         const infoEl = document.getElementById('route-info');
         const loadingEl = document.getElementById('loading');
 
-        if (checkboxes.length === 0) {
+        if (templeCbs.length === 0 && spotCbs.length === 0) {
             errorEl.style.display = 'block';
             infoEl.style.display = 'none';
             return;
@@ -1224,7 +797,8 @@
         loadingEl.style.display = 'flex';
         
         let points = [POIs["hsr"].coords];
-        checkboxes.forEach(cb => { points.push(POIs[cb.value].coords); });
+        templeCbs.forEach(cb => { if (POIs[cb.value]) points.push(POIs[cb.value].coords); });
+        spotCbs.forEach(cb => { if (POIs[cb.value]) points.push(POIs[cb.value].coords); });
         points.push(POIs["hsr"].coords);
         
         const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
@@ -1251,17 +825,17 @@
             }
 
             map.fitBounds(currentPathLayer.getBounds(), { padding: [40, 40] });
-
             currentRouteTurfLine = turf.lineString(routeGeoJSON.coordinates);
             
             TravelServiceManager.updateMarkers();
             const foundCount = renderFoodRadar();
 
             infoEl.innerHTML = `
-                ✨ <b style="color: #388E3C;">最佳路線計算完成！</b><br>
-                📏 總長度：${distKm} 公里<br>
-                🚴 預估時間：${timeMin} 分鐘<br>
-                ${currentScanRadius !== 'all' && foundCount > 0 ? `<div style="color:#c2185b; font-weight:bold; margin-top:5px;">🎯 掃描到路線 ${currentScanRadius} 公里內有 ${foundCount} 家美食！</div>` : ''}
+                ✨ <b style="color: #388E3C;">最佳單車環線計算完成！</b><br>
+                📏 總里程：${distKm} 公里<br>
+                🚴 預估騎乘：${timeMin} 分鐘<br>
+                ⛩️ 途經廟宇：${templeCbs.length} 間 ｜ 🏞️ 串聯景點：${spotCbs.length} 處<br>
+                ${currentScanRadius !== 'all' && foundCount > 0 ? `<div style="color:#c2185b; font-weight:bold; margin-top:5px;">🎯 掃描到路線 ${currentScanRadius} 公里內有 ${foundCount} 家百碗美食！</div>` : ''}
             `;
             infoEl.style.display = 'block';
 
@@ -1273,6 +847,59 @@
         }
     }
 
+    // ========================================================
+    // 5. 景點與廟宇小卡抽屜展示
+    // ========================================================
+    const StoryPOIManager = {
+        fetchStoryData: async function(poiId) {
+            const fallbackPoi = POIs[poiId];
+            return {
+                name: fallbackPoi ? fallbackPoi.name : "未知據點",
+                intro: fallbackPoi ? fallbackPoi.desc : "雲林在地文化與單車深度慢遊據點。",
+                history: "雲林歷史人文瑰寶，值得駐足細細品味。",
+                stay_time: "30 ~ 60 分鐘",
+                gallery: [],
+                lat: fallbackPoi ? fallbackPoi.coords[1] : 23.7,
+                lng: fallbackPoi ? fallbackPoi.coords[0] : 120.4
+            };
+        },
+        openPanel: async function(poiId, type) {
+            const container = document.getElementById('story-card-container');
+            container.innerHTML = `<div style="padding: 20px; text-align: center; margin-top: 50px; font-weight: bold; color: #666;">⏳ 正在載入故事資料...</div>`;
+            container.classList.add('open');
+
+            const data = await this.fetchStoryData(poiId);
+            let tagColor = type === 'temple' ? 'var(--temple-red)' : 'var(--spot-blue)';
+            let tagText = type === 'temple' ? '⛩️ 名廟朝聖' : '🏞️ 經典景點';
+
+            container.innerHTML = `
+                <button class="sc-close-btn" onclick="document.getElementById('story-card-container').classList.remove('open')">✖</button>
+                <div class="sc-content">
+                    <div class="sc-hero-wrapper">
+                        <img src="https://placehold.co/600x350/0284c7/ffffff?text=${encodeURIComponent(data.name)}" style="width:100%; height:100%; object-fit:cover;">
+                    </div>
+                    <div class="sc-body">
+                        <div class="sc-category-tag" style="background-color: ${tagColor}">${tagText}</div>
+                        <h2 class="sc-title">${data.name}</h2>
+                        
+                        <div class="sc-section" style="margin-top:12px;">
+                            <div style="background:#f8fafc; display:inline-flex; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:0.85rem; margin-bottom: 8px; border:1px solid #e2e8f0;">⏱️ 建議停留：${data.stay_time}</div>
+                            <h3 class="sc-section-title">📖 景點介紹</h3>
+                            <p class="sc-text">${data.intro}</p>
+                            <p class="sc-text" style="margin-top:10px; padding-top:10px; border-top:1px dashed #e2e8f0;">📜 文化亮點：<br>${data.history}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="sc-actions-wrapper">
+                    <button class="sc-btn-primary" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${data.lat},${data.lng}')">🧭 Google 地圖導航</button>
+                </div>
+            `;
+        }
+    };
+
+    // ========================================================
+    // 6. 圖層管理與美食雷達繪製
+    // ========================================================
     function toggleFoodService(isVisible) {
         if (isVisible) {
             if (dynamicFoodLayer) map.addLayer(dynamicFoodLayer);
@@ -1290,7 +917,6 @@
         if (loaded100Bowls.length > 0) {
             loaded100Bowls.forEach(food => {
                 let showMarker = false;
-
                 if (currentScanRadius === 'all' || !currentRouteTurfLine) {
                     showMarker = true; 
                 } else {
@@ -1304,30 +930,22 @@
                 if (showMarker) {
                     const icon = L.divIcon({ html: `<div style="background:var(--food-pink); width:24px; height:24px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">😋</div>`, className: '', iconSize: [24,24] });
                     L.marker([food.lat, food.lng], {icon}).bindPopup(`
-                        <div style="font-size:0.75rem; color:var(--food-pink); font-weight:bold; margin-bottom: 3px;">百碗美食雷達</div>
+                        <div style="font-size:0.75rem; color:var(--food-pink); font-weight:bold; margin-bottom: 3px;">百碗美食</div>
                         <b style="font-size:1.1rem; color:#333;">${food.name}</b><br>
                         <div style="margin-top:5px; color:#c2185b; font-weight:bold;">🏆 推薦：${food.item}</div>
                         <div style="margin-top:3px; color:#666; font-size:0.85rem;">📍 ${food.address}</div>
                         <button onclick="window.open('${food.map_url || `https://www.google.com/maps/dir/?api=1&destination=${food.lat},${food.lng}`}')" style="margin-top:10px; width: 100%; text-align: center; background: #f0f0f0; border: 1px solid #ccc; color: #333; padding: 6px 0; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: bold;">🗺️ Google 導航</button>
-                        <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                            ℹ️ 資料來自 雲林一百碗與慢遊雲林網站
-                        </div>
                     `, { minWidth: 220, autoPanPadding: [80, 110] }).addTo(dynamicFoodLayer);
                 }
             });
         }
 
         const chkFood = document.getElementById('chk-food');
-        if (chkFood && chkFood.checked) {
-            map.addLayer(dynamicFoodLayer);
-        } else {
-            map.removeLayer(dynamicFoodLayer);
-        }
-
+        if (chkFood && chkFood.checked) map.addLayer(dynamicFoodLayer);
+        else map.removeLayer(dynamicFoodLayer);
         return foundCount;
     }
 
-    // STREAMING_CHUNK:Managing travel service markers and layer rendering...
     const TravelServiceManager = {
         init: function() {
             Object.keys(travelServices).forEach(key => {
@@ -1340,27 +958,16 @@
                 group.clearLayers();
                 
                 let dataSource = [];
-                if (key === 'convenience') {
-                    const stores711 = loaded711Stores.length > 0 ? loaded711Stores : fallback711Stores;
-                    const storesFM = loadedFamilyMartStores;
-                    dataSource = [...stores711, ...storesFM];
-                } else if (key === 'souvenir' && loadedSouvenirs.length > 0) {
-                    dataSource = loadedSouvenirs;
-                } else if (key === 'accommodation' && loadedAccommodations.length > 0) {
-                    dataSource = loadedAccommodations;
-                } else if (key === 'moovo' && loadedMoovoStations.length > 0) {
-                    dataSource = loadedMoovoStations;
-                } else if (key === 'waterToilet' && loadedWaterToiletHubs.length > 0) {
-                    dataSource = loadedWaterToiletHubs;
-                } else if (key === 'bikeRepair' && loadedBikeRepairShops.length > 0) {
-                    dataSource = loadedBikeRepairShops;
-                } else if (key === 'attraction' && loadedAttractions.length > 0) {
-                    dataSource = loadedAttractions;
-                }
+                if (key === 'convenience') dataSource = [...loaded711Stores, ...loadedFamilyMartStores];
+                else if (key === 'souvenir') dataSource = loadedSouvenirs;
+                else if (key === 'accommodation') dataSource = loadedAccommodations;
+                else if (key === 'moovo') dataSource = loadedMoovoStations;
+                else if (key === 'waterToilet') dataSource = loadedWaterToiletHubs;
+                else if (key === 'bikeRepair') dataSource = loadedBikeRepairShops;
+                else if (key === 'attraction') dataSource = loadedAttractions;
 
                 dataSource.forEach(item => {
                     let showMarker = false;
-
                     if (currentScanRadius === 'all' || !currentRouteTurfLine) {
                         showMarker = true; 
                     } else {
@@ -1373,233 +980,21 @@
                     if (showMarker) {
                         const config = serviceConfig[key] || { icon: "📍", color: "#2196F3" };
                         let iconColor = config.color;
-                        if (key === 'convenience' && item.brand === 'FamilyMart') {
-                            iconColor = "#0284c7"; 
-                        } else if (key === 'convenience' && (item.brand === '7-11' || item.brand === '7-Eleven')) {
-                            iconColor = "#FFB300";
-                        }
+                        if (key === 'convenience' && item.brand === 'FamilyMart') iconColor = "#0284c7";
+                        else if (key === 'convenience' && (item.brand === '7-11' || item.brand === '7-Eleven')) iconColor = "#FFB300";
 
                         const icon = L.divIcon({ html: `<div style="background:${iconColor}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
                         
-                        let popupContent = `<b>${item.name || item.store_name || item.stay_name || item.station_name || '據點'}</b>`;
-                        
-                        if (key === 'bikeRepair' && (item.store_name || item.name)) {
-                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
+                        let spotTitle = item.name || item.store_name || item.stay_name || '雲林據點';
+                        let popupContent = `
+                            <div style="font-size:0.75rem; color:${iconColor}; font-weight:bold; margin-bottom:2px;">${item.category || config.icon}</div>
+                            <b style="font-size:1.05rem; color:#1e293b;">${spotTitle}</b><br>
+                            ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:4px 0;">${item.description}</p>` : ''}
+                            ${item.address ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">📍 ${item.address}</div>` : ''}
+                            <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="width:100%; margin-top:8px; text-align:center; background:${iconColor}; border:none; color:white; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航前往</button>
+                        `;
 
-                            popupContent = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
-                                    <span style="font-size:0.75rem; color:#dc2626; font-weight:bold;">🔧 自行車救援維修據點</span>
-                                    ${item.district ? `<span style="background:#dc2626; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
-                                </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${item.store_name || item.name}</b><br>
-                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
-                                ${item.services ? `<div style="font-size:0.82rem; color:#b91c1c; font-weight:bold; margin-top:2px;">🛠️ 維修項目：${item.services}</div>` : ''}
-                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
-                                ${item.business_hours ? `<div style="font-size:0.78rem; color:#64748b; margin-top:4px;">🕒 營業時間：${item.business_hours}</div>` : ''}
-                                ${item.address ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
-                                <div style="display:flex; gap:6px; margin-top:10px;">
-                                    ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#ef4444; color:white; border:none; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
-                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="flex:1; text-align:center; background:#3b82f6; border:none; color:white; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
-                                </div>
-                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 雲林縣自行車維修服務據點清單
-                                </div>
-                            `;
-                        }
-                        else if (key === 'waterToilet' && (item.name || item.station_code)) {
-                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
-                            
-                            popupContent = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
-                                    <span style="font-size:0.75rem; color:#00acc1; font-weight:bold;">💧🚻 友善水/廁據點</span>
-                                    <div style="display:flex; gap:4px;">
-                                        ${item.category ? `<span style="background:#00acc1; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.category}</span>` : ''}
-                                        ${item.district ? `<span style="background:#0284c7; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
-                                    </div>
-                                </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${item.name}</b><br>
-                                ${item.sub_category ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">🏷️ 分類：${item.sub_category}</div>` : ''}
-                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
-                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
-                                ${item.water_info ? `<div style="font-size:0.8rem; color:#0284c7; margin-top:4px; font-weight:bold;">💧 補水：${item.water_info}</div>` : ''}
-                                ${item.toilet_info ? `<div style="font-size:0.8rem; color:#0097a7; margin-top:2px; font-weight:bold;">🚻 廁所：${item.toilet_info}</div>` : ''}
-                                ${item.bike_facility_info ? `<div style="font-size:0.8rem; color:#15803d; margin-top:2px;">🚲 單車：${item.bike_facility_info}</div>` : ''}
-                                ${item.hours ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">🕒 開放：${item.hours}</div>` : ''}
-                                ${item.address ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">📍 位置：${item.address}</div>` : ''}
-                                <div style="margin-top:10px;">
-                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="width:100%; text-align:center; background:#00acc1; border:none; color:white; padding:7px 0; border-radius:6px; cursor:pointer; font-size:0.82rem; font-weight:bold;">🧭 導航前往</button>
-                                </div>
-                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 雲林縣自行車友善水/廁與服務據點總表
-                                </div>
-                            `;
-                        }
-                        else if (key === 'souvenir' && item.store_name) {
-                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
-                            
-                            popupContent = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                                    <span style="font-size:0.75rem; color:#e65100; font-weight:bold;">🎁 慢遊雲林伴手禮</span>
-                                    ${item.district ? `<span style="background:#e65100; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
-                                </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${item.store_name}</b><br>
-                                ${item.product_name ? `<div style="margin-top:3px; color:#d81b60; font-weight:bold; font-size:0.9rem;">✨ 推薦特產：${item.product_name}</div>` : ''}
-                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
-                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
-                                ${item.business_hours ? `<div style="font-size:0.8rem; color:#64748b; margin-top:4px;">🕒 營業時間：${item.business_hours}</div>` : ''}
-                                ${item.address ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
-                                <div style="display:flex; gap:6px; margin-top:10px;">
-                                    ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
-                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
-                                </div>
-                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 慢遊雲林網站
-                                </div>
-                            `;
-                        }
-                        else if (key === 'accommodation' && item.stay_name) {
-                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
-                            
-                            popupContent = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
-                                    <span style="font-size:0.75rem; color:#8e24aa; font-weight:bold;">🏨 雲林精選住宿</span>
-                                    <div style="display:flex; gap:4px;">
-                                        ${item.stay_type ? `<span style="background:#8e24aa; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.stay_type}</span>` : ''}
-                                        ${item.district ? `<span style="background:#4a148c; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
-                                    </div>
-                                </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${item.stay_name}</b><br>
-                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
-                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
-                                ${item.check_in_out ? `<div style="font-size:0.8rem; color:#64748b; margin-top:4px;">🕒 入退房：${item.check_in_out}</div>` : ''}
-                                ${item.address ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
-                                <div style="display:flex; gap:6px; margin-top:10px;">
-                                    ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
-                                    <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}')" style="flex:1; text-align:center; background:#f1f5f9; border:1px solid #cbd5e1; color:#334155; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航</button>
-                                </div>
-                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 慢遊雲林網站
-                                </div>
-                            `;
-                        }
-                        else if (key === 'attraction' && (item.name || item.store_name)) {
-                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
-                            let spotTitle = item.name || item.store_name || '熱門景點';
-
-                            popupContent = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
-                                    <span style="font-size:0.75rem; color:#0284c7; font-weight:bold;">🏞️ 雲林觀光景點</span>
-                                    <div style="display:flex; gap:4px;">
-                                        ${item.sub_category ? `<span style="background:#0284c7; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${item.sub_category}</span>` : ''}
-                                        ${item.district ? `<span style="background:#0369a1; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
-                                    </div>
-                                </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${spotTitle}</b><br>
-                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
-                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
-                                ${item.hours || item.business_hours ? `<div style="font-size:0.78rem; color:#64748b; margin-top:4px;">🕒 開放時間：${item.hours || item.business_hours}</div>` : ''}
-                                ${item.address ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
-                                <div style="display:flex; gap:6px; margin-top:10px;">
-                                    ${item.phone ? `<a href="tel:${item.phone}" style="flex:1; text-align:center; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; text-decoration:none; padding:6px 0; border-radius:6px; font-size:0.8rem; font-weight:bold;">📞 撥打電話</a>` : ''}
-                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="flex:1; text-align:center; background:#3b82f6; border:none; color:white; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航前往</button>
-                                </div>
-                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 雲林縣觀光景點資訊總表
-                                </div>
-                            `;
-                        }
-                        else if (key === 'moovo' && (item.station_name || item.station_code || item.name)) {
-                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
-                            let statusColor = (item.operating_status || '').includes('施工') || (item.operating_status || '').includes('暫停') ? '#ef4444' : '#16a34a';
-                            let titleName = item.station_name || item.name || 'Moovo 站點';
-                            let opStatus = item.operating_status || '正常營運';
-
-                            popupContent = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:4px;">
-                                    <span style="font-size:0.75rem; color:#388e3c; font-weight:bold;">🚲 MOOVO 公共自行車</span>
-                                    <div style="display:flex; gap:4px;">
-                                        <span style="background:${statusColor}; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">${opStatus}</span>
-                                        ${item.district ? `<span style="background:#388e3c; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
-                                    </div>
-                                </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${titleName}</b><br>
-                                ${item.station_type ? `<div style="font-size:0.8rem; color:#64748b; margin-top:2px;">🏷️ 分類：${item.station_type}</div>` : ''}
-                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
-                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:6px 0; line-height:1.4;">${item.description}</p>` : ''}
-                                ${item.bike_models ? `<div style="font-size:0.8rem; color:#334155; margin-top:4px;">🚲 車款：${item.bike_models}</div>` : ''}
-                                ${item.rental_methods ? `<div style="font-size:0.8rem; color:#334155; margin-top:2px;">💳 租借：${item.rental_methods}</div>` : ''}
-                                ${item.rate_info ? `<div style="font-size:0.8rem; color:#15803d; margin-top:2px; font-weight:bold;">💰 優惠：${item.rate_info}</div>` : ''}
-                                ${item.location_description ? `<div style="font-size:0.78rem; color:#64748b; margin-top:4px;">📍 位置：${item.location_description}</div>` : ''}
-                                <div style="margin-top:10px;">
-                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="width:100%; text-align:center; background:#388e3c; border:none; color:white; padding:7px 0; border-radius:6px; cursor:pointer; font-size:0.82rem; font-weight:bold;">🧭 導航前往</button>
-                                </div>
-                                <div style="font-size: 0.68rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來自 雲林縣公共自行車 MOOVO 官方網站
-                                </div>
-                            `;
-                        }
-                        else if (key === 'convenience') {
-                            const isFM = item.brand === 'FamilyMart';
-                            const brandTitle = isFM ? '🏪 全家便利商店 FamilyMart' : '🏪 7-ELEVEN 門市';
-                            const brandColor = isFM ? '#0284c7' : '#FFB300';
-                            const btnColor = isFM ? '#0284c7' : '#00a651';
-
-                            let services = [];
-                            if (isFM) {
-                                if (item.services_summary) {
-                                    services = item.services_summary.split(/[,，\s/]+/).filter(Boolean);
-                                } else {
-                                    if (item.isToilet) services.push("🚻洗手頁");
-                                    if (item.isDining) services.push("🪑內用座位");
-                                    if (item.isIceCream) services.push("🍦Fami!ce霜淇淋");
-                                    if (item.isCafe) services.push("☕Let's Café");
-                                    if (item.isATM) services.push("🏧ATM");
-                                    if (item.isFamiPort) services.push("🖨️FamiPort");
-                                    if (item.isPowerBank) services.push("🔋行動電源");
-                                    if (item.isGogoro) services.push("⚡Gogoro換電站");
-                                }
-                            } else {
-                                if (item.isToilet) services.push("🚻廁所");
-                                if (item.isATM) services.push("🏧ATM");
-                                if (item.isDining) services.push("🪑座位區");
-                                if (item.isIbon) services.push("🖨️ibon");
-                                if (item.isWifi) services.push("📶WiFi");
-                                if (item.isParking) services.push("🅿️停車場");
-                                if (item.isSlurpee) services.push("🥤思樂冰");
-                                if (item.isPowerBank) services.push("🔋行動電源租賃");
-                                if (item.isDonut) services.push("🍩Mister Donut");
-                                if (item.isTea) services.push("🍵現萃茶");
-                                if (item.isSweetPotato) services.push("🍠現蒸地瓜");
-                                if (item.isIceCream) services.push("🍦霜淇淋");
-                            }
-
-                            let serviceText = services.length > 0 
-                                ? `<div style="margin-top:6px; margin-bottom:4px; font-size:0.82rem; color:#444; line-height: 1.4;"><b>提供服務：</b><br>${services.join('、')}</div>` 
-                                : '';
-                            
-                            let tagChips = (item.tags || '').split(/[,，\s/]+/).filter(Boolean).map(t => `<span style="background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:bold;">#${t}</span>`).join(' ');
-
-                            popupContent = `
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; gap:4px;">
-                                    <span style="font-size:0.75rem; color:${brandColor}; font-weight:bold;">${brandTitle}</span>
-                                    ${item.district ? `<span style="background:${brandColor}; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold;">📍 ${item.district}</span>` : ''}
-                                </div>
-                                <b style="font-size:1.1rem; color:#1e293b;">${item.name}</b><br>
-                                ${tagChips ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin:6px 0;">${tagChips}</div>` : ''}
-                                ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:4px 0; line-height:1.4;">${item.description}</p>` : ''}
-                                ${serviceText}
-                                ${item.hours ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">🕒 營業時間：${item.hours}</div>` : ''}
-                                ${item.address ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">📍 地址：${item.address}</div>` : ''}
-                                <div style="margin-top:10px;">
-                                    <button onclick="window.open('${item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`}')" style="width:100%; text-align:center; background:${btnColor}; border:none; color:white; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 導航前往</button>
-                                </div>
-                                <div style="font-size: 0.65rem; color: #888; margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                                    ℹ️ 資料來源 來自官方網站
-                                </div>
-                            `;
-                        }
-
-                        L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent, { minWidth: 240, autoPanPadding: [80, 110] }).addTo(group);
+                        L.marker([item.lat, item.lng], {icon}).bindPopup(popupContent, { minWidth: 220, autoPanPadding: [80, 110] }).addTo(group);
                     }
                 });
             });
@@ -1614,14 +1009,11 @@
         }
     };
 
-    // STREAMING_CHUNK:Loading and parsing master CSV datasets and fallback sources...
-    async function loadVerifiedMasterCSV() {
-        const filesToTry = [
-            'yunlin_all_points_verified_2.csv',
-            'yunlin_all_points_verified.csv',
-            'yunlin_all_points_google_maps_unified_master_final.csv'
-        ];
-
+    // ========================================================
+    // 7. 資料庫載入與初始化
+    // ========================================================
+    async function loadMasterDataset() {
+        const filesToTry = ['yunlin_all_points_verified_2.csv', 'yunlin_all_points_verified.csv', 'yunlin_all_points_google_maps_unified_master_final.csv'];
         for (let fileName of filesToTry) {
             const success = await new Promise((resolve) => {
                 Papa.parse(fileName, {
@@ -1629,224 +1021,69 @@
                     complete: function(results) {
                         if (results && results.data && results.data.length > 0) {
                             try {
-                                loaded100Bowls = [];
-                                loadedFamilyMartStores = [];
-                                loaded711Stores = [];
-                                loadedWaterToiletHubs = [];
-                                loadedMoovoStations = [];
-                                loadedBikeRepairShops = [];
-                                loadedSouvenirs = [];
-                                loadedAccommodations = [];
-                                loadedAttractions = [];
-
                                 results.data.forEach(row => {
                                     let coords = parseRowCoords(row);
                                     if (!coords) return;
-
                                     const category = getExactCol(row, ['category', '來源分類', '分類']);
-                                    const subCategory = getExactCol(row, ['sub_category', '細項', '站點細項分類']);
-                                    const name = getExactCol(row, ['name', '店名', '商家名稱', '名稱', 'store_name', 'stay_name', 'station_name']);
-                                    const district = getExactCol(row, ['district', '行政區', '區']);
-                                    const address = getExactCol(row, ['address', '地址', '詳細地址']);
-                                    const phone = getExactCol(row, ['phone', '電話', '聯絡電話']);
-                                    const hours = getExactCol(row, ['business_hours', '營業時間', '開放時間']);
-                                    const desc = getExactCol(row, ['description', '簡介', '特色簡介', '網站小卡文案簡介']);
-                                    const tags = getExactCol(row, ['tags', '標籤', '特色標籤']);
-                                    const mapUrl = getExactCol(row, ['google_map_url', 'Google地圖連結', '地圖連結', 'map_url']);
+                                    const name = getExactCol(row, ['name', '店名', '商家名稱', '名稱']);
+                                    const district = getExactCol(row, ['district', '行政區']);
+                                    const address = getExactCol(row, ['address', '地址']);
+                                    const desc = getExactCol(row, ['description', '簡介', '特色簡介']);
+                                    const mapUrl = getExactCol(row, ['google_map_url', 'Google地圖連結', '地圖連結']);
 
-                                    const itemObj = {
-                                        id: row.id || '', category, sub_category: subCategory, name, district, address, phone,
-                                        hours, business_hours: hours, description: desc, tags, map_url: mapUrl,
-                                        lat: coords.lat, lng: coords.lng,
-                                        store_name: name, stay_name: name, station_name: name
-                                    };
-
+                                    const itemObj = { category, name, district, address, description: desc, map_url: mapUrl, lat: coords.lat, lng: coords.lng };
                                     const catLower = category.toLowerCase();
-                                    const subLower = subCategory.toLowerCase();
                                     const nameLower = name.toLowerCase();
-                                    const descLower = desc.toLowerCase();
 
-                                    const isFamilyMart = subLower.includes('全家') || nameLower.includes('全家') || subLower.includes('familymart') || descLower.includes('全家');
-                                    const is711Store = subLower.includes('7-11') || subLower.includes('711') || subLower.includes('7-eleven') || nameLower.includes('7-11') || nameLower.includes('711') || nameLower.includes('7-eleven') || nameLower.includes('統一超商') || catLower.includes('7-11') || catLower.includes('7-eleven');
-
-                                    if (catLower.includes('百碗美食') || catLower.includes('美食') || catLower.includes('小吃') || catLower.includes('餐飲')) {
-                                        loaded100Bowls.push({ ...itemObj, item: subCategory || desc || '在地美食' });
-                                    } else if (isFamilyMart) {
-                                        loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
-                                    } else if (is711Store || catLower.includes('超商') || catLower.includes('便利商店')) {
-                                        loaded711Stores.push({ ...itemObj, brand: '7-11' });
-                                    } else if (catLower.includes('友善水') || catLower.includes('水/廁') || catLower.includes('水廁') || catLower.includes('飲水') || catLower.includes('洗洗')) {
-                                        let waterInfo = getExactCol(row, ['water_info', '飲水機補水資訊', '飲水', '補水']) || '冷熱水補水';
-                                        let toiletInfo = getExactCol(row, ['toilet_info', '洗手間/公廁資訊', '公廁', '廁所']) || '公共洗手頁';
-                                        let bikeFacilityInfo = getExactCol(row, ['bike_facility_info', '充氣/單車設施', '單車設施']);
-                                        loadedWaterToiletHubs.push({ ...itemObj, water_info: waterInfo, toilet_info: toiletInfo, bike_facility_info: bikeFacilityInfo });
-                                    } else if (catLower.includes('moovo') || subLower.includes('moovo') || catLower.includes('公共自行車') || catLower.includes('單車站')) {
-                                        loadedMoovoStations.push({ ...itemObj, operating_status: '正常營運' });
-                                    } else if (catLower.includes('維修') || subLower.includes('維修') || catLower.includes('救援')) {
-                                        loadedBikeRepairShops.push({ ...itemObj, services: desc || '單車換胎與檢修' });
-                                    } else if (catLower.includes('伴手禮') || catLower.includes('特產')) {
-                                        loadedSouvenirs.push({ ...itemObj, product_name: subCategory || '在地特產' });
-                                    } else if (catLower.includes('住宿') || catLower.includes('旅宿') || catLower.includes('飯店') || catLower.includes('民宿')) {
-                                        loadedAccommodations.push({ ...itemObj, stay_type: subCategory || '精選旅宿' });
-                                    } else if (catLower.includes('景點') || catLower.includes('觀光') || catLower.includes('遊憩')) {
-                                        loadedAttractions.push({ ...itemObj, sub_category: subCategory || '觀光景點' });
-                                    }
+                                    if (catLower.includes('美食') || catLower.includes('小吃')) loaded100Bowls.push({ ...itemObj, item: desc || '在地美食' });
+                                    else if (nameLower.includes('全家')) loadedFamilyMartStores.push({ ...itemObj, brand: 'FamilyMart' });
+                                    else if (nameLower.includes('7-11') || nameLower.includes('711') || catLower.includes('超商')) loaded711Stores.push({ ...itemObj, brand: '7-11' });
+                                    else if (catLower.includes('水') || catLower.includes('廁')) loadedWaterToiletHubs.push(itemObj);
+                                    else if (catLower.includes('moovo')) loadedMoovoStations.push(itemObj);
+                                    else if (catLower.includes('維修')) loadedBikeRepairShops.push(itemObj);
+                                    else if (catLower.includes('伴手禮')) loadedSouvenirs.push(itemObj);
+                                    else if (catLower.includes('住宿')) loadedAccommodations.push(itemObj);
                                 });
-
-                                TravelServiceManager.updateMarkers();
-                                renderFoodRadar();
-
-                                console.log(`✅ 成功載入驗證資料庫 (${fileName})！解析 711 筆數: ${loaded711Stores.length}, 全家筆數: ${loadedFamilyMartStores.length}`);
                                 resolve(true);
                                 return;
-                            } catch(e) {
-                                console.warn(`解析 ${fileName} 異常`, e);
-                            }
+                            } catch(e) {}
                         }
                         resolve(false);
                     },
-                    error: function() { resolve(false); }
+                    error: () => resolve(false)
                 });
             });
-
-            if (success) return true;
+            if (success) break;
         }
-        return false;
-    }
 
-    async function fetch711CsvFallback() {
-        return new Promise((resolve) => {
-            Papa.parse('711.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    if (results && results.data && results.data.length > 0) {
-                        try {
-                            const parsed = results.data.map(row => {
-                                let coords = parseRowCoords(row);
-                                let storeName = getExactCol(row, ['POIName', '店名', '門市', '名稱']) || '7-ELEVEN 門市';
-                                return {
-                                    brand: '7-11',
-                                    name: storeName,
-                                    lat: coords?.lat ?? NaN, lng: coords?.lng ?? NaN,
-                                    district: getExactCol(row, ['district', '行政區']) || '雲林縣'
-                                };
-                            }).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
-
-                            if (parsed.length > 0) {
-                                loaded711Stores = parsed;
-                                console.log(`✅ 備援 711.csv 載入成功，共 ${parsed.length} 筆`);
-                            }
-                        } catch(e) {}
-                    }
-                    resolve();
-                },
-                error: function() { resolve(); }
+        // 把預設十大景點注入到景點圖層中
+        Object.values(POIs).filter(p => p.type === 'attraction').forEach(spot => {
+            loadedAttractions.push({
+                category: '🏞️ 經典景點',
+                name: spot.name,
+                description: spot.desc,
+                lat: spot.coords[1],
+                lng: spot.coords[0]
             });
         });
+
+        TravelServiceManager.updateMarkers();
+        renderFoodRadar();
     }
 
-    async function fetchWaterToiletCsvFallback() {
-        return new Promise((resolve) => {
-            Papa.parse('yunlin_cycling_water_and_restroom_spots_verified.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    if (results && results.data && results.data.length > 0) {
-                        try {
-                            const parsed = results.data.map(row => {
-                                let coords = parseRowCoords(row);
-                                let name = getExactCol(row, ['name', '站點名稱', '名稱', 'title', '店名']) || '友善水/廁據點';
-                                return {
-                                    category: getExactCol(row, ['category', '來源分類', '分類']) || '友善水/廁據點',
-                                    sub_category: getExactCol(row, ['sub_category', '細項', '站點細項分類']),
-                                    name: name,
-                                    district: getExactCol(row, ['district', '行政區']) || '雲林縣',
-                                    address: getExactCol(row, ['address', '詳細地址/位置', '詳細地址', '地址']),
-                                    water_info: getExactCol(row, ['water_info', '飲水機補水資訊', '飲水', '補水']) || '冷熱水補水',
-                                    toilet_info: getExactCol(row, ['toilet_info', '洗手間/公廁資訊', '公廁', '廁所']) || '公共洗手頁',
-                                    bike_facility_info: getExactCol(row, ['bike_facility_info', '充氣/單車設施', '單車設施']),
-                                    hours: getExactCol(row, ['hours', 'business_hours', '開放/營業時間', '營業時間', '開放時間']),
-                                    description: getExactCol(row, ['description', '簡介', '特色簡介', '網站小卡文案簡介']),
-                                    tags: getExactCol(row, ['tags', '標籤', '特色標籤']),
-                                    map_url: getExactCol(row, ['google_map_url', 'map_url', '地圖連結', 'Google地圖連結']),
-                                    lat: coords?.lat ?? NaN, lng: coords?.lng ?? NaN
-                                };
-                            }).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
-
-                            if (parsed.length > 0) {
-                                loadedWaterToiletHubs = parsed;
-                                console.log(`✅ 備援 友善水/廁 CSV 載入成功，共 ${parsed.length} 筆`);
-                            }
-                        } catch(e) {}
-                    }
-                    resolve();
-                },
-                error: function() { resolve(); }
-            });
-        });
-    }
-
-    async function fetchAttractionsCsvFallback() {
-        return new Promise((resolve) => {
-            Papa.parse('yunlin_attractions_cards_verified.csv', {
-                download: true, header: true, skipEmptyLines: true,
-                complete: function(results) {
-                    if (results && results.data && results.data.length > 0) {
-                        try {
-                            const parsed = results.data.map(row => {
-                                let coords = parseRowCoords(row);
-                                let name = getExactCol(row, ['name', '景點名稱', '名稱', 'title', 'spot_name', '店名']) || '熱門景點';
-                                return {
-                                    category: getExactCol(row, ['category', '來源分類', '分類']) || '觀光景點',
-                                    sub_category: getExactCol(row, ['sub_category', '細項', '景點細項分類']),
-                                    name: name,
-                                    district: getExactCol(row, ['district', '行政區']) || '雲林縣',
-                                    address: getExactCol(row, ['address', '詳細地址/位置', '詳細地址', '地址']),
-                                    phone: getExactCol(row, ['phone', '電話', '聯絡電話']),
-                                    hours: getExactCol(row, ['hours', 'business_hours', '開放/營業時間', '營業時間', '開放時間']),
-                                    description: getExactCol(row, ['description', '簡介', '特色簡介', '景點簡介', '網站小卡文案簡介']),
-                                    tags: getExactCol(row, ['tags', '標籤', '特色標籤']),
-                                    map_url: getExactCol(row, ['google_map_url', 'map_url', '地圖連結', 'Google地圖連結']),
-                                    lat: coords?.lat ?? NaN, lng: coords?.lng ?? NaN
-                                };
-                            }).filter(s => !isNaN(s.lat) && !isNaN(s.lng));
-
-                            if (parsed.length > 0) {
-                                loadedAttractions = parsed;
-                                console.log(`✅ 備援 景點 CSV 載入成功，共 ${parsed.length} 筆`);
-                            }
-                        } catch(e) {}
-                    }
-                    resolve();
-                },
-                error: function() { resolve(); }
-            });
-        });
-    }
-
-    // STREAMING_CHUNK:Fetching Open-Meteo weather forecast and initializing Leaflet map...
     async function fetchWeather() {
         const widget = document.getElementById('weather-widget');
         try {
-            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=23.73633&longitude=120.41649&current_weather=true&daily=precipitation_probability_max&hourly=precipitation_probability&timezone=Asia/Taipei`);
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=23.73633&longitude=120.41649&current_weather=true&daily=precipitation_probability_max&timezone=Asia/Taipei`);
             const data = await res.json();
-            
             const temp = data.current_weather?.temperature ?? "--";
             const code = data.current_weather?.weathercode ?? 0;
-            
             let maxPrecipProb = data.daily?.precipitation_probability_max?.[0] ?? "0";
-            let precipProb = maxPrecipProb;
-            if (data.hourly && data.hourly.precipitation_probability && data.hourly.time) {
-                const currentHourIso = data.current_weather?.time;
-                const idx = (data.hourly.time || []).findIndex(t => t.startsWith(currentHourIso?.slice(0, 13) || ""));
-                if (idx !== -1) precipProb = data.hourly.precipitation_probability[idx];
-            }
             
             let weatherIcon = "☀️", weatherText = "晴朗";
             if (code >= 1 && code <= 3) { weatherIcon = "⛅"; weatherText = "多雲"; }
-            else if (code >= 45 && code <= 48) { weatherIcon = "🌫️"; weatherText = "有霧"; }
             else if (code >= 51 && code <= 67) { weatherIcon = "🌧️"; weatherText = "有雨"; }
-            else if (code >= 80 && code <= 82) { weatherIcon = "🌦️"; weatherText = "陣雨"; }
-            else if (code >= 95) { weatherIcon = "⛈️"; weatherText = "雷雨"; }
+            else if (code >= 80) { weatherIcon = "⛈️"; weatherText = "雷陣雨"; }
 
             widget.innerHTML = `
                 <div style="font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -1856,77 +1093,95 @@
                 </div>
                 <div style="font-size: 0.8rem; color: #0284c7; margin-top: 3px; display: flex; justify-content: center; gap: 8px;">
                     <span>☔ 今日降雨機率: <b>${maxPrecipProb}%</b></span>
-                    <span>(當前: ${precipProb}%)</span>
                 </div>
             `;
-        } catch (e) { widget.innerHTML = "⚠️ 氣象載入失敗"; }
+        } catch(e) { widget.innerHTML = "⚠️ 氣象載入失敗"; }
     }
 
-    async function initApp() {
-        try {
-            map = L.map('map', { zoomControl: false }).setView([23.73633, 120.41649], 12);
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-            
-            const mapContainer = document.getElementById('map');
-            if (window.ResizeObserver && mapContainer) {
-                new ResizeObserver(() => {
-                    if (map) map.invalidateSize();
-                }).observe(mapContainer);
-            }
-            window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
-            setTimeout(() => { if (map) map.invalidateSize(); }, 300);
-
-            markersCluster = L.markerClusterGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 14 }).addTo(map);
-            dynamicFoodLayer = L.layerGroup(); 
-            TravelServiceManager.init();
-
-            Object.values(POIs).forEach(poi => {
-                let color = "var(--spot-blue)"; let iconText = "📍";
-                if(poi.type === 'temple') { color = "var(--temple-red)"; iconText = "⛩️"; }
-                if(poi.type === 'station') { color = "var(--moovo-dark)"; iconText = "🚉"; }
-                if(poi.type === 'moovo') { color = "var(--moovo-green)"; iconText = "🚲"; }
-
-                const icon = L.divIcon({ html: `<div style="background:${color}; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">${iconText}</div>`, className: '', iconSize: [28,28] });
-                
-                const marker = L.marker([poi.coords[1], poi.coords[0]], { icon });
-                if(poi.type === 'temple') {
-                    marker.bindPopup(`
-                        <div style="text-align:center;">
-                            <b style="font-size:15px;">${poi.name}</b><br>
-                            <button onclick="StoryPOIManager.openPanel('${poi.id || Object.keys(POIs).find(k=>POIs[k]===poi)}', 'temple')" style="margin-top:8px; background:#4CAF50; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">📖 專屬故事</button>
-                        </div>
-                    `, { autoPanPadding: [80, 110] });
-                } else {
-                    marker.bindPopup(`<b>${poi.name}</b><br><span style="color:#666;">${poi.desc}</span>`, { autoPanPadding: [80, 110] });
-                }
-                markersCluster.addLayer(marker);
-            });
-
-            fetchWeather();
-            await loadVerifiedMasterCSV();
-
-            if (loaded711Stores.length === 0) {
-                await fetch711CsvFallback();
-            }
-
-            if (loadedWaterToiletHubs.length === 0) {
-                await fetchWaterToiletCsvFallback();
-            }
-
-            if (loadedAttractions.length === 0) {
-                await fetchAttractionsCsvFallback();
-            }
-
-        } catch (e) {
-            console.error("Initialization Failed:", e);
+    // ========================================================
+    // 8. SOS 功能與地圖初始化
+    // ========================================================
+    function toggleSiren() {
+        const sirenBtn = document.getElementById('sirenToggleBtn');
+        if (!isSirenActive) {
+            isSirenActive = true;
+            sirenBtn.classList.add('active');
+            sirenBtn.innerHTML = "🛑 停止警報聲響";
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            let high = true;
+            sirenTimer = setInterval(() => {
+                if (!isSirenActive || !audioCtx) return;
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(high ? 1200 : 800, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                    high = !high;
+                } catch(e) {}
+            }, 300);
+        } else {
+            isSirenActive = false;
+            clearInterval(sirenTimer);
+            sirenTimer = null;
+            sirenBtn.classList.remove('active');
+            sirenBtn.innerHTML = "🔊 播放高音求救警報聲 (引人注意)";
         }
+    }
+
+    function openSosModal() { 
+        document.getElementById('sosModal').style.display = 'flex'; 
+        const coordsEl = document.getElementById('sosGpsCoords');
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const lat = pos.coords.latitude, lng = pos.coords.longitude;
+                currentUserCoords = [lng, lat];
+                coordsEl.innerHTML = `🌐 經緯度：<b>${lat.toFixed(5)}, ${lng.toFixed(5)}</b>`;
+                document.getElementById('sosNearestBox').style.display = 'block';
+                document.getElementById('sosNearestHosp').innerHTML = `🏥 最近急診：<b>臺大虎尾院區</b> (即刻可達)`;
+                document.getElementById('sosNearestPol').innerHTML = `👮 最近驛站：<b>虎尾分局鐵馬驛站</b>`;
+            }, () => { coordsEl.innerHTML = `⚠️ 無法取得即時定位`; }, { enableHighAccuracy: true });
+        }
+    }
+
+    function closeSosModal() {
+        if (isSirenActive) toggleSiren();
+        document.getElementById('sosModal').style.display = 'none';
+    }
+
+    function toggleSosMapLayer() {
+        closeSosModal();
+        if (!sosMapLayer) sosMapLayer = L.layerGroup();
+        sosMapLayer.clearLayers();
+        sosEmergencyResources.hospitals.forEach(h => {
+            const icon = L.divIcon({ html: `<div style="background:#dc2626; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white;">🏥</div>`, className: '', iconSize: [28,28] });
+            L.marker([h.coords[1], h.coords[0]], { icon }).bindPopup(`<b>${h.name}</b><br>${h.addr}<br><a href="tel:${h.phone}">📞 ${h.phone}</a>`).addTo(sosMapLayer);
+        });
+        map.addLayer(sosMapLayer);
+        document.getElementById('closeSosMapBtn').style.display = 'flex';
+        map.fitBounds(sosMapLayer.getBounds(), { padding: [50, 50] });
+    }
+
+    function clearSosMapLayer() {
+        if (sosMapLayer && map) map.removeLayer(sosMapLayer);
+        document.getElementById('closeSosMapBtn').style.display = 'none';
+    }
+
+    function toggleTrafficLayer(enable) {
+        if (!trafficLayer) trafficLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m,traffic&x={x}&y={y}&z={z}', { maxZoom: 19 });
+        if (enable) map.addLayer(trafficLayer);
+        else map.removeLayer(trafficLayer);
     }
 
     function togglePanel() {
         const panel = document.getElementById('controlPanel');
         const btn = document.getElementById('expandBtn');
-        if (!panel || !btn) return;
         panel.classList.toggle('collapsed');
         if (panel.classList.contains('collapsed')) {
             btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.style.transform = 'translateX(0)';
@@ -1935,9 +1190,46 @@
         }
     }
 
-    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initApp); } 
-    else { initApp(); }
+    async function initApp() {
+        map = L.map('map', { zoomControl: false }).setView([23.73633, 120.41649], 12);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        
+        markersCluster = L.markerClusterGroup({ maxClusterRadius: 50, disableClusteringAtZoom: 14 }).addTo(map);
+        dynamicFoodLayer = L.layerGroup();
+        TravelServiceManager.init();
 
+        // 繪製七大名廟與經典景點地圖標記
+        Object.values(POIs).forEach(poi => {
+            let color = "var(--spot-blue)", iconText = "📍";
+            if (poi.type === 'temple') { color = "var(--temple-red)"; iconText = "⛩️"; }
+            if (poi.type === 'station') { color = "var(--moovo-dark)"; iconText = "🚉"; }
+            if (poi.type === 'attraction') { color = "var(--spot-blue)"; iconText = "🏞️"; }
+
+            const icon = L.divIcon({ html: `<div style="background:${color}; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-size:14px; color:white; box-shadow:0 2px 5px rgba(0,0,0,0.3);">${iconText}</div>`, className: '', iconSize: [28,28] });
+            const marker = L.marker([poi.coords[1], poi.coords[0]], { icon });
+            
+            marker.bindPopup(`
+                <div style="text-align:center; min-width: 180px;">
+                    <div style="font-size:0.75rem; color:${color}; font-weight:bold;">${poi.type === 'temple' ? '⛩️ 七大名廟' : '🏞️ 經典景點'}</div>
+                    <b style="font-size:1.05rem; color:#1e293b;">${poi.name}</b><br>
+                    <p style="font-size:0.8rem; color:#64748b; margin:6px 0;">${poi.desc}</p>
+                    <button onclick="StoryPOIManager.openPanel('${poi.id}', '${poi.type}')" style="margin-top:4px; background:#4CAF50; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.82rem;">📖 專屬故事小卡</button>
+                </div>
+            `, { autoPanPadding: [80, 110] });
+
+            markersCluster.addLayer(marker);
+        });
+
+        fetchWeather();
+        await loadMasterDataset();
+
+        // 預設開啟景點圖層
+        map.addLayer(travelServices['attraction']);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
+    else initApp();
 </script>
 </body>
 </html>
