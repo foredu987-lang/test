@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V9.0</title>
+    <title>雲林信仰跟著卡打車打卡 V9.1</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -474,7 +474,7 @@
 <div id="app-container">
     <header>
         <div class="header-text">
-            <h1>雲林信仰跟著卡打車打卡 V9.0</h1>
+            <h1>雲林信仰跟著卡打車打卡 V9.1</h1>
             <p>單一驗證資料庫驅動：7 大名廟、10 大經典景點與在地補給全到位</p>
         </div>
         <!-- 頂部手動重啟導覽說明按鍵 -->
@@ -1432,7 +1432,7 @@
             document.getElementById('tourBtnPrev').style.display = this.currentStep === 0 ? 'none' : 'inline-block';
             document.getElementById('tourBtnNext').innerText = this.currentStep === this.steps.length - 1 ? '🎉 完成導覽' : '下一步 ➜';
 
-            // 計算目標元素位置
+            // 計算目標元素位置與視窗安全邊界防裁切
             if (targetEl) {
                 const rect = targetEl.getBoundingClientRect();
                 const pad = 6;
@@ -1444,15 +1444,23 @@
                 highlightBox.style.height = `${rect.height + pad * 2}px`;
 
                 tooltip.style.display = 'block';
+                const tipHeight = tooltip.offsetHeight || 220;
+                const tipWidth = tooltip.offsetWidth || 320;
                 
-                // 定位卡片提示框
+                let targetTop = 20;
+                let targetLeft = 20;
+
                 if (step.position === 'left') {
-                    tooltip.style.top = `${Math.max(20, rect.top)}px`;
-                    tooltip.style.left = `${Math.max(15, rect.left - 340)}px`;
+                    // 若目標靠下（如 SOS 按鈕），卡片向上自適應貼齊，避免沉底被工作列遮擋
+                    targetTop = Math.min(window.innerHeight - tipHeight - 30, Math.max(25, rect.top + rect.height / 2 - tipHeight / 2));
+                    targetLeft = Math.max(15, rect.left - tipWidth - 20);
                 } else if (step.position === 'bottom') {
-                    tooltip.style.top = `${rect.bottom + 15}px`;
-                    tooltip.style.left = `${Math.max(15, rect.left + rect.width / 2 - 160)}px`;
+                    targetTop = Math.min(window.innerHeight - tipHeight - 30, rect.bottom + 15);
+                    targetLeft = Math.max(15, Math.min(window.innerWidth - tipWidth - 15, rect.left + rect.width / 2 - tipWidth / 2));
                 }
+
+                tooltip.style.top = `${targetTop}px`;
+                tooltip.style.left = `${targetLeft}px`;
             }
         },
         next: function() {
