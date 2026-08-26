@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V8.1</title>
+    <title>雲林信仰跟著卡打車打卡 V9.0</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -39,9 +39,31 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             z-index: 1000;
             flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
         }
-        header h1 { margin: 0; font-size: 1.3rem; letter-spacing: 0.5px; }
-        header p { margin: 4px 0 0 0; font-size: 0.82rem; color: #aaa; }
+        .header-text h1 { margin: 0; font-size: 1.3rem; letter-spacing: 0.5px; }
+        .header-text p { margin: 4px 0 0 0; font-size: 0.82rem; color: #aaa; }
+        
+        .header-help-btn {
+            position: absolute;
+            right: 15px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .header-help-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.03); }
 
         .map-wrapper { position: relative; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
         #map { width: 100%; height: 100%; z-index: 1; position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
@@ -61,6 +83,7 @@
             pointer-events: none;
             max-width: 96vw;
             align-items: center;
+            transition: all 0.3s;
         }
         .top-toolbar > * { pointer-events: auto; }
 
@@ -320,6 +343,119 @@
 
         .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; color: var(--moovo-dark); display: none; }
 
+        /* ========================================================
+           ✨ 方案 B：聚光燈導覽互動系統 CSS (Spotlight Walkthrough)
+           ======================================================== */
+        .tour-backdrop-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(2px);
+            z-index: 8000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .tour-backdrop-overlay.active { display: block; opacity: 1; }
+
+        .tour-highlight-box {
+            position: absolute;
+            z-index: 8500;
+            border-radius: 12px;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.75), 0 0 25px rgba(76, 175, 80, 0.8);
+            border: 3px solid var(--moovo-green);
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: none;
+        }
+
+        .tour-card-tooltip {
+            position: absolute;
+            z-index: 9000;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            width: 320px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 2px solid var(--moovo-green);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: none;
+            box-sizing: border-box;
+        }
+
+        .tour-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .tour-step-badge {
+            background: #ecfdf5;
+            color: #065f46;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid #a7f3d0;
+        }
+        .tour-skip-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0;
+        }
+        .tour-skip-btn:hover { color: #475569; text-decoration: underline; }
+
+        .tour-card-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 6px 0;
+        }
+        .tour-card-desc {
+            font-size: 0.88rem;
+            color: #475569;
+            line-height: 1.5;
+            margin: 0 0 16px 0;
+        }
+
+        .tour-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .tour-footer-btns { display: flex; gap: 8px; }
+        
+        .tour-btn {
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .tour-btn-prev { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+        .tour-btn-prev:hover { background: #e2e8f0; }
+        .tour-btn-next { background: var(--moovo-green); color: white; box-shadow: 0 2px 6px rgba(76,175,80,0.3); }
+        .tour-btn-next:hover { background: var(--moovo-dark); }
+
+        .tour-dont-show {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            color: #64748b;
+            cursor: pointer;
+            user-select: none;
+        }
+        .tour-dont-show input { width: 14px; height: 14px; cursor: pointer; accent-color: var(--moovo-green); }
+
         @keyframes pulseSOS {
             0% { transform: scale(1); }
             70% { transform: scale(1.03); }
@@ -329,6 +465,7 @@
         @media (max-width: 900px) {
             .top-toolbar { flex-wrap: wrap; justify-content: center; top: 6px; }
             .control-panel { width: calc(100% - 30px); }
+            .tour-card-tooltip { width: 290px; }
         }
     </style>
 </head>
@@ -336,8 +473,14 @@
 
 <div id="app-container">
     <header>
-        <h1>雲林信仰跟著卡打車打卡 V8.1</h1>
-        <p>單一驗證資料庫驅動：7 大名廟、10 大經典景點與在地補給全到位</p>
+        <div class="header-text">
+            <h1>雲林信仰跟著卡打車打卡 V9.0</h1>
+            <p>單一驗證資料庫驅動：7 大名廟、10 大經典景點與在地補給全到位</p>
+        </div>
+        <!-- 頂部手動重啟導覽說明按鍵 -->
+        <button class="header-help-btn" onclick="TourGuide.start(true)" title="重新開啟使用導覽說明">
+            💡 新手導覽
+        </button>
     </header>
 
     <div class="map-wrapper">
@@ -420,7 +563,7 @@
                 </section>
 
                 <!-- 智慧路線規劃：高鐵站選項 + 七大宮廟 + 十大景點 -->
-                <section class="ui-card">
+                <section class="ui-card" id="tour-step1-target">
                     <div class="ui-card-title">
                         <span>🗺️ 智慧路線規劃</span>
                     </div>
@@ -512,6 +655,32 @@
             ❌ 關閉地圖救援雷達圖層
         </button>
 
+    </div>
+</div>
+
+<!-- ========================================================
+     ✨ 方案 B：聚光燈導覽 DOM 結構 (Spotlight Overlay)
+     ======================================================== -->
+<div id="tourBackdrop" class="tour-backdrop-overlay"></div>
+<div id="tourHighlight" class="tour-highlight-box"></div>
+<div id="tourTooltip" class="tour-card-tooltip">
+    <div class="tour-card-header">
+        <span class="tour-step-badge" id="tourStepBadge">步驟 1 / 3</span>
+        <button class="tour-skip-btn" onclick="TourGuide.close()">跳過導覽 ✕</button>
+    </div>
+    <h3 class="tour-card-title" id="tourTitle">🧭 規劃專屬單車路線</h3>
+    <p class="tour-card-desc" id="tourDesc">
+        在右側「旅程指揮中心」自由勾選出發點（高鐵站）、7 大名廟與 10 大經典景點，點擊「計算最佳路線」，AI 將自動為您串聯最順暢的環狀單車道！
+    </p>
+    <div class="tour-card-footer">
+        <label class="tour-dont-show">
+            <input type="checkbox" id="tourDontShowCheck">
+            <span>不再主動顯示</span>
+        </label>
+        <div class="tour-footer-btns">
+            <button class="tour-btn tour-btn-prev" id="tourBtnPrev" onclick="TourGuide.prev()">上一步</button>
+            <button class="tour-btn tour-btn-next" id="tourBtnNext" onclick="TourGuide.next()">下一步</button>
+        </div>
     </div>
 </div>
 
@@ -1117,7 +1286,7 @@
     }
 
     // ========================================================
-    // 8. SOS 功能與地圖初始化
+    // 8. SOS 功能
     // ========================================================
     function toggleSiren() {
         const sirenBtn = document.getElementById('sirenToggleBtn');
@@ -1208,6 +1377,109 @@
         }
     }
 
+    // ========================================================
+    // 9. ✨ 方案 B：聚光燈新手引導核心控制器 (TourGuide)
+    // ========================================================
+    const TourGuide = {
+        currentStep: 0,
+        steps: [
+            {
+                targetId: 'tour-step1-target',
+                title: '🧭 第一步：規劃專屬單車路線',
+                desc: '在右側面板自由勾選<b>出發點（高鐵站）</b>、<b>7 大名廟</b>與 <b>10 大經典景點</b>，點擊「計算最佳路線」，AI 將自動為您串聯最順暢的環狀單車道！',
+                position: 'left'
+            },
+            {
+                targetId: 'topToolbar',
+                title: '🏪 第二步：隨行補給與沿線雷達',
+                desc: '騎乘途中渴了或肚子餓？點選上方<b>「超商、友善水/廁、美食、Moovo」</b>，並可切換<b>「全部 / 2km / 5km」</b>，精準掌握路線周邊補給！',
+                position: 'bottom'
+            },
+            {
+                targetId: 'sosBtn',
+                title: '🆘 第三步：安全守護與緊急救援',
+                desc: '遇到爆胎或身體不適？點擊 <b>SOS 救援雷達</b>，一鍵獲取實時 GPS 座標、最近 24H 急診醫院與鐵馬驛站，隨時為您的騎行護航！',
+                position: 'left'
+            }
+        ],
+        start: function(force = false) {
+            if (!force) {
+                const hideTour = localStorage.getItem('yunlin_tour_completed');
+                if (hideTour === 'true') return;
+            }
+            this.currentStep = 0;
+            document.getElementById('tourBackdrop').classList.add('active');
+            this.renderStep();
+        },
+        renderStep: function() {
+            const step = this.steps[this.currentStep];
+            const targetEl = document.getElementById(step.targetId);
+            const highlightBox = document.getElementById('tourHighlight');
+            const tooltip = document.getElementById('tourTooltip');
+
+            // 確保面板展開以對齊定位
+            const panel = document.getElementById('controlPanel');
+            if (panel && panel.classList.contains('collapsed')) {
+                togglePanel();
+            }
+
+            // 更新文字內容
+            document.getElementById('tourStepBadge').innerText = `步驟 ${this.currentStep + 1} / ${this.steps.length}`;
+            document.getElementById('tourTitle').innerHTML = step.title;
+            document.getElementById('tourDesc').innerHTML = step.desc;
+
+            // 控制按鈕顯示
+            document.getElementById('tourBtnPrev').style.display = this.currentStep === 0 ? 'none' : 'inline-block';
+            document.getElementById('tourBtnNext').innerText = this.currentStep === this.steps.length - 1 ? '🎉 完成導覽' : '下一步 ➜';
+
+            // 計算目標元素位置
+            if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                const pad = 6;
+
+                highlightBox.style.display = 'block';
+                highlightBox.style.top = `${rect.top - pad + window.scrollY}px`;
+                highlightBox.style.left = `${rect.left - pad + window.scrollX}px`;
+                highlightBox.style.width = `${rect.width + pad * 2}px`;
+                highlightBox.style.height = `${rect.height + pad * 2}px`;
+
+                tooltip.style.display = 'block';
+                
+                // 定位卡片提示框
+                if (step.position === 'left') {
+                    tooltip.style.top = `${Math.max(20, rect.top)}px`;
+                    tooltip.style.left = `${Math.max(15, rect.left - 340)}px`;
+                } else if (step.position === 'bottom') {
+                    tooltip.style.top = `${rect.bottom + 15}px`;
+                    tooltip.style.left = `${Math.max(15, rect.left + rect.width / 2 - 160)}px`;
+                }
+            }
+        },
+        next: function() {
+            if (this.currentStep < this.steps.length - 1) {
+                this.currentStep++;
+                this.renderStep();
+            } else {
+                this.close();
+            }
+        },
+        prev: function() {
+            if (this.currentStep > 0) {
+                this.currentStep--;
+                this.renderStep();
+            }
+        },
+        close: function() {
+            const dontShow = document.getElementById('tourDontShowCheck')?.checked;
+            if (dontShow) {
+                localStorage.setItem('yunlin_tour_completed', 'true');
+            }
+            document.getElementById('tourBackdrop').classList.remove('active');
+            document.getElementById('tourHighlight').style.display = 'none';
+            document.getElementById('tourTooltip').style.display = 'none';
+        }
+    };
+
     async function initApp() {
         map = L.map('map', { zoomControl: false }).setView([23.73633, 120.41649], 12);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -1244,6 +1516,11 @@
 
         // 預設開啟景點圖層
         map.addLayer(travelServices['attraction']);
+
+        // 啟動新手導覽引導 (方案 B)
+        setTimeout(() => {
+            TourGuide.start(false);
+        }, 600);
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
