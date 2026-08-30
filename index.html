@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V9.1</title>
+    <title>雲林信仰跟著卡打車打卡 V9.2</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -474,7 +474,7 @@
 <div id="app-container">
     <header>
         <div class="header-text">
-            <h1>雲林信仰跟著卡打車打卡 V9.1</h1>
+            <h1>雲林信仰跟著卡打車打卡 V9.2</h1>
             <p>單一驗證資料庫驅動：7 大名廟、10 大經典景點與在地補給全到位</p>
         </div>
         <!-- 頂部手動重啟導覽說明按鍵 -->
@@ -983,13 +983,30 @@
         }
         
         const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
-        const url = `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&alternatives=false`;
+        // 嚴格單車禁行快速/高速道路專用導航引擎 (禁用國道/快速道路/台78線)
+        const routingEndpoints = [
+            `https://routing.openstreetmap.de/routed-bike/route/v1/cycling/${coordsString}?overview=full&geometries=geojson&continue_straight=true`,
+            `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&continue_straight=true`
+        ];
 
         try {
-            const response = await fetch(url);
-            const data = await response.json();
+            let data = null;
+            for (let ep of routingEndpoints) {
+                try {
+                    const response = await fetch(ep);
+                    if (response.ok) {
+                        const resJson = await response.json();
+                        if (resJson.code === 'Ok' && resJson.routes && resJson.routes.length > 0) {
+                            data = resJson;
+                            break;
+                        }
+                    }
+                } catch(err) {
+                    console.warn("Routing endpoint fallback:", ep, err);
+                }
+            }
             
-            if (data.code !== 'Ok') throw new Error('API 無法規劃路線');
+            if (!data || data.code !== 'Ok') throw new Error('API 無法規劃路線');
             
             let routeGeoJSON = data.routes[0].geometry;
             let distKm = (data.routes[0].distance / 1000).toFixed(1);
