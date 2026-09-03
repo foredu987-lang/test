@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>雲林信仰跟著卡打車打卡 V10.0 (RWD響應式全裝置版)</title>
+    <title>雲林信仰跟著卡打車打卡 V10.1 (左上角 SOS 膠囊版)</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -524,6 +524,41 @@
         /* ========================================================
            📱 RWD 響應式斷點 (平版 768px ~ 1024px / 手機 < 768px)
            ======================================================== */
+        
+        /* ========================================================
+           左上角獨立 SOS 救援膠囊按鈕 (樣式 A)
+           ======================================================== */
+        .sos-top-capsule {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            z-index: 2400;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: 2px solid white;
+            border-radius: 24px;
+            padding: 7px 14px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            user-select: none;
+        }
+        .sos-top-capsule:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+        }
+        .sos-top-capsule:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
         @media (max-width: 1024px) {
             .header-text h1 { font-size: 1.1rem; }
             .control-panel { width: 320px; top: 10px; right: 10px; }
@@ -537,9 +572,17 @@
             .header-text p { display: none; }
             .header-help-btn { font-size: 0.72rem; padding: 4px 9px; right: 8px; }
 
-            /* 頂部工具列：手機版橫向滑動 (避免折行遮蔽地圖) */
-            .top-toolbar {
+            /* 左上角 SOS 按鈕手機微調 */
+            .sos-top-capsule {
                 top: 8px;
+                left: 8px;
+                padding: 6px 11px;
+                font-size: 0.78rem;
+            }
+
+            /* 頂部工具列：手機版橫向滑動 (避開左上角 SOS 鈕) */
+            .top-toolbar {
+                top: 46px;
                 left: 0;
                 transform: none;
                 width: 100%;
@@ -607,7 +650,7 @@
 <div id="app-container">
     <header>
         <div class="header-text">
-            <h1>雲林信仰跟著卡打車打卡 V10.0</h1>
+            <h1>雲林信仰跟著卡打車打卡 V10.1</h1>
             <p>智慧響應式設計：支援手機、平板與桌機無縫暢遊</p>
         </div>
         <!-- 頂部手動重啟導覽說明按鍵 -->
@@ -621,6 +664,11 @@
         <div id="loading" class="loading-overlay">⏳ 正在處理您的請求...</div>
         
         <!-- 正上方三段式排版工具列 (左:模式 / 中:圖層按鍵 / 右:半徑範圍) -->
+        <!-- 左上方獨立 SOS 救援膠囊按鈕 (樣式 A) -->
+        <button id="sosBtn" class="sos-top-capsule" onclick="openSosModal()" title="緊急狀況求救與醫療支援">
+            🆘 SOS 救援
+        </button>
+
         <div class="top-toolbar" id="topToolbar">
             <!-- 左側：探索模式說明 -->
             <div class="toolbar-info-box" id="toolbar-mode-badge">
@@ -778,7 +826,6 @@
                     <div id="route-info"></div>
                 </section>
 
-                <button id="sosBtn" class="btn-sos" onclick="openSosModal()">🆘 啟動 SOS 救援雷達</button>
             </div>
         </div>
 
@@ -1548,8 +1595,8 @@
             {
                 targetId: 'sosBtn',
                 title: '🆘 第三步：安全守護與緊急救援',
-                desc: '遇到爆胎或身體不適？點擊 <b>SOS 救援雷達</b>，一鍵獲取實時 GPS 座標、最近 24H 急診醫院與鐵馬驛站，隨時為您的騎行護航！',
-                position: 'left'
+                desc: '遇到爆胎或身體不適？隨時點擊畫面左上方的 <b>SOS 救援</b>，一鍵獲取實時 GPS 座標、最近 24H 急診醫院與鐵馬驛站，隨時為您的騎行護航！',
+                position: 'bottom'
             }
         ],
         start: function(force = false) {
