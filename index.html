@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>雲林信仰跟著卡打車打卡 </title>
+    <!-- Version: V10.1 (左上角 SOS 膠囊版) -->
+    <title>雲林信仰跟著卡打車打卡</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -88,6 +89,40 @@
 
         .leaflet-popup-pane { z-index: 3500 !important; }
         .leaflet-popup { z-index: 3500 !important; }
+
+        /* ========================================================
+           左上角獨立 SOS 救援膠囊按鈕 (樣式 A)
+           ======================================================== */
+        .sos-top-capsule {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            z-index: 2400;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: 2px solid white;
+            border-radius: 24px;
+            padding: 7px 14px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            user-select: none;
+        }
+        .sos-top-capsule:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+        }
+        .sos-top-capsule:active {
+            transform: translateY(1px) scale(0.98);
+        }
 
         /* ========================================================
            頂部工具列 (RWD 自適應排版)
@@ -196,7 +231,7 @@
         }
 
         /* ========================================================
-           旅程指揮中心面板 (全裝置最適化)
+           旅程指揮中心面板 (桌機版：右側懸浮卡片)
            ======================================================== */
         .control-panel {
             position: absolute;
@@ -213,6 +248,11 @@
         }
         .control-panel > * { pointer-events: auto; }
         .control-panel.collapsed { transform: translateX(120%); opacity: 0; }
+
+        .sheet-drag-pill { display: none; }
+        .mobile-sheet-subtext { display: none; }
+        .mobile-toggle-icon { display: none; }
+        .desktop-close-icon { display: inline; }
 
         .panel-scroll-area {
             overflow-y: auto;
@@ -235,7 +275,8 @@
             display: flex; justify-content: space-between; align-items: center;
             border: 1px solid var(--border-color);
         }
-        .panel-header-flex span { font-weight: 800; font-size: 0.95rem; }
+        .panel-header-title-wrap { display: flex; align-items: center; gap: 6px; }
+        .panel-main-title { font-weight: 800; font-size: 0.95rem; }
         
         .toggle-panel-btn {
             position: absolute;
@@ -261,7 +302,7 @@
             transform: translateX(20px);
         }
         .toggle-panel-btn:hover { background: #f8fafc; }
-        .close-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8; padding: 0 4px; }
+        .close-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: #94a3b8; padding: 0 4px; }
         .close-btn:hover { color: #334155; }
 
         .ui-card {
@@ -313,16 +354,6 @@
         }
         .ui-checkbox-label:hover { color: var(--moovo-dark); }
         .ui-checkbox-label input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--moovo-green); }
-
-        .btn-sos {
-            width: 100%; padding: 11px; border: none; border-radius: 10px;
-            background: var(--sos-red); color: white; cursor: pointer;
-            font-weight: 800; font-size: 0.92rem; letter-spacing: 0.5px;
-            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
-            box-shadow: 0 4px 15px rgba(211,47,47,0.35);
-        }
-        .btn-sos:hover { background: #b71c1c; }
-        .btn-sos:active { transform: scale(0.98); }
 
         /* ========================================================
            SOS Modal (RWD 彈窗)
@@ -524,41 +555,6 @@
         /* ========================================================
            📱 RWD 響應式斷點 (平版 768px ~ 1024px / 手機 < 768px)
            ======================================================== */
-        
-        /* ========================================================
-           左上角獨立 SOS 救援膠囊按鈕 (樣式 A)
-           ======================================================== */
-        .sos-top-capsule {
-            position: absolute;
-            top: 10px;
-            left: 12px;
-            z-index: 2400;
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            border: 2px solid white;
-            border-radius: 24px;
-            padding: 7px 14px;
-            font-weight: 800;
-            font-size: 0.85rem;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            white-space: nowrap;
-            user-select: none;
-        }
-        .sos-top-capsule:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            transform: translateY(-1px) scale(1.02);
-            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
-        }
-        .sos-top-capsule:active {
-            transform: translateY(1px) scale(0.98);
-        }
-
         @media (max-width: 1024px) {
             .header-text h1 { font-size: 1.1rem; }
             .control-panel { width: 320px; top: 10px; right: 10px; }
@@ -582,7 +578,7 @@
 
             /* 頂部工具列：手機版橫向滑動 (避開左上角 SOS 鈕) */
             .top-toolbar {
-                top: 46px;
+                top: 44px;
                 left: 0;
                 transform: none;
                 width: 100%;
@@ -599,30 +595,103 @@
             .service-toggle-label { font-size: 0.72rem; padding: 4px 6px; }
             .radius-btn { font-size: 0.7rem; padding: 4px 6px; }
 
-            /* 旅程指揮中心：手機版懸浮卡片 / 底部覆蓋 */
+            /* ========================================================
+               ✨ 方案 B：手機版 Google Maps 式底部滑動抽屜 (Bottom Sheet)
+               ======================================================== */
             .control-panel {
-                width: calc(100vw - 16px);
-                max-width: 380px;
-                top: 8px;
-                right: 8px;
-                max-height: calc(100vh - 16px - var(--safe-area-top));
-                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100vw;
+                max-width: 100vw;
+                border-radius: 20px 20px 0 0;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(16px);
+                box-shadow: 0 -5px 25px rgba(0,0,0,0.18);
+                border: 1px solid var(--border-color);
+                border-bottom: none;
+                z-index: 2500;
+                transition: max-height 0.35s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.3s;
+                max-height: calc(50px + var(--safe-area-bottom)); /* 預設 Peek 抽屜狀態：露出標題與把手，上方 90% 全螢幕地圖 */
+                overflow: hidden;
+                transform: none !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+
+            .control-panel.mobile-expanded {
+                max-height: 78vh; /* 展開狀態：滑出路線規劃與天氣 */
+                box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+            }
+
+            .panel-header-flex {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 6px 14px 8px 14px;
+                background: transparent;
+                border-radius: 20px 20px 0 0;
+                box-shadow: none;
+                border: none;
+                cursor: pointer;
+                user-select: none;
+            }
+
+            .sheet-drag-pill {
+                display: block;
+                width: 36px;
+                height: 4px;
+                background: #cbd5e1;
+                border-radius: 2px;
+                margin-bottom: 5px;
+            }
+
+            .panel-header-title-wrap {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .panel-main-title {
+                font-weight: 800;
+                font-size: 0.9rem;
+                color: #0f172a;
+            }
+
+            .mobile-sheet-subtext {
+                display: inline-block;
+                font-size: 0.72rem;
+                color: #0284c7;
+                font-weight: 700;
+                background: #f0f9ff;
+                padding: 2px 8px;
+                border-radius: 12px;
+                border: 1px solid #bae6fd;
+            }
+
+            .desktop-close-icon { display: none; }
+            .mobile-toggle-icon {
+                display: inline-block;
+                font-size: 0.82rem;
+                color: #64748b;
+                margin-left: 6px;
+                font-weight: 800;
+            }
+
+            .panel-scroll-area {
+                padding: 0 10px calc(15px + var(--safe-area-bottom)) 10px;
+                height: calc(78vh - 55px);
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             .toggle-panel-btn {
-                top: auto;
-                bottom: calc(20px + var(--safe-area-bottom));
-                right: 12px;
-                transform: none;
-                border-radius: 25px;
-                background: #1B5E20;
-                color: white;
-                border: 2px solid white;
-                box-shadow: 0 4px 18px rgba(27,94,32,0.4);
-                padding: 10px 18px;
-                font-size: 0.88rem;
+                display: none !important; /* 手機版直接以底部抽屜 Bar 進行觸發 */
             }
-            .toggle-panel-btn:hover { background: #144917; }
 
             /* 故事小卡：手機版置中彈窗 */
             .story-card-drawer {
@@ -650,7 +719,7 @@
 <div id="app-container">
     <header>
         <div class="header-text">
-            <h1>雲林信仰跟著卡打車打卡 V10.1</h1>
+            <h1>雲林信仰跟著卡打車打卡</h1>
             <p>智慧響應式設計：支援手機、平板與桌機無縫暢遊</p>
         </div>
         <!-- 頂部手動重啟導覽說明按鍵 -->
@@ -723,11 +792,18 @@
             🧭 展開旅程面板
         </button>
 
-        <!-- 旅程指揮中心 -->
+        <!-- 旅程指揮中心 (電腦為右側懸浮卡片 / 手機為底部滑動抽屜 Bottom Sheet) -->
         <div class="control-panel" id="controlPanel">
-            <div class="panel-header-flex">
-                <span>🧭 旅程指揮中心</span>
-                <button class="close-btn" onclick="togglePanel()" title="收起面板">✖</button>
+            <div class="panel-header-flex" onclick="togglePanel()">
+                <div class="sheet-drag-pill"></div>
+                <div class="panel-header-title-wrap">
+                    <span class="panel-main-title">🧭 旅程指揮中心</span>
+                    <span class="mobile-sheet-subtext" id="sheetSubtext">點擊展開路線與資訊 ⌃</span>
+                </div>
+                <button class="close-btn" onclick="event.stopPropagation(); togglePanel();" title="收起/展開面板">
+                    <span class="desktop-close-icon">✖</span>
+                    <span class="mobile-toggle-icon" id="sheetToggleIcon">▲</span>
+                </button>
             </div>
 
             <div class="panel-scroll-area">
@@ -1563,14 +1639,35 @@
         else map.removeLayer(trafficLayer);
     }
 
-    function togglePanel() {
+    function togglePanel(forceExpand = null) {
         const panel = document.getElementById('controlPanel');
         const btn = document.getElementById('expandBtn');
-        panel.classList.toggle('collapsed');
-        if (panel.classList.contains('collapsed')) {
-            btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.style.transform = 'translateX(0)';
+        const isMobile = window.innerWidth <= 768;
+
+        if (isMobile) {
+            if (forceExpand !== null) {
+                if (forceExpand) panel.classList.add('mobile-expanded');
+                else panel.classList.remove('mobile-expanded');
+            } else {
+                panel.classList.toggle('mobile-expanded');
+            }
+            const subtext = document.getElementById('sheetSubtext');
+            const icon = document.getElementById('sheetToggleIcon');
+            const isExp = panel.classList.contains('mobile-expanded');
+            if (subtext) subtext.innerText = isExp ? '點擊收合抽屜 ▼' : '點擊展開路線與資訊 ⌃';
+            if (icon) icon.innerText = isExp ? '▼' : '▲';
         } else {
-            btn.style.opacity = '0'; btn.style.pointerEvents = 'none'; btn.style.transform = 'translateX(20px)';
+            if (forceExpand !== null) {
+                if (forceExpand) panel.classList.remove('collapsed');
+                else panel.classList.add('collapsed');
+            } else {
+                panel.classList.toggle('collapsed');
+            }
+            if (panel.classList.contains('collapsed')) {
+                btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.style.transform = 'translateX(0)';
+            } else {
+                btn.style.opacity = '0'; btn.style.pointerEvents = 'none'; btn.style.transform = 'translateX(20px)';
+            }
         }
     }
 
@@ -1614,11 +1711,8 @@
             const highlightBox = document.getElementById('tourHighlight');
             const tooltip = document.getElementById('tourTooltip');
 
-            // 確保面板展開以對齊定位
-            const panel = document.getElementById('controlPanel');
-            if (panel && panel.classList.contains('collapsed')) {
-                togglePanel();
-            }
+            // 確保面板展開以對齊定位 (桌機展開/手機拉起底部抽屜)
+            togglePanel(true);
 
             // 更新文字內容
             document.getElementById('tourStepBadge').innerText = `步驟 ${this.currentStep + 1} / ${this.steps.length}`;
