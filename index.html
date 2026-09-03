@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>雲林信仰跟著卡打車打卡 V9.2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>雲林信仰跟著卡打車打卡 V10.0 (RWD響應式全裝置版)</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -17,26 +17,40 @@
     <style>
         :root {
             --moovo-green: #4CAF50;
-            --moovo-dark: #388E3C;
+            --moovo-dark: #2E7D32;
             --highlight-orange: #FF9800;
             --temple-red: #E53935;
             --spot-blue: #0284c7;
             --food-pink: #E91E63;
             --sos-red: #D32F2F;
             --bg-light: #f4f6f8;
-            --text-main: #2c3e50;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
             --border-color: #e2e8f0;
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-light); color: var(--text-main); overflow: hidden; }
-        #app-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
+            background-color: var(--bg-light); color: var(--text-main);
+            overflow: hidden; -webkit-font-smoothing: antialiased;
+        }
+
+        #app-container {
+            display: flex; flex-direction: column; height: 100%; width: 100%;
+            position: relative; overflow: hidden;
+        }
         
         header {
-            background: #1a1a1a;
+            background: #18181b;
             color: white;
-            padding: 0.8rem 1rem;
+            padding: calc(0.6rem + var(--safe-area-top)) 1rem 0.6rem 1rem;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.25);
             z-index: 1000;
             flex-shrink: 0;
             display: flex;
@@ -44,84 +58,92 @@
             align-items: center;
             position: relative;
         }
-        .header-text h1 { margin: 0; font-size: 1.3rem; letter-spacing: 0.5px; }
-        .header-text p { margin: 4px 0 0 0; font-size: 0.82rem; color: #aaa; }
+        .header-text { padding: 0 70px; }
+        .header-text h1 { margin: 0; font-size: 1.18rem; letter-spacing: 0.5px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .header-text p { margin: 2px 0 0 0; font-size: 0.78rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         .header-help-btn {
             position: absolute;
-            right: 15px;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.25);
             color: white;
             border-radius: 20px;
             padding: 5px 12px;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
         }
-        .header-help-btn:hover { background: rgba(255,255,255,0.25); transform: scale(1.03); }
+        .header-help-btn:hover { background: rgba(255,255,255,0.25); }
 
-        .map-wrapper { position: relative; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
+        .map-wrapper { position: relative; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%; width: 100%; }
         #map { width: 100%; height: 100%; z-index: 1; position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
 
         .leaflet-popup-pane { z-index: 3500 !important; }
         .leaflet-popup { z-index: 3500 !important; }
 
-        /* 上方工具列 - 依截圖三段式排列 */
+        /* ========================================================
+           頂部工具列 (RWD 自適應排版)
+           ======================================================== */
         .top-toolbar {
             position: absolute;
-            top: 12px;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 8px;
+            gap: 6px;
             z-index: 2000;
             pointer-events: none;
             max-width: 96vw;
             align-items: center;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
         }
         .top-toolbar > * { pointer-events: auto; }
 
         .toolbar-info-box {
-            background: rgba(236, 253, 245, 0.95);
+            background: rgba(236, 253, 245, 0.96);
             border: 1px solid #a7f3d0;
             border-left: 4px solid var(--moovo-green);
-            padding: 7px 12px;
+            padding: 6px 10px;
             border-radius: 8px;
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             color: #065f46;
             font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             display: flex;
             align-items: center;
             white-space: nowrap;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
+            flex-shrink: 0;
         }
 
         .service-btn-group {
             display: flex;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.96);
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             border: 1px solid var(--border-color);
             padding: 3px;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
             gap: 2px;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .service-toggle-label {
             display: inline-flex;
             align-items: center;
-            padding: 5px 8px;
+            padding: 5px 7px;
             border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: bold;
+            font-size: 0.78rem;
+            font-weight: 700;
             color: #64748b;
             cursor: pointer;
             transition: all 0.2s;
@@ -131,34 +153,35 @@
         .service-toggle-label:hover { background: #f1f5f9; }
         .service-toggle-label input { display: none; }
         
-        .service-toggle-label.food input:checked + span { color: var(--food-pink); text-shadow: 0 0 1px currentColor; }
-        .service-toggle-label.conv input:checked + span { color: #FFB300; text-shadow: 0 0 1px currentColor; }
-        .service-toggle-label.waterToilet input:checked + span { color: #00ACC1; text-shadow: 0 0 1px currentColor; }
-        .service-toggle-label.moovo input:checked + span { color: #388E3C; text-shadow: 0 0 1px currentColor; }
-        .service-toggle-label.repair input:checked + span { color: #D32F2F; text-shadow: 0 0 1px currentColor; }
-        .service-toggle-label.souvenir input:checked + span { color: #E65100; text-shadow: 0 0 1px currentColor; }
-        .service-toggle-label.hotel input:checked + span { color: #8E24AA; text-shadow: 0 0 1px currentColor; }
-        .service-toggle-label.spot input:checked + span { color: #0284c7; text-shadow: 0 0 1px currentColor; }
+        .service-toggle-label.food input:checked + span { color: var(--food-pink); font-weight: 800; }
+        .service-toggle-label.conv input:checked + span { color: #d97706; font-weight: 800; }
+        .service-toggle-label.waterToilet input:checked + span { color: #0891b2; font-weight: 800; }
+        .service-toggle-label.moovo input:checked + span { color: #2e7d32; font-weight: 800; }
+        .service-toggle-label.repair input:checked + span { color: #dc2626; font-weight: 800; }
+        .service-toggle-label.souvenir input:checked + span { color: #ea580c; font-weight: 800; }
+        .service-toggle-label.hotel input:checked + span { color: #9333ea; font-weight: 800; }
+        .service-toggle-label.spot input:checked + span { color: #0284c7; font-weight: 800; }
 
-        /* 右側獨立切換區塊 (全部 / 2公里 / 5公里) */
+        /* 右側範圍過濾切換鈕 */
         .radius-selector-group {
             display: flex;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.96);
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             border: 1px solid var(--border-color);
             padding: 3px;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(6px);
             gap: 2px;
             align-items: center;
+            flex-shrink: 0;
         }
         .radius-btn {
             background: transparent;
             border: none;
-            padding: 5px 9px;
+            padding: 5px 8px;
             border-radius: 6px;
-            font-size: 0.78rem;
-            font-weight: bold;
+            font-size: 0.75rem;
+            font-weight: 700;
             color: #64748b;
             cursor: pointer;
             transition: all 0.2s;
@@ -169,21 +192,23 @@
         .radius-btn.active {
             background: #e11d48;
             color: white;
-            box-shadow: 0 2px 4px rgba(225,29,72,0.3);
+            box-shadow: 0 2px 5px rgba(225,29,72,0.3);
         }
 
-        /* 旅程指揮中心面板 */
+        /* ========================================================
+           旅程指揮中心面板 (全裝置最適化)
+           ======================================================== */
         .control-panel {
             position: absolute;
-            top: 12px;
-            right: 15px;
-            width: 350px;
-            max-height: calc(100vh - 85px);
+            top: 10px;
+            right: 12px;
+            width: 340px;
+            max-height: calc(100vh - 75px);
             background: transparent;
             z-index: 2500;
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s;
             pointer-events: none;
         }
         .control-panel > * { pointer-events: auto; }
@@ -191,160 +216,194 @@
 
         .panel-scroll-area {
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            padding-right: 4px;
+            gap: 8px;
+            padding-right: 2px;
             padding-bottom: 10px;
         }
-        .panel-scroll-area::-webkit-scrollbar { width: 5px; }
+        .panel-scroll-area::-webkit-scrollbar { width: 4px; }
         .panel-scroll-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
         .panel-header-flex {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            padding: 9px 12px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             display: flex; justify-content: space-between; align-items: center;
             border: 1px solid var(--border-color);
         }
-        .panel-header-flex span { font-weight: 700; font-size: 1rem; }
+        .panel-header-flex span { font-weight: 800; font-size: 0.95rem; }
         
         .toggle-panel-btn {
-            position: absolute; top: 12px; right: 15px; z-index: 2400;
-            background: white; border: 1px solid var(--border-color); padding: 10px 16px;
-            border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            cursor: pointer; font-weight: bold; color: var(--text-main);
-            display: flex; align-items: center; gap: 8px;
-            transition: all 0.3s; opacity: 0; pointer-events: none; transform: translateX(20px);
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            z-index: 2400;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            padding: 9px 14px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(20px);
         }
-        .toggle-panel-btn:hover { background: #f8f9fa; }
-        .close-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #999; padding: 0; }
+        .toggle-panel-btn:hover { background: #f8fafc; }
+        .close-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8; padding: 0 4px; }
+        .close-btn:hover { color: #334155; }
 
         .ui-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
             border-radius: 12px;
-            padding: 12px 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            padding: 11px 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             border: 1px solid var(--border-color);
-            display: flex; flex-direction: column; gap: 8px;
+            display: flex; flex-direction: column; gap: 6px;
         }
         .ui-card-title {
-            font-size: 0.85rem; font-weight: 700; color: #475569;
-            letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.82rem; font-weight: 800; color: #334155;
+            letter-spacing: 0.3px; display: flex; align-items: center; justify-content: space-between;
         }
 
         .weather-widget { 
-            background: #f0f9ff; border-radius: 8px; padding: 8px; text-align: center; 
-            font-weight: 600; color: #0284c7; font-size: 0.85rem; border: 1px solid #e0f2fe; 
-            display: flex; flex-direction: column; gap: 4px;
+            background: #f0f9ff; border-radius: 8px; padding: 7px; text-align: center; 
+            font-weight: 700; color: #0284c7; font-size: 0.82rem; border: 1px solid #e0f2fe; 
+            display: flex; flex-direction: column; gap: 3px;
         }
 
-        .btn-route { width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--moovo-green); color: white; cursor: pointer; font-weight: bold; font-size: 0.95rem; transition: background 0.3s; }
+        .btn-route {
+            width: 100%; padding: 10px; border: none; border-radius: 8px;
+            background: var(--moovo-green); color: white; cursor: pointer;
+            font-weight: 800; font-size: 0.92rem; transition: background 0.2s, transform 0.1s;
+        }
         .btn-route:hover { background: var(--moovo-dark); }
-        #route-info { font-size: 0.82rem; line-height: 1.5; background: #f1f8e9; padding: 10px; border-radius: 8px; border-left: 4px solid var(--moovo-green); display: none; }
+        .btn-route:active { transform: scale(0.98); }
+
+        #route-info {
+            font-size: 0.8rem; line-height: 1.5; background: #f1f8e9;
+            padding: 9px; border-radius: 8px; border-left: 4px solid var(--moovo-green); display: none;
+        }
 
         .route-subgroup-title {
-            font-size: 0.78rem; font-weight: 800; color: #0f172a; margin-top: 4px; margin-bottom: 2px;
+            font-size: 0.75rem; font-weight: 800; color: #0f172a; margin-top: 3px; margin-bottom: 2px;
             display: flex; align-items: center; gap: 4px;
         }
 
         .checkbox-group {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 6px 8px;
+            gap: 5px 6px;
         }
         .ui-checkbox-label {
-            display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.82rem; color: var(--text-main); padding: 1px 0; user-select: none;
+            display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.8rem;
+            color: var(--text-main); padding: 2px 0; user-select: none;
         }
         .ui-checkbox-label:hover { color: var(--moovo-dark); }
-        .ui-checkbox-label input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: var(--moovo-green); }
+        .ui-checkbox-label input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--moovo-green); }
 
         .btn-sos {
-            width: 100%; padding: 12px; border: none; border-radius: 12px;
+            width: 100%; padding: 11px; border: none; border-radius: 10px;
             background: var(--sos-red); color: white; cursor: pointer;
-            font-weight: 800; font-size: 0.95rem; letter-spacing: 1px;
-            transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
-            box-shadow: 0 4px 15px rgba(211,47,47,0.4);
+            font-weight: 800; font-size: 0.92rem; letter-spacing: 0.5px;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+            box-shadow: 0 4px 15px rgba(211,47,47,0.35);
         }
         .btn-sos:hover { background: #b71c1c; }
+        .btn-sos:active { transform: scale(0.98); }
 
-        /* SOS Modal */
+        /* ========================================================
+           SOS Modal (RWD 彈窗)
+           ======================================================== */
         .custom-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px);
             z-index: 9999; display: none; justify-content: center; align-items: center;
+            padding: 12px;
         }
         .custom-modal-card {
-            background: white; border-radius: 16px; padding: 20px 24px; max-width: 480px; width: 90%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 2px solid var(--sos-red);
+            background: white; border-radius: 16px; padding: 16px 18px;
+            max-width: 460px; width: 100%;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.3); border: 2px solid var(--sos-red);
             text-align: left; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
             box-sizing: border-box;
         }
 
-        .sos-modal-scroll { overflow-y: auto; flex-grow: 1; padding-right: 4px; margin: 10px 0; }
-        .sos-modal-scroll::-webkit-scrollbar { width: 5px; }
+        .sos-modal-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; flex-grow: 1; padding-right: 4px; margin: 8px 0; }
+        .sos-modal-scroll::-webkit-scrollbar { width: 4px; }
         .sos-modal-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-        .sos-sec-title { font-size: 0.95rem; font-weight: 800; color: #1e293b; margin: 12px 0 6px 0; display: flex; align-items: center; gap: 6px; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; }
-        .sos-resource-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
+        .sos-sec-title { font-size: 0.88rem; font-weight: 800; color: #1e293b; margin: 10px 0 5px 0; display: flex; align-items: center; gap: 5px; border-bottom: 2px solid #e2e8f0; padding-bottom: 3px; }
+        .sos-resource-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 3px; }
         .sos-card-header { display: flex; justify-content: space-between; align-items: center; }
-        .sos-card-name { font-weight: bold; font-size: 0.95rem; color: #0f172a; }
-        .sos-card-badge { font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; background: #e0f2fe; color: #0369a1; }
+        .sos-card-name { font-weight: 800; font-size: 0.88rem; color: #0f172a; }
+        .sos-card-badge { font-size: 0.7rem; padding: 2px 5px; border-radius: 4px; font-weight: 800; background: #e0f2fe; color: #0369a1; }
         .sos-card-badge.red { background: #ffe4e6; color: #be123c; }
         .sos-card-badge.green { background: #dcfce7; color: #15803d; }
-        .sos-card-desc { font-size: 0.8rem; color: #64748b; margin: 2px 0; }
+        .sos-card-desc { font-size: 0.75rem; color: #64748b; margin: 1px 0; }
         
-        .sos-card-btn-group { display: flex; gap: 6px; margin-top: 4px; }
-        .sos-btn-call { flex: 1; display: inline-flex; align-items: center; justify-content: center; background: #ef4444; color: white; text-decoration: none; padding: 6px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
-        .sos-btn-nav { flex: 1; display: inline-flex; align-items: center; justify-content: center; background: #3b82f6; color: white; border: none; padding: 6px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; }
+        .sos-card-btn-group { display: flex; gap: 5px; margin-top: 3px; }
+        .sos-btn-call { flex: 1; display: inline-flex; align-items: center; justify-content: center; background: #ef4444; color: white; text-decoration: none; padding: 6px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; }
+        .sos-btn-nav { flex: 1; display: inline-flex; align-items: center; justify-content: center; background: #3b82f6; color: white; border: none; padding: 6px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
 
         .sos-map-btn {
             width: 100%; padding: 8px; background: #0284c7; color: white; border: none; border-radius: 8px;
-            font-weight: bold; font-size: 0.85rem; cursor: pointer; margin-top: 8px;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
+            font-weight: 800; font-size: 0.82rem; cursor: pointer; margin-top: 6px;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
         }
         .sos-siren-btn {
-            width: 100%; padding: 10px; background: #f43f5e; color: white; border: none; border-radius: 8px;
-            font-weight: 800; font-size: 0.9rem; cursor: pointer; margin-top: 6px;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
+            width: 100%; padding: 9px; background: #f43f5e; color: white; border: none; border-radius: 8px;
+            font-weight: 800; font-size: 0.85rem; cursor: pointer; margin-top: 4px;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
         }
         .sos-siren-btn.active { background: #1e293b; color: #f43f5e; border: 2px solid #f43f5e; animation: pulseSOS 1.2s infinite; }
 
         .close-sos-map-btn {
-            position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 4000;
-            background: #dc2626; color: white; border: 2px solid white; padding: 10px 20px; border-radius: 25px;
-            font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(220,38,38,0.4);
-            display: none; align-items: center; gap: 6px;
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 4000;
+            background: #dc2626; color: white; border: 2px solid white; padding: 9px 18px; border-radius: 25px;
+            font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 15px rgba(220,38,38,0.4);
+            display: none; align-items: center; gap: 6px; white-space: nowrap;
         }
-
-        /* Story Drawer */
-        .story-card-drawer {
-            position: absolute; top: 50%; left: -450px; transform: translateY(-50%);
-            width: 25vw; min-width: 320px; max-width: 400px; height: 85vh;
-            background: #fff; border-radius: 16px; box-shadow: 5px 10px 30px rgba(0,0,0,0.25);
-            transition: left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-            z-index: 3800; display: flex; flex-direction: column; overflow: hidden;
-        }
-        .story-card-drawer.open { left: 20px; }
-        .sc-close-btn { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; z-index: 10; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; }
-        .sc-content { overflow-y: auto; flex-grow: 1; }
-        .sc-hero-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; background: #e2e8f0; }
-        .sc-body { padding: 20px; }
-        .sc-category-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; color: white; margin-bottom: 8px; }
-        .sc-title { font-size: 1.4rem; margin: 0 0 5px 0; color: #1e293b; font-weight: 900; }
-        .sc-section { margin-bottom: 15px; }
-        .sc-section-title { font-size: 1rem; color: #0f172a; margin: 0 0 8px 0; font-weight: 700; }
-        .sc-text { font-size: 0.9rem; line-height: 1.6; color: #475569; margin: 0; }
-        .sc-actions-wrapper { padding: 15px 20px; background: #fff; border-top: 1px solid #e2e8f0; }
-        .sc-btn-primary { width: 100%; padding: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; text-align: center; cursor: pointer; border: none; background: #4CAF50; color: white; }
-
-        .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; color: var(--moovo-dark); display: none; }
 
         /* ========================================================
-           ✨ 方案 B：聚光燈導覽互動系統 CSS (Spotlight Walkthrough)
+           故事小卡抽屜 (Story Drawer)
+           ======================================================== */
+        .story-card-drawer {
+            position: absolute; top: 50%; left: -450px; transform: translateY(-50%);
+            width: 25vw; min-width: 320px; max-width: 380px; height: 85vh; max-height: 650px;
+            background: #fff; border-radius: 16px; box-shadow: 5px 10px 30px rgba(0,0,0,0.25);
+            transition: left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1), opacity 0.3s;
+            z-index: 3800; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .story-card-drawer.open { left: 16px; }
+        .sc-close-btn { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; z-index: 10; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; }
+        .sc-content { overflow-y: auto; -webkit-overflow-scrolling: touch; flex-grow: 1; }
+        .sc-hero-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; background: #e2e8f0; }
+        .sc-body { padding: 16px; }
+        .sc-category-tag { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; color: white; margin-bottom: 6px; }
+        .sc-title { font-size: 1.25rem; margin: 0 0 4px 0; color: #1e293b; font-weight: 900; }
+        .sc-section { margin-bottom: 12px; }
+        .sc-section-title { font-size: 0.92rem; color: #0f172a; margin: 0 0 6px 0; font-weight: 800; }
+        .sc-text { font-size: 0.85rem; line-height: 1.6; color: #475569; margin: 0; }
+        .sc-actions-wrapper { padding: 12px 16px; background: #fff; border-top: 1px solid #e2e8f0; }
+        .sc-btn-primary { width: 100%; padding: 9px; border-radius: 8px; font-size: 0.88rem; font-weight: 800; text-align: center; cursor: pointer; border: none; background: #4CAF50; color: white; }
+
+        .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1.1rem; color: var(--moovo-dark); display: none; }
+
+        /* ========================================================
+           新手導覽互動系統 CSS (Spotlight Walkthrough)
            ======================================================== */
         .tour-backdrop-overlay {
             position: fixed;
@@ -365,7 +424,7 @@
             box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.75), 0 0 25px rgba(76, 175, 80, 0.8);
             border: 3px solid var(--moovo-green);
             pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
             display: none;
         }
 
@@ -373,12 +432,12 @@
             position: absolute;
             z-index: 9000;
             background: white;
-            border-radius: 16px;
-            padding: 20px;
+            border-radius: 14px;
+            padding: 16px;
             width: 320px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.3);
             border: 2px solid var(--moovo-green);
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
             display: none;
             box-sizing: border-box;
         }
@@ -387,14 +446,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .tour-step-badge {
             background: #ecfdf5;
             color: #065f46;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 800;
-            padding: 3px 8px;
+            padding: 2px 7px;
             border-radius: 6px;
             border: 1px solid #a7f3d0;
         }
@@ -402,40 +461,40 @@
             background: none;
             border: none;
             color: #94a3b8;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 700;
             padding: 0;
         }
         .tour-skip-btn:hover { color: #475569; text-decoration: underline; }
 
         .tour-card-title {
-            font-size: 1.1rem;
+            font-size: 1.02rem;
             font-weight: 800;
             color: #0f172a;
-            margin: 0 0 6px 0;
+            margin: 0 0 4px 0;
         }
         .tour-card-desc {
-            font-size: 0.88rem;
+            font-size: 0.82rem;
             color: #475569;
             line-height: 1.5;
-            margin: 0 0 16px 0;
+            margin: 0 0 12px 0;
         }
 
         .tour-card-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-top: 10px;
+            padding-top: 8px;
             border-top: 1px solid #f1f5f9;
         }
-        .tour-footer-btns { display: flex; gap: 8px; }
+        .tour-footer-btns { display: flex; gap: 6px; }
         
         .tour-btn {
-            padding: 7px 14px;
+            padding: 6px 12px;
             border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: bold;
+            font-size: 0.82rem;
+            font-weight: 800;
             cursor: pointer;
             border: none;
             transition: all 0.2s;
@@ -449,12 +508,12 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: #64748b;
             cursor: pointer;
             user-select: none;
         }
-        .tour-dont-show input { width: 14px; height: 14px; cursor: pointer; accent-color: var(--moovo-green); }
+        .tour-dont-show input { width: 13px; height: 13px; cursor: pointer; accent-color: var(--moovo-green); }
 
         @keyframes pulseSOS {
             0% { transform: scale(1); }
@@ -462,10 +521,84 @@
             100% { transform: scale(1); }
         }
 
-        @media (max-width: 900px) {
-            .top-toolbar { flex-wrap: wrap; justify-content: center; top: 6px; }
-            .control-panel { width: calc(100% - 30px); }
-            .tour-card-tooltip { width: 290px; }
+        /* ========================================================
+           📱 RWD 響應式斷點 (平版 768px ~ 1024px / 手機 < 768px)
+           ======================================================== */
+        @media (max-width: 1024px) {
+            .header-text h1 { font-size: 1.1rem; }
+            .control-panel { width: 320px; top: 10px; right: 10px; }
+            .story-card-drawer { width: 340px; }
+        }
+
+        @media (max-width: 768px) {
+            header { padding: calc(0.5rem + var(--safe-area-top)) 0.75rem 0.5rem 0.75rem; }
+            .header-text { padding: 0 60px; }
+            .header-text h1 { font-size: 0.98rem; }
+            .header-text p { display: none; }
+            .header-help-btn { font-size: 0.72rem; padding: 4px 9px; right: 8px; }
+
+            /* 頂部工具列：手機版橫向滑動 (避免折行遮蔽地圖) */
+            .top-toolbar {
+                top: 8px;
+                left: 0;
+                transform: none;
+                width: 100%;
+                max-width: 100%;
+                padding: 0 8px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                gap: 5px;
+            }
+            .top-toolbar::-webkit-scrollbar { display: none; }
+
+            .toolbar-info-box { font-size: 0.72rem; padding: 5px 8px; }
+            .service-toggle-label { font-size: 0.72rem; padding: 4px 6px; }
+            .radius-btn { font-size: 0.7rem; padding: 4px 6px; }
+
+            /* 旅程指揮中心：手機版懸浮卡片 / 底部覆蓋 */
+            .control-panel {
+                width: calc(100vw - 16px);
+                max-width: 380px;
+                top: 8px;
+                right: 8px;
+                max-height: calc(100vh - 16px - var(--safe-area-top));
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            }
+
+            .toggle-panel-btn {
+                top: auto;
+                bottom: calc(20px + var(--safe-area-bottom));
+                right: 12px;
+                transform: none;
+                border-radius: 25px;
+                background: #1B5E20;
+                color: white;
+                border: 2px solid white;
+                box-shadow: 0 4px 18px rgba(27,94,32,0.4);
+                padding: 10px 18px;
+                font-size: 0.88rem;
+            }
+            .toggle-panel-btn:hover { background: #144917; }
+
+            /* 故事小卡：手機版置中彈窗 */
+            .story-card-drawer {
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 92vw;
+                max-width: 380px;
+                height: 80vh;
+                max-height: 550px;
+                display: none;
+            }
+            .story-card-drawer.open { display: flex; }
+
+            /* 新手導覽提示框：手機版自動置中 */
+            .tour-card-tooltip {
+                width: calc(100vw - 32px);
+                max-width: 330px;
+            }
         }
     </style>
 </head>
@@ -474,8 +607,8 @@
 <div id="app-container">
     <header>
         <div class="header-text">
-            <h1>雲林信仰跟著卡打車打卡 V9.2</h1>
-            <p>單一驗證資料庫驅動：7 大名廟、10 大經典景點與在地補給全到位</p>
+            <h1>雲林信仰跟著卡打車打卡 V10.0</h1>
+            <p>智慧響應式設計：支援手機、平板與桌機無縫暢遊</p>
         </div>
         <!-- 頂部手動重啟導覽說明按鍵 -->
         <button class="header-help-btn" onclick="TourGuide.start(true)" title="重新開啟使用導覽說明">
@@ -1449,15 +1582,16 @@
             document.getElementById('tourBtnPrev').style.display = this.currentStep === 0 ? 'none' : 'inline-block';
             document.getElementById('tourBtnNext').innerText = this.currentStep === this.steps.length - 1 ? '🎉 完成導覽' : '下一步 ➜';
 
-            // 計算目標元素位置與視窗安全邊界防裁切
+            // 計算目標元素位置與視窗安全邊界防裁切 (全螢幕/手機/平板通用)
             if (targetEl) {
                 const rect = targetEl.getBoundingClientRect();
                 const pad = 6;
+                const isMobile = window.innerWidth <= 768;
 
                 highlightBox.style.display = 'block';
-                highlightBox.style.top = `${rect.top - pad + window.scrollY}px`;
-                highlightBox.style.left = `${rect.left - pad + window.scrollX}px`;
-                highlightBox.style.width = `${rect.width + pad * 2}px`;
+                highlightBox.style.top = `${Math.max(0, rect.top - pad + window.scrollY)}px`;
+                highlightBox.style.left = `${Math.max(0, rect.left - pad + window.scrollX)}px`;
+                highlightBox.style.width = `${Math.min(window.innerWidth, rect.width + pad * 2)}px`;
                 highlightBox.style.height = `${rect.height + pad * 2}px`;
 
                 tooltip.style.display = 'block';
@@ -1467,17 +1601,27 @@
                 let targetTop = 20;
                 let targetLeft = 20;
 
-                if (step.position === 'left') {
-                    // 若目標靠下（如 SOS 按鈕），卡片向上自適應貼齊，避免沉底被工作列遮擋
-                    targetTop = Math.min(window.innerHeight - tipHeight - 30, Math.max(25, rect.top + rect.height / 2 - tipHeight / 2));
-                    targetLeft = Math.max(15, rect.left - tipWidth - 20);
-                } else if (step.position === 'bottom') {
-                    targetTop = Math.min(window.innerHeight - tipHeight - 30, rect.bottom + 15);
-                    targetLeft = Math.max(15, Math.min(window.innerWidth - tipWidth - 15, rect.left + rect.width / 2 - tipWidth / 2));
+                if (isMobile) {
+                    // 手機版：卡片水平置中，垂直根據目標位置智慧靠上或靠下放置
+                    targetLeft = (window.innerWidth - tipWidth) / 2;
+                    if (rect.top > window.innerHeight / 2) {
+                        targetTop = Math.max(20, rect.top - tipHeight - 15);
+                    } else {
+                        targetTop = Math.min(window.innerHeight - tipHeight - 20, rect.bottom + 15);
+                    }
+                } else {
+                    // 桌機/平板版：自適應在側邊或下方
+                    if (step.position === 'left') {
+                        targetTop = Math.min(window.innerHeight - tipHeight - 30, Math.max(25, rect.top + rect.height / 2 - tipHeight / 2));
+                        targetLeft = Math.max(15, rect.left - tipWidth - 20);
+                    } else if (step.position === 'bottom') {
+                        targetTop = Math.min(window.innerHeight - tipHeight - 30, rect.bottom + 15);
+                        targetLeft = Math.max(15, Math.min(window.innerWidth - tipWidth - 15, rect.left + rect.width / 2 - tipWidth / 2));
+                    }
                 }
 
-                tooltip.style.top = `${targetTop}px`;
-                tooltip.style.left = `${targetLeft}px`;
+                tooltip.style.top = `${Math.max(15, targetTop)}px`;
+                tooltip.style.left = `${Math.max(10, targetLeft)}px`;
             }
         },
         next: function() {
