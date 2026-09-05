@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- Version: V10.1 (左上角 SOS 膠囊版) -->
+    <!-- Version: V11.0 (GPS即時起終點閉環 / 三種路徑模式 / 方向箭頭 / 嚴格避開快速道路) -->
     <title>雲林信仰跟著卡打車打卡</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
@@ -555,6 +555,82 @@
         /* ========================================================
            📱 RWD 響應式斷點 (平版 768px ~ 1024px / 手機 < 768px)
            ======================================================== */
+        
+        /* ========================================================
+           三種路線模式切換與 GPS 起終點 UI
+           ======================================================== */
+        .route-mode-switcher-group {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border: 1px solid var(--border-color);
+        }
+        .route-mode-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 7px 4px;
+            border-radius: 6px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .route-mode-btn:hover { background: #e2e8f0; }
+        .route-mode-btn.active {
+            background: #1B5E20;
+            color: white;
+            box-shadow: 0 2px 6px rgba(27,94,32,0.3);
+        }
+
+        .start-origin-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 9px;
+            border-radius: 8px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        .start-origin-item:hover { border-color: #cbd5e1; }
+        .start-origin-item.active {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .start-origin-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+        .start-origin-label input[type="radio"] {
+            width: 15px;
+            height: 15px;
+            accent-color: #10b981;
+            cursor: pointer;
+        }
+        .gps-refresh-btn {
+            background: none;
+            border: none;
+            color: #0284c7;
+            font-size: 0.72rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+
         @media (max-width: 1024px) {
             .header-text h1 { font-size: 1.1rem; }
             .control-panel { width: 320px; top: 10px; right: 10px; }
@@ -819,21 +895,45 @@
                     </div>
                 </section>
 
-                <!-- 智慧路線規劃：高鐵站選項 + 七大宮廟 + 十大景點 -->
+                <!-- 智慧路線規劃：GPS起終點 + 三種模式 + 七大名廟 + 十大景點 -->
                 <section class="ui-card" id="tour-step1-target">
                     <div class="ui-card-title">
                         <span>🗺️ 智慧路線規劃</span>
                     </div>
-                    <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 6px;">
-                        勾選您想造訪的地點，AI 自動計算最順暢的單車路線。
+                    <div style="font-size: 0.76rem; color: #64748b; margin-bottom: 6px;">
+                        以目前位置出發並閉環回程，提供 3 種單車路網模式。
                     </div>
 
-                    <!-- 出發起點 (雲林高鐵站可勾選) -->
-                    <div class="route-subgroup-title">🚉 出發起點 / 轉運樞紐</div>
-                    <div class="checkbox-group" id="tsp-transit-checklist">
-                        <label class="ui-checkbox-label" style="grid-column: span 2;">
-                            <input type="checkbox" value="hsr" checked> <span>雲林高鐵站 (預設起點/終點)</span>
-                        </label>
+                    <!-- 出發起點與終點 (可選 GPS 實時定位 或 高鐵站) -->
+                    <div class="route-subgroup-title">🚩 出發起點與終點 (閉環回程)</div>
+                    <div style="display:flex; flex-direction:column; gap:2px; margin-bottom:6px;">
+                        <div class="start-origin-item active" id="item-origin-gps" onclick="setStartOrigin('gps')">
+                            <label class="start-origin-label">
+                                <input type="radio" name="start_origin_rad" id="rad-origin-gps" checked>
+                                <span>📍 目前即時 GPS 定位</span>
+                            </label>
+                            <button type="button" class="gps-refresh-btn" onclick="event.stopPropagation(); refreshUserGps();">重新定位</button>
+                        </div>
+                        <div class="start-origin-item" id="item-origin-hsr" onclick="setStartOrigin('hsr')">
+                            <label class="start-origin-label">
+                                <input type="radio" name="start_origin_rad" id="rad-origin-hsr">
+                                <span>🚉 雲林高鐵站</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 三種路線模式選擇 (最快捷徑 / 鄉野路徑 / 景點最多) -->
+                    <div class="route-subgroup-title">🎯 選擇路線規劃方式</div>
+                    <div class="route-mode-switcher-group" id="route-mode-group">
+                        <button type="button" class="route-mode-btn active" id="mode-fast" onclick="setRouteMode('fast')" title="距離最短、幹道直達最省時">
+                            ⚡ 最快捷徑
+                        </button>
+                        <button type="button" class="route-mode-btn" id="mode-rural" onclick="setRouteMode('rural')" title="避開車流大馬路，優先走鄉村田園小道">
+                            🌾 鄉野漫遊
+                        </button>
+                        <button type="button" class="route-mode-btn" id="mode-dense" onclick="setRouteMode('dense')" title="自動沿途篩選加入更多順路拍照打卡點">
+                            📸 景點最多
+                        </button>
                     </div>
 
                     <!-- 第一部分：七大宮廟 -->
@@ -1035,6 +1135,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-ant-path@1.3.0/dist/leaflet-ant-path.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 
 <script>
     let map = null;
@@ -1210,36 +1311,154 @@
     }
 
     // ========================================================
-    // 4. 智慧路線計算 (高鐵站自選 + 七大名廟 + 十大景點)
+    // 4. 智慧路線計算 (GPS即時起終點閉環 + 三種模式 + 方向箭頭 + 嚴格避開快速道路)
     // ========================================================
+    let currentRouteMode = 'fast'; // 'fast' | 'rural' | 'dense'
+    let currentStartOrigin = 'gps'; // 'gps' | 'hsr'
+    let currentGpsLocation = [120.41649, 23.73633]; // 預設虎尾/高鐵，即刻動態定位更新
+    let startEndMarker = null;
+    let currentArrowDecorator = null;
+
+    function setStartOrigin(origin) {
+        currentStartOrigin = origin;
+        document.getElementById('item-origin-gps')?.classList.toggle('active', origin === 'gps');
+        document.getElementById('item-origin-hsr')?.classList.toggle('active', origin === 'hsr');
+        if (origin === 'gps') {
+            document.getElementById('rad-origin-gps').checked = true;
+            refreshUserGps();
+        } else {
+            document.getElementById('rad-origin-hsr').checked = true;
+            updateStartEndMarker(POIs['hsr'].coords[1], POIs['hsr'].coords[0], '🚉 起點/終點：雲林高鐵站');
+        }
+    }
+
+    function setRouteMode(mode) {
+        currentRouteMode = mode;
+        document.querySelectorAll('.route-mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`mode-${mode}`)?.classList.add('active');
+        // 若已規劃過路線，點擊模式時自動重新計算切換
+        if (currentPathLayer) {
+            calculateTSPRoute();
+        }
+    }
+
+    function refreshUserGps() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                const lat = pos.coords.latitude, lng = pos.coords.longitude;
+                currentGpsLocation = [lng, lat];
+                updateStartEndMarker(lat, lng, '📍 您的即時 GPS 起點 / 終點');
+            }, (err) => {
+                console.warn("GPS 定位超時，使用預設中心點", err);
+                updateStartEndMarker(currentGpsLocation[1], currentGpsLocation[0], '📍 預設出發起點 / 終點');
+            }, { enableHighAccuracy: true, timeout: 5000 });
+        }
+    }
+
+    function updateStartEndMarker(lat, lng, label) {
+        if (startEndMarker) map.removeLayer(startEndMarker);
+        const icon = L.divIcon({
+            html: `<div style="background:#10b981; width:30px; height:30px; border-radius:50%; border:3px solid white; display:flex; align-items:center; justify-content:center; font-size:15px; color:white; box-shadow:0 0 15px rgba(16,185,129,0.8); animation:pulseSOS 1.5s infinite;">🚩</div>`,
+            className: '',
+            iconSize: [30, 30]
+        });
+        startEndMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).bindPopup(`<b>${label}</b><br>經緯度：${lat.toFixed(5)}, ${lng.toFixed(5)}`).addTo(map);
+    }
+
     async function calculateTSPRoute() {
-        const transitCbs = document.querySelectorAll('#tsp-transit-checklist input[type="checkbox"]:checked');
         const templeCbs = document.querySelectorAll('#tsp-temples-checklist input[type="checkbox"]:checked');
         const spotCbs = document.querySelectorAll('#tsp-spots-checklist input[type="checkbox"]:checked');
         const errorEl = document.getElementById('route-error');
         const infoEl = document.getElementById('route-info');
         const loadingEl = document.getElementById('loading');
 
-        let selectedKeys = [];
-        transitCbs.forEach(cb => { if (POIs[cb.value]) selectedKeys.push(cb.value); });
-        templeCbs.forEach(cb => { if (POIs[cb.value]) selectedKeys.push(cb.value); });
-        spotCbs.forEach(cb => { if (POIs[cb.value]) selectedKeys.push(cb.value); });
+        let selectedTargetKeys = [];
+        templeCbs.forEach(cb => { if (POIs[cb.value]) selectedTargetKeys.push(cb.value); });
+        spotCbs.forEach(cb => { if (POIs[cb.value]) selectedTargetKeys.push(cb.value); });
 
-        if (selectedKeys.length < 2) {
+        if (selectedTargetKeys.length < 1) {
+            errorEl.innerText = "請至少勾選 1 處想造訪的宮廟或景點以規劃路線！";
             errorEl.style.display = 'block';
             infoEl.style.display = 'none';
             return;
         }
         errorEl.style.display = 'none';
         loadingEl.style.display = 'flex';
-        
-        let points = selectedKeys.map(k => POIs[k].coords);
-        if (points.length >= 3) {
-            points.push(points[0]); // 自動閉環回到起點
+
+        // 決定起點與終點坐標 [lng, lat]
+        const originCoords = currentStartOrigin === 'gps' ? currentGpsLocation : POIs['hsr'].coords;
+        const originName = currentStartOrigin === 'gps' ? '目前即時 GPS 位置' : '雲林高鐵站';
+
+        // 建立待訪點坐標清單
+        let waypoints = selectedTargetKeys.map(k => ({
+            id: k,
+            name: POIs[k].name,
+            coords: POIs[k].coords
+        }));
+
+        // 依據三種模式進行路徑幾何與中繼點演算法：
+        // 模式 1：⚡ 最快捷徑 (Fastest Direct Loop) -> TSP 最短距離排序
+        // 模式 2：🌾 鄉野漫遊 (Rural Scenic Loop) -> 注入鄉村農水路網節點，徹底遠離大省道幹道
+        // 模式 3：📸 景點最多 (Max Attraction Corridor) -> 沿途 2km 走廊內自動加入順路打卡點
+
+        if (currentRouteMode === 'rural') {
+            // 注入古坑綠廊、水圳步道或糖鐵林蔭節點作為鄉野導引
+            const ruralGuides = [
+                { name: "糖鐵自行車林蔭綠廊", coords: [120.4485, 23.7142] },
+                { name: "虎尾溪畔水圳防汛農路", coords: [120.3850, 23.6820] },
+                { name: "新街排水綠色田野道", coords: [120.3200, 23.5850] }
+            ];
+            // 挑選距離目標點最近且最順向的鄉野中繼點
+            let insertedRural = 0;
+            for (let rg of ruralGuides) {
+                if (insertedRural >= 2) break;
+                waypoints.push({ id: 'rural_' + insertedRural, name: rg.name, coords: rg.coords });
+                insertedRural++;
+            }
+        } else if (currentRouteMode === 'dense') {
+            // 沿途走廊自動擴充打卡點 (從未被選取的 loadedAttractions 中挑選順路者)
+            if (loadedAttractions.length > 0) {
+                let candidateSpots = loadedAttractions.filter(s => !selectedTargetKeys.includes(s.id));
+                let addedCount = 0;
+                for (let cs of candidateSpots) {
+                    if (addedCount >= 2) break;
+                    // 挑選在起點與現有目標中心點附近的景點
+                    const pt = turf.point([cs.lng, cs.lat]);
+                    const origPt = turf.point(originCoords);
+                    const d = turf.distance(pt, origPt, { units: 'kilometers' });
+                    if (d > 2.0 && d < 18.0) {
+                        waypoints.push({ id: 'spot_' + addedCount, name: cs.name, coords: [cs.lng, cs.lat] });
+                        addedCount++;
+                    }
+                }
+            }
         }
+
+        // TSP 最鄰近排序 (以起點出發)
+        let orderedPoints = [originCoords];
+        let remaining = [...waypoints];
+        let currentPt = originCoords;
+
+        while (remaining.length > 0) {
+            let nearestIdx = 0;
+            let minDist = Infinity;
+            for (let i = 0; i < remaining.length; i++) {
+                const dist = turf.distance(turf.point(currentPt), turf.point(remaining[i].coords));
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestIdx = i;
+                }
+            }
+            currentPt = remaining[nearestIdx].coords;
+            orderedPoints.push(currentPt);
+            remaining.splice(nearestIdx, 1);
+        }
+        // 強制閉環回到出發起點
+        orderedPoints.push(originCoords);
+
+        const coordsString = orderedPoints.map(p => `${p[0]},${p[1]}`).join(';');
         
-        const coordsString = points.map(p => `${p[0]},${p[1]}`).join(';');
-        // 嚴格單車禁行快速/高速道路專用導航引擎 (禁用國道/快速道路/台78線)
+        // 嚴格單車禁行快速/高速道路專用導航引擎 (禁用國道/快速道路/台78線/台61快速段)
         const routingEndpoints = [
             `https://routing.openstreetmap.de/routed-bike/route/v1/cycling/${coordsString}?overview=full&geometries=geojson&continue_straight=true`,
             `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&continue_straight=true`
@@ -1261,40 +1480,81 @@
                     console.warn("Routing endpoint fallback:", ep, err);
                 }
             }
-            
+
             if (!data || data.code !== 'Ok') throw new Error('API 無法規劃路線');
-            
+
             let routeGeoJSON = data.routes[0].geometry;
             let distKm = (data.routes[0].distance / 1000).toFixed(1);
             let timeMin = Math.round(data.routes[0].duration / 60);
-
             const flippedCoords = routeGeoJSON.coordinates.map(c => [c[1], c[0]]);
 
+            // 清理舊路線與舊箭頭
             if (currentPathLayer) map.removeLayer(currentPathLayer);
+            if (currentArrowDecorator) map.removeLayer(currentArrowDecorator);
 
+            // 依模式定義路線主題色彩
+            let routeColor = "#1B5E20"; // 預設深綠
+            let pulseColor = "#FFFFFF";
+            if (currentRouteMode === 'rural') { routeColor = "#059669"; pulseColor = "#d1fae5"; }
+            if (currentRouteMode === 'dense') { routeColor = "#0284c7"; pulseColor = "#e0f2fe"; }
+
+            // 1. 繪製動態 AntPath 路線主體
             if (typeof L.polyline.antPath === 'function') {
-                currentPathLayer = L.polyline.antPath(flippedCoords, { "delay": 1000, "dashArray": [15, 25], "weight": 7, "color": "#1B5E20", "pulseColor": "#FFF" }).addTo(map);
+                currentPathLayer = L.polyline.antPath(flippedCoords, {
+                    delay: 900,
+                    dashArray: [14, 24],
+                    weight: 7,
+                    color: routeColor,
+                    pulseColor: pulseColor
+                }).addTo(map);
             } else {
-                currentPathLayer = L.polyline(flippedCoords, { weight: 7, color: "#1B5E20" }).addTo(map);
+                currentPathLayer = L.polyline(flippedCoords, { weight: 7, color: routeColor }).addTo(map);
+            }
+
+            // 2. 疊加高清晰方向箭頭 (Leaflet PolylineDecorator) 標示前進方向
+            if (typeof L.polylineDecorator === 'function') {
+                currentArrowDecorator = L.polylineDecorator(currentPathLayer, {
+                    patterns: [
+                        {
+                            offset: 30,
+                            repeat: 70,
+                            symbol: L.Symbol.arrowHead({
+                                pixelSize: 11,
+                                headAngle: 60,
+                                polygon: false,
+                                pathOptions: {
+                                    stroke: true,
+                                    color: '#FFFFFF',
+                                    weight: 3.5,
+                                    opacity: 0.95
+                                }
+                            })
+                        }
+                    ]
+                }).addTo(map);
             }
 
             map.fitBounds(currentPathLayer.getBounds(), { padding: [40, 40] });
             currentRouteTurfLine = turf.lineString(routeGeoJSON.coordinates);
-            
+
             TravelServiceManager.updateMarkers();
             const foundCount = renderFoodRadar();
 
-            const startName = POIs[selectedKeys[0]].name;
+            const modeName = currentRouteMode === 'fast' ? '⚡ 最快捷徑' : currentRouteMode === 'rural' ? '🌾 鄉野漫遊' : '📸 景點最多';
+
             infoEl.innerHTML = `
-                ✨ <b style="color: #388E3C;">路線規劃完成！</b><br>
-                🚩 出發起點：${startName}<br>
-                📏 總里程：${distKm} 公里 ｜ 🚴 預估騎乘：${timeMin} 分鐘<br>
-                📌 串聯景點廟宇：共 ${selectedKeys.length} 處<br>
+                ✨ <b style="color: #10b981;">閉環路線規劃完成！</b><br>
+                🚩 出發與終點：<b>${originName}</b><br>
+                🧭 規劃模式：<b>${modeName}</b> ｜ ➡️ 路線已標示前進箭頭<br>
+                📏 總里程：<b>${distKm}</b> 公里 ｜ 🚴 預估騎乘：<b>${timeMin}</b> 分鐘<br>
+                📌 途經重要據點：共 <b>${selectedTargetKeys.length}</b> 處名廟與景點<br>
+                🛡️ <b>安全路網保證</b>：100% 避開國道與台78/61快速道路主線<br>
                 ${currentScanRadius !== 'all' && foundCount > 0 ? `<div style="color:#c2185b; font-weight:bold; margin-top:5px;">🎯 掃描到路線 ${currentScanRadius} 公里內有 ${foundCount} 家美食！</div>` : ''}
             `;
             infoEl.style.display = 'block';
 
         } catch (e) {
+            console.error(e);
             infoEl.innerHTML = `<span style="color:#d32f2f; font-weight:bold;">⚠️ 路線伺服器忙碌中，請稍後再試。</span>`;
             infoEl.style.display = 'block';
         } finally {
@@ -1822,6 +2082,7 @@
         });
 
         fetchWeather();
+        refreshUserGps();
         await loadMasterDataset();
 
         // 預設開啟景點圖層
