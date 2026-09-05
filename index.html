@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- Version: V11.0 (左側獨立路況卡片 / 實時GPS起終點閉環 / 3種路線模式 / 動態方向箭頭 / 嚴格避開快速道路) -->
+    <!-- Version: V11.2 (七大宮廟與十大景點可收折摺頁 / 計算路線自動收折防推擠 / 聚光燈導覽完備修復) -->
     <title>雲林信仰跟著卡打車打卡</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
@@ -645,6 +645,68 @@
         /* ========================================================
            📱 RWD 響應式斷點 (平版 768px ~ 1024px / 手機 < 768px)
            ======================================================== */
+        
+        /* ========================================================
+           七大名廟與十大景點手風琴收折 (Accordion)
+           ======================================================== */
+        .accordion-item {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #ffffff;
+            margin-top: 6px;
+            transition: all 0.2s ease;
+        }
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 10px;
+            background: #f8fafc;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .accordion-header:hover {
+            background: #f1f5f9;
+        }
+        .accordion-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .accordion-title {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+        .accordion-count-badge {
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 10px;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            transition: all 0.2s;
+        }
+        .accordion-arrow {
+            font-size: 0.72rem;
+            color: #64748b;
+            font-weight: 800;
+            transition: transform 0.3s ease;
+        }
+        .accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+            padding: 0 10px;
+        }
+        .accordion-body.expanded {
+            max-height: 350px;
+            padding: 8px 10px 10px 10px;
+        }
+
         @media (max-width: 1024px) {
             .header-text h1 { font-size: 1.1rem; }
             .control-panel { width: 320px; top: 10px; right: 10px; }
@@ -947,65 +1009,85 @@
                         </button>
                     </div>
 
-                    <!-- 第一部分：七大宮廟 -->
-                    <div class="route-subgroup-title" style="margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">⛩️ 七大名廟朝聖</div>
-                    <div class="checkbox-group" id="tsp-temples-checklist">
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_chaotian" checked> <span>北港朝天宮</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_wude" checked> <span>北港武德宮</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_fuxing"> <span>西螺福興宮</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_chifa" checked> <span>虎尾持法媽祖</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_gongfan"> <span>麥寮拱範宮</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_shuntian"> <span>土庫順天宮</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="t_nansheng"> <span>斗六南聖宮</span>
-                        </label>
+                    <!-- 第一部分：七大宮廟 (手風琴摺頁) -->
+                    <div class="accordion-item" id="accordion-temples">
+                        <div class="accordion-header" onclick="toggleAccordion('temples')">
+                            <div class="accordion-title-wrap">
+                                <span class="accordion-title">⛩️ 七大名廟朝聖</span>
+                                <span class="accordion-count-badge" id="temple-count-badge">已選 4 處</span>
+                            </div>
+                            <span class="accordion-arrow" id="temple-arrow">▲</span>
+                        </div>
+                        <div class="accordion-body expanded" id="body-temples">
+                            <div class="checkbox-group" id="tsp-temples-checklist">
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="t_chaotian" checked onchange="updateAccordionCounters()"> <span>北港朝天宮</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="t_wude" checked onchange="updateAccordionCounters()"> <span>北港武德宮</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="t_fuxing" onchange="updateAccordionCounters()"> <span>西螺福興宮</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="t_chifa" checked onchange="updateAccordionCounters()"> <span>虎尾持法媽祖</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="t_gongfan" onchange="updateAccordionCounters()"> <span>麥寮拱範宮</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="t_shuntian" onchange="updateAccordionCounters()"> <span>土庫順天宮</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="t_nansheng" onchange="updateAccordionCounters()"> <span>斗六南聖宮</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 第二部分：十大經典景點 -->
-                    <div class="route-subgroup-title" style="margin-top: 8px; border-top: 1px dashed #e2e8f0; padding-top: 6px;">🏞️ 十大經典景點</div>
-                    <div class="checkbox-group" id="tsp-spots-checklist">
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_iron_bridge"> <span>虎尾鐵橋糖廠</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_story_house"> <span>雲林故事館</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_xiluo_bridge"> <span>西螺大橋</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_yanping_st"> <span>西螺延平老街</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_daughter_bridge"> <span>北港女兒橋</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_yansiqi"> <span>水林顏思齊館</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_maming_park"> <span>褒忠五年千歲公園</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_yunzhong_st"> <span>雲中街生活聚落</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_qianqiaogu"> <span>千巧谷牛樂園</span>
-                        </label>
-                        <label class="ui-checkbox-label">
-                            <input type="checkbox" value="s_gukeng_tunnel"> <span>古坑綠色隧道</span>
-                        </label>
+                    <!-- 第二部分：十大經典景點 (手風琴摺頁) -->
+                    <div class="accordion-item" id="accordion-spots">
+                        <div class="accordion-header" onclick="toggleAccordion('spots')">
+                            <div class="accordion-title-wrap">
+                                <span class="accordion-title">🏞️ 十大經典景點</span>
+                                <span class="accordion-count-badge" id="spot-count-badge">已選 0 處</span>
+                            </div>
+                            <span class="accordion-arrow" id="spot-arrow">▲</span>
+                        </div>
+                        <div class="accordion-body expanded" id="body-spots">
+                            <div class="checkbox-group" id="tsp-spots-checklist">
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_iron_bridge" onchange="updateAccordionCounters()"> <span>虎尾鐵橋糖廠</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_story_house" onchange="updateAccordionCounters()"> <span>雲林故事館</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_xiluo_bridge" onchange="updateAccordionCounters()"> <span>西螺大橋</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_yanping_st" onchange="updateAccordionCounters()"> <span>西螺延平老街</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_daughter_bridge" onchange="updateAccordionCounters()"> <span>北港女兒橋</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_yansiqi" onchange="updateAccordionCounters()"> <span>水林顏思齊館</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_maming_park" onchange="updateAccordionCounters()"> <span>褒忠五年千歲公園</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_yunzhong_st" onchange="updateAccordionCounters()"> <span>雲中街生活聚落</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_qianqiaogu" onchange="updateAccordionCounters()"> <span>千巧谷牛樂園</span>
+                                </label>
+                                <label class="ui-checkbox-label">
+                                    <input type="checkbox" value="s_gukeng_tunnel" onchange="updateAccordionCounters()"> <span>古坑綠色隧道</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <button class="btn-route" style="margin-top:10px;" onclick="calculateTSPRoute()">✨ 計算最佳串聯路線</button>
@@ -1313,6 +1395,51 @@
     // ========================================================
     // 智慧路線計算 (起點至最近第一景點判定 + SVG Marker 方向箭頭)
     // ========================================================
+        // ========================================================
+    // 手風琴摺頁 (Accordion) 控制與計數
+    // ========================================================
+    function toggleAccordion(type, forceOpen = null) {
+        const body = document.getElementById(`body-${type}`);
+        const arrow = document.getElementById(`${type === 'temples' ? 'temple' : 'spot'}-arrow`);
+        if (!body) return;
+
+        let shouldOpen;
+        if (forceOpen !== null) {
+            shouldOpen = forceOpen;
+        } else {
+            shouldOpen = !body.classList.contains('expanded');
+        }
+
+        if (shouldOpen) {
+            body.classList.add('expanded');
+            if (arrow) arrow.innerText = '▲';
+        } else {
+            body.classList.remove('expanded');
+            if (arrow) arrow.innerText = '▼';
+        }
+    }
+
+    function updateAccordionCounters() {
+        const templeCbs = document.querySelectorAll('#tsp-temples-checklist input[type="checkbox"]:checked');
+        const spotCbs = document.querySelectorAll('#tsp-spots-checklist input[type="checkbox"]:checked');
+        
+        const templeBadge = document.getElementById('temple-count-badge');
+        const spotBadge = document.getElementById('spot-count-badge');
+
+        if (templeBadge) {
+            templeBadge.innerText = `已選 ${templeCbs.length} 處`;
+            templeBadge.style.background = templeCbs.length > 0 ? '#ecfdf5' : '#f1f5f9';
+            templeBadge.style.color = templeCbs.length > 0 ? '#065f46' : '#64748b';
+            templeBadge.style.borderColor = templeCbs.length > 0 ? '#a7f3d0' : '#e2e8f0';
+        }
+        if (spotBadge) {
+            spotBadge.innerText = `已選 ${spotCbs.length} 處`;
+            spotBadge.style.background = spotCbs.length > 0 ? '#eff6ff' : '#f1f5f9';
+            spotBadge.style.color = spotCbs.length > 0 ? '#1e40af' : '#64748b';
+            spotBadge.style.borderColor = spotCbs.length > 0 ? '#bfdbfe' : '#e2e8f0';
+        }
+    }
+
     function setStartOrigin(origin) {
         currentStartOrigin = origin;
         document.getElementById('item-origin-gps')?.classList.toggle('active', origin === 'gps');
@@ -1555,6 +1682,9 @@
                 🛡️ <b>安全路網保證</b>：100% 避開國道與台78/61快速道路主線<br>
                 ${currentScanRadius !== 'all' && foundCount > 0 ? `<div style="color:#c2185b; font-weight:bold; margin-top:5px;">🎯 掃描到路線 ${currentScanRadius} 公里內有 ${foundCount} 家美食！</div>` : ''}
             `;
+            // 自動收折七大名廟與十大景點，釋放垂直空間防止推擠
+            toggleAccordion('temples', false);
+            toggleAccordion('spots', false);
             infoEl.style.display = 'block';
 
         } catch (e) {
@@ -1942,12 +2072,14 @@
         ],
         start: function(force = false) {
             if (!force) {
-                const hideTour = localStorage.getItem('yunlin_tour_completed');
+                const hideTour = localStorage.getItem('yunlin_tour_v11_completed');
                 if (hideTour === 'true') return;
             }
             this.currentStep = 0;
             document.getElementById('tourBackdrop').classList.add('active');
-            this.renderStep();
+            setTimeout(() => {
+                this.renderStep();
+            }, 120);
         },
         renderStep: function() {
             const step = this.steps[this.currentStep];
@@ -2020,7 +2152,7 @@
         close: function() {
             const dontShow = document.getElementById('tourDontShowCheck')?.checked;
             if (dontShow) {
-                localStorage.setItem('yunlin_tour_completed', 'true');
+                localStorage.setItem('yunlin_tour_v11_completed', 'true');
             }
             document.getElementById('tourBackdrop').classList.remove('active');
             document.getElementById('tourHighlight').style.display = 'none';
@@ -2061,6 +2193,7 @@
         fetchWeather();
         refreshUserGps();
         await loadMasterDataset();
+        updateAccordionCounters();
 
         map.addLayer(travelServices['attraction']);
 
