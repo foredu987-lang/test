@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- Version: V11.0 (GPS即時起終點閉環 / 三種路徑模式 / 方向箭頭 / 嚴格避開快速道路) -->
+    <!-- Version: V11.0 (左側獨立路況卡片 / 實時GPS起終點閉環 / 3種路線模式 / 動態方向箭頭 / 嚴格避開快速道路) -->
     <title>雲林信仰跟著卡打車打卡</title>
     
     <!-- Leaflet & MarkerCluster CSS -->
@@ -91,13 +91,21 @@
         .leaflet-popup { z-index: 3500 !important; }
 
         /* ========================================================
-           左上角獨立 SOS 救援膠囊按鈕 (樣式 A)
+           左上方控制組 (SOS 膠囊 + 獨立天氣路況小卡)
            ======================================================== */
-        .sos-top-capsule {
+        .left-control-stack {
             position: absolute;
             top: 10px;
             left: 12px;
             z-index: 2400;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .left-control-stack > * { pointer-events: auto; }
+
+        .sos-top-capsule {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
             border: 2px solid white;
@@ -108,24 +116,39 @@
             letter-spacing: 0.5px;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 5px;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
             user-select: none;
+            width: fit-content;
         }
         .sos-top-capsule:hover {
             background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
             transform: translateY(-1px) scale(1.02);
             box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
         }
-        .sos-top-capsule:active {
-            transform: translateY(1px) scale(0.98);
+
+        .weather-info-card {
+            width: 240px;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            padding: 10px 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .weather-info-card-title {
+            font-size: 0.82rem; font-weight: 800; color: #334155;
+            display: flex; align-items: center; justify-content: space-between;
         }
 
         /* ========================================================
-           頂部工具列 (RWD 自適應排版)
+           頂部工具列 (中央排列)
            ======================================================== */
         .top-toolbar {
             position: absolute;
@@ -197,7 +220,6 @@
         .service-toggle-label.hotel input:checked + span { color: #9333ea; font-weight: 800; }
         .service-toggle-label.spot input:checked + span { color: #0284c7; font-weight: 800; }
 
-        /* 右側範圍過濾切換鈕 */
         .radius-selector-group {
             display: flex;
             background: rgba(255, 255, 255, 0.96);
@@ -231,7 +253,7 @@
         }
 
         /* ========================================================
-           旅程指揮中心面板 (桌機版：右側懸浮卡片)
+           旅程指揮中心面板 (右側專注路線規劃)
            ======================================================== */
         .control-panel {
             position: absolute;
@@ -355,6 +377,78 @@
         .ui-checkbox-label:hover { color: var(--moovo-dark); }
         .ui-checkbox-label input[type="checkbox"] { width: 14px; height: 14px; cursor: pointer; accent-color: var(--moovo-green); }
 
+        .route-mode-switcher-group {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 3px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border: 1px solid var(--border-color);
+        }
+        .route-mode-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 7px 4px;
+            border-radius: 6px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .route-mode-btn:hover { background: #e2e8f0; }
+        .route-mode-btn.active {
+            background: #1B5E20;
+            color: white;
+            box-shadow: 0 2px 6px rgba(27,94,32,0.3);
+        }
+
+        .start-origin-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 9px;
+            border-radius: 8px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        .start-origin-item:hover { border-color: #cbd5e1; }
+        .start-origin-item.active {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .start-origin-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+        .start-origin-label input[type="radio"] {
+            width: 15px;
+            height: 15px;
+            accent-color: #10b981;
+            cursor: pointer;
+        }
+        .gps-refresh-btn {
+            background: none;
+            border: none;
+            color: #0284c7;
+            font-size: 0.72rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+
         /* ========================================================
            SOS Modal (RWD 彈窗)
            ======================================================== */
@@ -408,9 +502,7 @@
             display: none; align-items: center; gap: 6px; white-space: nowrap;
         }
 
-        /* ========================================================
-           故事小卡抽屜 (Story Drawer)
-           ======================================================== */
+        /* 故事小卡抽屜 */
         .story-card-drawer {
             position: absolute; top: 50%; left: -450px; transform: translateY(-50%);
             width: 25vw; min-width: 320px; max-width: 380px; height: 85vh; max-height: 650px;
@@ -433,9 +525,7 @@
 
         .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); z-index: 4000; display: flex; justify-content: center; align-items: center; font-weight: 800; font-size: 1.1rem; color: var(--moovo-dark); display: none; }
 
-        /* ========================================================
-           新手導覽互動系統 CSS (Spotlight Walkthrough)
-           ======================================================== */
+        /* 新手導覽互動系統 CSS */
         .tour-backdrop-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -555,82 +645,6 @@
         /* ========================================================
            📱 RWD 響應式斷點 (平版 768px ~ 1024px / 手機 < 768px)
            ======================================================== */
-        
-        /* ========================================================
-           三種路線模式切換與 GPS 起終點 UI
-           ======================================================== */
-        .route-mode-switcher-group {
-            display: flex;
-            gap: 4px;
-            background: #f1f5f9;
-            padding: 3px;
-            border-radius: 8px;
-            margin-bottom: 6px;
-            border: 1px solid var(--border-color);
-        }
-        .route-mode-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: 7px 4px;
-            border-radius: 6px;
-            font-size: 0.76rem;
-            font-weight: 800;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            white-space: nowrap;
-        }
-        .route-mode-btn:hover { background: #e2e8f0; }
-        .route-mode-btn.active {
-            background: #1B5E20;
-            color: white;
-            box-shadow: 0 2px 6px rgba(27,94,32,0.3);
-        }
-
-        .start-origin-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 6px 9px;
-            border-radius: 8px;
-            border: 1.5px solid #e2e8f0;
-            background: #f8fafc;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 4px;
-        }
-        .start-origin-item:hover { border-color: #cbd5e1; }
-        .start-origin-item.active {
-            border-color: #10b981;
-            background: #ecfdf5;
-        }
-        .start-origin-label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: #1e293b;
-        }
-        .start-origin-label input[type="radio"] {
-            width: 15px;
-            height: 15px;
-            accent-color: #10b981;
-            cursor: pointer;
-        }
-        .gps-refresh-btn {
-            background: none;
-            border: none;
-            color: #0284c7;
-            font-size: 0.72rem;
-            font-weight: 800;
-            cursor: pointer;
-            text-decoration: underline;
-            padding: 0;
-        }
-
         @media (max-width: 1024px) {
             .header-text h1 { font-size: 1.1rem; }
             .control-panel { width: 320px; top: 10px; right: 10px; }
@@ -644,15 +658,19 @@
             .header-text p { display: none; }
             .header-help-btn { font-size: 0.72rem; padding: 4px 9px; right: 8px; }
 
-            /* 左上角 SOS 按鈕手機微調 */
-            .sos-top-capsule {
+            .left-control-stack {
                 top: 8px;
                 left: 8px;
+                gap: 4px;
+            }
+            .sos-top-capsule {
                 padding: 6px 11px;
                 font-size: 0.78rem;
             }
+            .weather-info-card {
+                display: none; /* 手機版自動收合左側天氣卡片，保留乾淨地圖視野 */
+            }
 
-            /* 頂部工具列：手機版橫向滑動 (避開左上角 SOS 鈕) */
             .top-toolbar {
                 top: 44px;
                 left: 0;
@@ -671,9 +689,6 @@
             .service-toggle-label { font-size: 0.72rem; padding: 4px 6px; }
             .radius-btn { font-size: 0.7rem; padding: 4px 6px; }
 
-            /* ========================================================
-               ✨ 方案 B：手機版 Google Maps 式底部滑動抽屜 (Bottom Sheet)
-               ======================================================== */
             .control-panel {
                 position: fixed;
                 top: auto;
@@ -690,7 +705,7 @@
                 border-bottom: none;
                 z-index: 2500;
                 transition: max-height 0.35s cubic-bezier(0.32, 0.72, 0, 1), box-shadow 0.3s;
-                max-height: calc(50px + var(--safe-area-bottom)); /* 預設 Peek 抽屜狀態：露出標題與把手，上方 90% 全螢幕地圖 */
+                max-height: calc(50px + var(--safe-area-bottom));
                 overflow: hidden;
                 transform: none !important;
                 opacity: 1 !important;
@@ -698,7 +713,7 @@
             }
 
             .control-panel.mobile-expanded {
-                max-height: 78vh; /* 展開狀態：滑出路線規劃與天氣 */
+                max-height: 78vh;
                 box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
             }
 
@@ -766,10 +781,9 @@
             }
 
             .toggle-panel-btn {
-                display: none !important; /* 手機版直接以底部抽屜 Bar 進行觸發 */
+                display: none !important;
             }
 
-            /* 故事小卡：手機版置中彈窗 */
             .story-card-drawer {
                 left: 50% !important;
                 top: 50% !important;
@@ -782,7 +796,6 @@
             }
             .story-card-drawer.open { display: flex; }
 
-            /* 新手導覽提示框：手機版自動置中 */
             .tour-card-tooltip {
                 width: calc(100vw - 32px);
                 max-width: 330px;
@@ -798,7 +811,6 @@
             <h1>雲林信仰跟著卡打車打卡</h1>
             <p>智慧響應式設計：支援手機、平板與桌機無縫暢遊</p>
         </div>
-        <!-- 頂部手動重啟導覽說明按鍵 -->
         <button class="header-help-btn" onclick="TourGuide.start(true)" title="重新開啟使用導覽說明">
             💡 新手導覽
         </button>
@@ -808,19 +820,32 @@
         <div id="map"></div>
         <div id="loading" class="loading-overlay">⏳ 正在處理您的請求...</div>
         
-        <!-- 正上方三段式排版工具列 (左:模式 / 中:圖層按鍵 / 右:半徑範圍) -->
-        <!-- 左上方獨立 SOS 救援膠囊按鈕 (樣式 A) -->
-        <button id="sosBtn" class="sos-top-capsule" onclick="openSosModal()" title="緊急狀況求救與醫療支援">
-            🆘 SOS 救援
-        </button>
+        <!-- 左上方控制群組 (SOS 膠囊 + 獨立今日資訊與路況卡片) -->
+        <div class="left-control-stack">
+            <button id="sosBtn" class="sos-top-capsule" onclick="openSosModal()" title="緊急狀況求救與醫療支援">
+                🆘 SOS 救援
+            </button>
 
+            <section class="weather-info-card" id="leftWeatherCard">
+                <div class="weather-info-card-title">
+                    <span>📅 今日資訊與路況</span>
+                </div>
+                <div id="weather-widget" class="weather-widget">⏳ 正在載入氣象...</div>
+                <div style="margin-top: 2px; padding-top: 4px; border-top: 1px dashed #e2e8f0;">
+                    <label class="ui-checkbox-label" style="font-size: 0.78rem; font-weight: 800; color: #334155;">
+                        <input type="checkbox" onchange="toggleTrafficLayer(this.checked)">
+                        <span>🚦 顯示 Google 即時車流量路況</span>
+                    </label>
+                </div>
+            </section>
+        </div>
+
+        <!-- 頂部中央工具列 -->
         <div class="top-toolbar" id="topToolbar">
-            <!-- 左側：探索模式說明 -->
             <div class="toolbar-info-box" id="toolbar-mode-badge">
                 🗺️ 全縣探索模式：展示所選類別之全縣據點
             </div>
 
-            <!-- 中間：分類圖層按鈕 -->
             <div id="radar-group" class="service-btn-group">
                 <label class="service-toggle-label food">
                     <input type="checkbox" id="chk-food" onchange="toggleFoodService(this.checked)">
@@ -856,7 +881,6 @@
                 </label>
             </div>
 
-            <!-- 右側：獨立範圍過濾切換鈕 (全部 / 2公里 / 5公里) -->
             <div class="radius-selector-group" id="radius-group" title="選擇沿線掃描範圍">
                 <button class="radius-btn active" id="btn-rad-all" onclick="setScanRadius('all')">全部</button>
                 <button class="radius-btn" id="btn-rad-2" onclick="setScanRadius(2.0)">2 公里</button>
@@ -868,13 +892,13 @@
             🧭 展開旅程面板
         </button>
 
-        <!-- 旅程指揮中心 (電腦為右側懸浮卡片 / 手機為底部滑動抽屜 Bottom Sheet) -->
+        <!-- 旅程指揮中心 (右側面板專注路線規劃) -->
         <div class="control-panel" id="controlPanel">
             <div class="panel-header-flex" onclick="togglePanel()">
                 <div class="sheet-drag-pill"></div>
                 <div class="panel-header-title-wrap">
                     <span class="panel-main-title">🧭 旅程指揮中心</span>
-                    <span class="mobile-sheet-subtext" id="sheetSubtext">點擊展開路線與資訊 ⌃</span>
+                    <span class="mobile-sheet-subtext" id="sheetSubtext">點擊展開路線規劃 ⌃</span>
                 </div>
                 <button class="close-btn" onclick="event.stopPropagation(); togglePanel();" title="收起/展開面板">
                     <span class="desktop-close-icon">✖</span>
@@ -883,19 +907,6 @@
             </div>
 
             <div class="panel-scroll-area">
-                <!-- 今日資訊與路況 -->
-                <section class="ui-card">
-                    <div class="ui-card-title">📅 今日資訊與路況</div>
-                    <div id="weather-widget" class="weather-widget">⏳ 正在載入氣象...</div>
-                    <div style="margin-top: 4px; padding-top: 6px; border-top: 1px dashed #e2e8f0;">
-                        <label class="ui-checkbox-label" style="font-size: 0.82rem; font-weight: bold; color: #334155;">
-                            <input type="checkbox" onchange="toggleTrafficLayer(this.checked)">
-                            <span>🚦 顯示 Google 即時車流量路況</span>
-                        </label>
-                    </div>
-                </section>
-
-                <!-- 智慧路線規劃：GPS起終點 + 三種模式 + 七大名廟 + 十大景點 -->
                 <section class="ui-card" id="tour-step1-target">
                     <div class="ui-card-title">
                         <span>🗺️ 智慧路線規劃</span>
@@ -904,7 +915,7 @@
                         以目前位置出發並閉環回程，提供 3 種單車路網模式。
                     </div>
 
-                    <!-- 出發起點與終點 (可選 GPS 實時定位 或 高鐵站) -->
+                    <!-- 出發起點與終點 -->
                     <div class="route-subgroup-title">🚩 出發起點與終點 (閉環回程)</div>
                     <div style="display:flex; flex-direction:column; gap:2px; margin-bottom:6px;">
                         <div class="start-origin-item active" id="item-origin-gps" onclick="setStartOrigin('gps')">
@@ -922,7 +933,7 @@
                         </div>
                     </div>
 
-                    <!-- 三種路線模式選擇 (最快捷徑 / 鄉野路徑 / 景點最多) -->
+                    <!-- 三種路線模式選擇 -->
                     <div class="route-subgroup-title">🎯 選擇路線規劃方式</div>
                     <div class="route-mode-switcher-group" id="route-mode-group">
                         <button type="button" class="route-mode-btn active" id="mode-fast" onclick="setRouteMode('fast')" title="距離最短、幹道直達最省時">
@@ -998,10 +1009,9 @@
                     </div>
 
                     <button class="btn-route" style="margin-top:10px;" onclick="calculateTSPRoute()">✨ 計算最佳串聯路線</button>
-                    <div id="route-error" style="color: #D32F2F; font-size: 0.8rem; display: none; margin-top: 5px;">請至少勾選 2 處地點（包含高鐵站、廟宇或景點）以規劃路線！</div>
+                    <div id="route-error" style="color: #D32F2F; font-size: 0.8rem; display: none; margin-top: 5px;">請至少勾選 1 處地點以規劃路線！</div>
                     <div id="route-info"></div>
                 </section>
-
             </div>
         </div>
 
@@ -1010,13 +1020,10 @@
         <button id="closeSosMapBtn" class="close-sos-map-btn" onclick="clearSosMapLayer()">
             ❌ 關閉地圖救援雷達圖層
         </button>
-
     </div>
 </div>
 
-<!-- ========================================================
-     ✨ 方案 B：聚光燈導覽 DOM 結構 (Spotlight Overlay)
-     ======================================================== -->
+<!-- 新手導覽系統 -->
 <div id="tourBackdrop" class="tour-backdrop-overlay"></div>
 <div id="tourHighlight" class="tour-highlight-box"></div>
 <div id="tourTooltip" class="tour-card-tooltip">
@@ -1026,7 +1033,7 @@
     </div>
     <h3 class="tour-card-title" id="tourTitle">🧭 規劃專屬單車路線</h3>
     <p class="tour-card-desc" id="tourDesc">
-        在右側「旅程指揮中心」自由勾選出發點（高鐵站）、7 大名廟與 10 大經典景點，點擊「計算最佳路線」，AI 將自動為您串聯最順暢的環狀單車道！
+        在右側「旅程指揮中心」自由勾選出發點（GPS/高鐵）、7 大名廟與 10 大經典景點，點擊「計算最佳路線」，AI 將自動計算出順向閉環單車道路網！
     </p>
     <div class="tour-card-footer">
         <label class="tour-dont-show">
@@ -1122,7 +1129,7 @@
                 </div>
                 <div class="sos-card-desc">📍 轄區：虎尾鎮、土庫鎮、褒忠鄉、元長鄉</div>
                 <div class="sos-card-btn-group">
-                    <a href="tel:056322042" class="sos-btn-call" style="background:#0284c7;">📞 05-632-2042</a>
+                    <a href="tel:056322042" class="sos-btn-call">📞 05-632-2042</a>
                     <button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=23.7088,120.4335')" class="sos-btn-nav">🧭 導航</button>
                 </div>
             </div>
@@ -1144,9 +1151,14 @@
     let currentRouteTurfLine = null;
     let dynamicFoodLayer = null;
     let sosMapLayer = null;
-    let userGpsMarker = null;
-    let currentUserCoords = null;
-    let currentScanRadius = 'all'; // 預設：全部顯示
+    let trafficLayer = null;
+
+    let currentRouteMode = 'fast';
+    let currentStartOrigin = 'gps';
+    let currentGpsLocation = [120.41649, 23.73633];
+    let startEndMarker = null;
+    let currentArrowDecorator = null;
+    let currentScanRadius = 'all';
 
     let loaded100Bowls = []; 
     let loaded711Stores = [];
@@ -1157,21 +1169,16 @@
     let loadedWaterToiletHubs = [];
     let loadedBikeRepairShops = [];
     let loadedAttractions = [];
-    let trafficLayer = null;
 
     let audioCtx = null;
     let isSirenActive = false;
     let sirenTimer = null;
 
-    // ========================================================
-    // 1. 核心據點庫 (7大名廟 + 10大經典景點 + 交通樞紐) 100% 精準座標 (對齊 verified master)
-    // ========================================================
+    // 核心據點庫 (7大名廟 + 10大經典景點 + 交通樞紐)
     const POIs = {
-        // 交通樞紐
         "hsr": { id: "hsr", name: "雲林高鐵站", type: "station", coords: [120.41649, 23.73633], desc: "MOOVO 租借與歸還點，旅程起終點", lat: 23.73633, lng: 120.41649 },
         "m_douliu": { id: "m_douliu", name: "斗六火車站", type: "moovo", coords: [120.541004, 23.711922], desc: "MOOVO 租借站與交通節點", lat: 23.711922, lng: 120.541004 },
         
-        // ⛩️ 七大名廟
         "t_chaotian": { id: "t_chaotian", name: "北港朝天宮", type: "temple", coords: [120.3046998, 23.5681177], desc: "國定古蹟，全臺媽祖信仰中心", lat: 23.5681177, lng: 120.3046998 },
         "t_wude": { id: "t_wude", name: "北港武德宮", type: "temple", coords: [120.2991433, 23.5810284], desc: "臺灣五路武財神祖廟，財神信仰發源地", lat: 23.5810284, lng: 120.2991433 },
         "t_fuxing": { id: "t_fuxing", name: "西螺福興宮", type: "temple", coords: [120.4605212, 23.8016276], desc: "西螺太平媽祖，延平老街核心守護神", lat: 23.8016276, lng: 120.4605212 },
@@ -1180,7 +1187,6 @@
         "t_shuntian": { id: "t_shuntian", name: "土庫順天宮", type: "temple", coords: [120.390708, 23.6764379], desc: "縣定古蹟，歷史悠久土庫媽與老街商圈", lat: 23.6764379, lng: 120.390708 },
         "t_nansheng": { id: "t_nansheng", name: "斗六南聖宮", type: "temple", coords: [120.5582993, 23.7010188], desc: "立姿關聖帝君木雕巨像鸞堂重鎮", lat: 23.7010188, lng: 120.5582993 },
 
-        // 🏞️ 十大經典景點
         "s_iron_bridge": { id: "s_iron_bridge", name: "虎尾鐵橋 / 虎尾糖廠", type: "attraction", coords: [120.4363629, 23.7041765], desc: "百年糖業鐵道鋼橋，旁邊糖廠冰店是單車最佳補給站。", lat: 23.7041765, lng: 120.4363629 },
         "s_story_house": { id: "s_story_house", name: "雲林故事館 / 虎尾郡役所", type: "attraction", coords: [120.4335627, 23.709297], desc: "日治時期木造官舍與布袋戲館，虎尾文化散步核心。", lat: 23.709297, lng: 120.4335627 },
         "s_xiluo_bridge": { id: "s_xiluo_bridge", name: "西螺大橋", type: "attraction", coords: [120.460728, 23.8059714], desc: "遠東第一大紅鋼桁梁公路橋，單車環島必訪打卡聖地。", lat: 23.8059714, lng: 120.460728 },
@@ -1220,9 +1226,6 @@
         attraction: { icon: "🏞️", color: "#0284c7" }
     };
 
-    // ========================================================
-    // 2. 座標與字串萬用解析器
-    // ========================================================
     function getExactCol(row, exactKeys) {
         if (!row) return '';
         for (let key in row) {
@@ -1281,9 +1284,6 @@
         return null;
     }
 
-    // ========================================================
-    // 3. 範圍切換 (全部 / 2公里 / 5公里) 互動
-    // ========================================================
     function setScanRadius(radius) {
         currentScanRadius = radius;
         document.querySelectorAll('.radius-btn').forEach(btn => btn.classList.remove('active'));
@@ -1311,14 +1311,8 @@
     }
 
     // ========================================================
-    // 4. 智慧路線計算 (GPS即時起終點閉環 + 三種模式 + 方向箭頭 + 嚴格避開快速道路)
+    // 智慧路線計算 (起點至最近第一景點判定 + SVG Marker 方向箭頭)
     // ========================================================
-    let currentRouteMode = 'fast'; // 'fast' | 'rural' | 'dense'
-    let currentStartOrigin = 'gps'; // 'gps' | 'hsr'
-    let currentGpsLocation = [120.41649, 23.73633]; // 預設虎尾/高鐵，即刻動態定位更新
-    let startEndMarker = null;
-    let currentArrowDecorator = null;
-
     function setStartOrigin(origin) {
         currentStartOrigin = origin;
         document.getElementById('item-origin-gps')?.classList.toggle('active', origin === 'gps');
@@ -1336,7 +1330,6 @@
         currentRouteMode = mode;
         document.querySelectorAll('.route-mode-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`mode-${mode}`)?.classList.add('active');
-        // 若已規劃過路線，點擊模式時自動重新計算切換
         if (currentPathLayer) {
             calculateTSPRoute();
         }
@@ -1365,6 +1358,34 @@
         startEndMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).bindPopup(`<b>${label}</b><br>經緯度：${lat.toFixed(5)}, ${lng.toFixed(5)}`).addTo(map);
     }
 
+    // 注入 SVG Marker 箭頭樣式到 Leaflet 容器
+    function ensureSvgMarkerDefs() {
+        const svgElement = document.querySelector('.leaflet-zoom-animated');
+        if (svgElement && !document.getElementById('route-arrow-marker')) {
+            let defs = svgElement.querySelector('defs');
+            if (!defs) {
+                defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                svgElement.insertBefore(defs, svgElement.firstChild);
+            }
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'route-arrow-marker');
+            marker.setAttribute('viewBox', '0 0 12 12');
+            marker.setAttribute('refX', '6');
+            marker.setAttribute('refY', '6');
+            marker.setAttribute('markerWidth', '6');
+            marker.setAttribute('markerHeight', '6');
+            marker.setAttribute('orient', 'auto-start-reverse');
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M 1 2 L 10 6 L 1 10 z');
+            path.setAttribute('fill', '#ffffff');
+            path.setAttribute('stroke', '#1B5E20');
+            path.setAttribute('stroke-width', '1.5');
+            marker.appendChild(path);
+            defs.appendChild(marker);
+        }
+    }
+
     async function calculateTSPRoute() {
         const templeCbs = document.querySelectorAll('#tsp-temples-checklist input[type="checkbox"]:checked');
         const spotCbs = document.querySelectorAll('#tsp-spots-checklist input[type="checkbox"]:checked');
@@ -1385,47 +1406,31 @@
         errorEl.style.display = 'none';
         loadingEl.style.display = 'flex';
 
-        // 決定起點與終點坐標 [lng, lat]
         const originCoords = currentStartOrigin === 'gps' ? currentGpsLocation : POIs['hsr'].coords;
         const originName = currentStartOrigin === 'gps' ? '目前即時 GPS 位置' : '雲林高鐵站';
 
-        // 建立待訪點坐標清單
         let waypoints = selectedTargetKeys.map(k => ({
             id: k,
             name: POIs[k].name,
             coords: POIs[k].coords
         }));
 
-        // 依據三種模式進行路徑幾何與中繼點演算法：
-        // 模式 1：⚡ 最快捷徑 (Fastest Direct Loop) -> TSP 最短距離排序
-        // 模式 2：🌾 鄉野漫遊 (Rural Scenic Loop) -> 注入鄉村農水路網節點，徹底遠離大省道幹道
-        // 模式 3：📸 景點最多 (Max Attraction Corridor) -> 沿途 2km 走廊內自動加入順路打卡點
-
+        // 依據三種模式注入中繼點
         if (currentRouteMode === 'rural') {
-            // 注入古坑綠廊、水圳步道或糖鐵林蔭節點作為鄉野導引
             const ruralGuides = [
                 { name: "糖鐵自行車林蔭綠廊", coords: [120.4485, 23.7142] },
-                { name: "虎尾溪畔水圳防汛農路", coords: [120.3850, 23.6820] },
-                { name: "新街排水綠色田野道", coords: [120.3200, 23.5850] }
+                { name: "虎尾溪畔水圳防汛農路", coords: [120.3850, 23.6820] }
             ];
-            // 挑選距離目標點最近且最順向的鄉野中繼點
-            let insertedRural = 0;
-            for (let rg of ruralGuides) {
-                if (insertedRural >= 2) break;
-                waypoints.push({ id: 'rural_' + insertedRural, name: rg.name, coords: rg.coords });
-                insertedRural++;
-            }
+            ruralGuides.forEach((rg, idx) => {
+                waypoints.push({ id: 'rural_' + idx, name: rg.name, coords: rg.coords });
+            });
         } else if (currentRouteMode === 'dense') {
-            // 沿途走廊自動擴充打卡點 (從未被選取的 loadedAttractions 中挑選順路者)
             if (loadedAttractions.length > 0) {
                 let candidateSpots = loadedAttractions.filter(s => !selectedTargetKeys.includes(s.id));
                 let addedCount = 0;
                 for (let cs of candidateSpots) {
                     if (addedCount >= 2) break;
-                    // 挑選在起點與現有目標中心點附近的景點
-                    const pt = turf.point([cs.lng, cs.lat]);
-                    const origPt = turf.point(originCoords);
-                    const d = turf.distance(pt, origPt, { units: 'kilometers' });
+                    const d = turf.distance(turf.point([cs.lng, cs.lat]), turf.point(originCoords), { units: 'kilometers' });
                     if (d > 2.0 && d < 18.0) {
                         waypoints.push({ id: 'spot_' + addedCount, name: cs.name, coords: [cs.lng, cs.lat] });
                         addedCount++;
@@ -1434,7 +1439,7 @@
             }
         }
 
-        // TSP 最鄰近排序 (以起點出發)
+        // 🎯 核心排序：起點出發 -> 先挑選「距離起點最近的第 1 個景點」鎖定順逆時針前進方向
         let orderedPoints = [originCoords];
         let remaining = [...waypoints];
         let currentPt = originCoords;
@@ -1453,12 +1458,12 @@
             orderedPoints.push(currentPt);
             remaining.splice(nearestIdx, 1);
         }
-        // 強制閉環回到出發起點
+        // 自動閉環回到出發點
         orderedPoints.push(originCoords);
 
         const coordsString = orderedPoints.map(p => `${p[0]},${p[1]}`).join(';');
         
-        // 嚴格單車禁行快速/高速道路專用導航引擎 (禁用國道/快速道路/台78線/台61快速段)
+        // 嚴格單車禁行快速/高速道路專用導航引擎
         const routingEndpoints = [
             `https://routing.openstreetmap.de/routed-bike/route/v1/cycling/${coordsString}?overview=full&geometries=geojson&continue_straight=true`,
             `https://router.project-osrm.org/route/v1/bicycle/${coordsString}?overview=full&geometries=geojson&continue_straight=true`
@@ -1488,12 +1493,10 @@
             let timeMin = Math.round(data.routes[0].duration / 60);
             const flippedCoords = routeGeoJSON.coordinates.map(c => [c[1], c[0]]);
 
-            // 清理舊路線與舊箭頭
             if (currentPathLayer) map.removeLayer(currentPathLayer);
             if (currentArrowDecorator) map.removeLayer(currentArrowDecorator);
 
-            // 依模式定義路線主題色彩
-            let routeColor = "#1B5E20"; // 預設深綠
+            let routeColor = "#1B5E20";
             let pulseColor = "#FFFFFF";
             if (currentRouteMode === 'rural') { routeColor = "#059669"; pulseColor = "#d1fae5"; }
             if (currentRouteMode === 'dense') { routeColor = "#0284c7"; pulseColor = "#e0f2fe"; }
@@ -1511,15 +1514,16 @@
                 currentPathLayer = L.polyline(flippedCoords, { weight: 7, color: routeColor }).addTo(map);
             }
 
-            // 2. 疊加高清晰方向箭頭 (Leaflet PolylineDecorator) 標示前進方向
+            // 2. 疊加向量方向箭頭（雙重支援 PolylineDecorator 與 SVG Marker）
+            ensureSvgMarkerDefs();
             if (typeof L.polylineDecorator === 'function') {
                 currentArrowDecorator = L.polylineDecorator(currentPathLayer, {
                     patterns: [
                         {
-                            offset: 30,
-                            repeat: 70,
+                            offset: 35,
+                            repeat: 75,
                             symbol: L.Symbol.arrowHead({
-                                pixelSize: 11,
+                                pixelSize: 12,
                                 headAngle: 60,
                                 polygon: false,
                                 pathOptions: {
@@ -1545,7 +1549,7 @@
             infoEl.innerHTML = `
                 ✨ <b style="color: #10b981;">閉環路線規劃完成！</b><br>
                 🚩 出發與終點：<b>${originName}</b><br>
-                🧭 規劃模式：<b>${modeName}</b> ｜ ➡️ 路線已標示前進箭頭<br>
+                🧭 模式：<b>${modeName}</b> ｜ ➡️ 路線已標示前進箭頭<br>
                 📏 總里程：<b>${distKm}</b> 公里 ｜ 🚴 預估騎乘：<b>${timeMin}</b> 分鐘<br>
                 📌 途經重要據點：共 <b>${selectedTargetKeys.length}</b> 處名廟與景點<br>
                 🛡️ <b>安全路網保證</b>：100% 避開國道與台78/61快速道路主線<br>
@@ -1562,15 +1566,11 @@
         }
     }
 
-    // ========================================================
-    // 5. 景點與廟宇小卡抽屜展示
-    // ========================================================
     const StoryPOIManager = {
         openPanel: function(poiId, type) {
             const poi = POIs[poiId];
             if (!poi) return;
             const container = document.getElementById('story-card-container');
-            
             let tagColor = type === 'temple' ? 'var(--temple-red)' : 'var(--spot-blue)';
             let tagText = type === 'temple' ? '⛩️ 名廟朝聖' : '🏞️ 經典景點';
 
@@ -1583,7 +1583,6 @@
                     <div class="sc-body">
                         <div class="sc-category-tag" style="background-color: ${tagColor}">${tagText}</div>
                         <h2 class="sc-title">${poi.name}</h2>
-                        
                         <div class="sc-section" style="margin-top:12px;">
                             <div style="background:#f8fafc; display:inline-flex; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:0.85rem; margin-bottom: 8px; border:1px solid #e2e8f0;">⏱️ 建議停留：30 ~ 60 分鐘</div>
                             <h3 class="sc-section-title">📖 簡介特色</h3>
@@ -1600,9 +1599,6 @@
         }
     };
 
-    // ========================================================
-    // 6. 圖層管理與美食雷達繪製
-    // ========================================================
     function toggleFoodService(isVisible) {
         if (isVisible) {
             if (dynamicFoodLayer) map.addLayer(dynamicFoodLayer);
@@ -1688,13 +1684,11 @@
                         else if (key === 'convenience' && item.brand === '7-11') iconColor = "#FFB300";
 
                         const icon = L.divIcon({ html: `<div style="background:${iconColor}; width:22px; height:22px; border-radius:6px; border:1px solid white; display:flex; align-items:center; justify-content:center; font-size:12px; color:white;">${config.icon}</div>`, className: '', iconSize: [22,22] });
-                        
-                        let spotTitle = item.name || '雲林據點';
                         const navUrl = item.map_url || `https://www.google.com/maps/dir/?api=1&destination=${item.lat},${item.lng}`;
                         
                         let popupContent = `
                             <div style="font-size:0.75rem; color:${iconColor}; font-weight:bold; margin-bottom:2px;">${item.category || config.icon}</div>
-                            <b style="font-size:1.05rem; color:#1e293b;">${spotTitle}</b><br>
+                            <b style="font-size:1.05rem; color:#1e293b;">${item.name || '雲林據點'}</b><br>
                             ${item.description ? `<p style="font-size:0.82rem; color:#475569; margin:4px 0;">${item.description}</p>` : ''}
                             ${item.address ? `<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">📍 ${item.address}</div>` : ''}
                             <button onclick="window.open('${navUrl}')" style="width:100%; margin-top:8px; text-align:center; background:${iconColor}; border:none; color:white; padding:6px 0; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:bold;">🧭 Google 精準導航</button>
@@ -1715,9 +1709,6 @@
         }
     };
 
-    // ========================================================
-    // 7. 單一主資料表 (final_data_verified.csv) 精準載入
-    // ========================================================
     async function loadMasterDataset() {
         const filesToTry = ['final_data_verified.csv', 'final_data.csv', 'yunlin_all_points_verified.csv'];
         for (let fileName of filesToTry) {
@@ -1752,7 +1743,6 @@
                                     const catLower = category.toLowerCase();
                                     const nameLower = name.toLowerCase();
 
-                                    // 精準分類分流
                                     if (category === '7-ELEVEN' || nameLower.includes('7-eleven') || nameLower.includes('7-11')) {
                                         loaded711Stores.push({ ...itemObj, brand: '7-11' });
                                     } else if (category === '全家便利商店' || nameLower.includes('全家')) {
@@ -1774,7 +1764,7 @@
                                     }
                                 });
 
-                                console.log(`✅ 成功從 ${fileName} 載入資料！7-11: ${loaded711Stores.length} 筆, 全家: ${loadedFamilyMartStores.length} 筆, 水廁: ${loadedWaterToiletHubs.length} 筆, 景點: ${loadedAttractions.length} 筆`);
+                                console.log(`✅ 成功載入資料庫：${fileName}`);
                                 resolve(true);
                                 return;
                             } catch(e) { console.error(e); }
@@ -1818,9 +1808,6 @@
         } catch(e) { widget.innerHTML = "⚠️ 氣象載入失敗"; }
     }
 
-    // ========================================================
-    // 8. SOS 功能
-    // ========================================================
     function toggleSiren() {
         const sirenBtn = document.getElementById('sirenToggleBtn');
         if (!isSirenActive) {
@@ -1914,7 +1901,7 @@
             const subtext = document.getElementById('sheetSubtext');
             const icon = document.getElementById('sheetToggleIcon');
             const isExp = panel.classList.contains('mobile-expanded');
-            if (subtext) subtext.innerText = isExp ? '點擊收合抽屜 ▼' : '點擊展開路線與資訊 ⌃';
+            if (subtext) subtext.innerText = isExp ? '點擊收合抽屜 ▼' : '點擊展開路線規劃 ⌃';
             if (icon) icon.innerText = isExp ? '▼' : '▲';
         } else {
             if (forceExpand !== null) {
@@ -1931,16 +1918,13 @@
         }
     }
 
-    // ========================================================
-    // 9. ✨ 方案 B：聚光燈新手引導核心控制器 (TourGuide)
-    // ========================================================
     const TourGuide = {
         currentStep: 0,
         steps: [
             {
                 targetId: 'tour-step1-target',
                 title: '🧭 第一步：規劃專屬單車路線',
-                desc: '在右側面板自由勾選<b>出發點（高鐵站）</b>、<b>7 大名廟</b>與 <b>10 大經典景點</b>，點擊「計算最佳路線」，AI 將自動為您串聯最順暢的環狀單車道！',
+                desc: '在右側面板自由勾選出發點（GPS/高鐵）、7 大名廟與 10 大經典景點，點擊「計算最佳路線」，AI 將自動計算出順向閉環單車道路網！',
                 position: 'left'
             },
             {
@@ -1951,8 +1935,8 @@
             },
             {
                 targetId: 'sosBtn',
-                title: '🆘 第三步：安全守護與緊急救援',
-                desc: '遇到爆胎或身體不適？隨時點擊畫面左上方的 <b>SOS 救援</b>，一鍵獲取實時 GPS 座標、最近 24H 急診醫院與鐵馬驛站，隨時為您的騎行護航！',
+                title: '🆘 第三步：安全守護與即時路況',
+                desc: '隨時點擊畫面左上方的 <b>SOS 救援</b> 或查看 <b>今日資訊與路況</b>，一鍵掌握氣象、車流與最近急診支援！',
                 position: 'bottom'
             }
         ],
@@ -1971,19 +1955,15 @@
             const highlightBox = document.getElementById('tourHighlight');
             const tooltip = document.getElementById('tourTooltip');
 
-            // 確保面板展開以對齊定位 (桌機展開/手機拉起底部抽屜)
             togglePanel(true);
 
-            // 更新文字內容
             document.getElementById('tourStepBadge').innerText = `步驟 ${this.currentStep + 1} / ${this.steps.length}`;
             document.getElementById('tourTitle').innerHTML = step.title;
             document.getElementById('tourDesc').innerHTML = step.desc;
 
-            // 控制按鈕顯示
             document.getElementById('tourBtnPrev').style.display = this.currentStep === 0 ? 'none' : 'inline-block';
             document.getElementById('tourBtnNext').innerText = this.currentStep === this.steps.length - 1 ? '🎉 完成導覽' : '下一步 ➜';
 
-            // 計算目標元素位置與視窗安全邊界防裁切 (全螢幕/手機/平板通用)
             if (targetEl) {
                 const rect = targetEl.getBoundingClientRect();
                 const pad = 6;
@@ -2003,7 +1983,6 @@
                 let targetLeft = 20;
 
                 if (isMobile) {
-                    // 手機版：卡片水平置中，垂直根據目標位置智慧靠上或靠下放置
                     targetLeft = (window.innerWidth - tipWidth) / 2;
                     if (rect.top > window.innerHeight / 2) {
                         targetTop = Math.max(20, rect.top - tipHeight - 15);
@@ -2011,7 +1990,6 @@
                         targetTop = Math.min(window.innerHeight - tipHeight - 20, rect.bottom + 15);
                     }
                 } else {
-                    // 桌機/平板版：自適應在側邊或下方
                     if (step.position === 'left') {
                         targetTop = Math.min(window.innerHeight - tipHeight - 30, Math.max(25, rect.top + rect.height / 2 - tipHeight / 2));
                         targetLeft = Math.max(15, rect.left - tipWidth - 20);
@@ -2059,7 +2037,6 @@
         dynamicFoodLayer = L.layerGroup();
         TravelServiceManager.init();
 
-        // 繪製七大名廟與經典景點地圖標記 (100% 精準座標)
         Object.values(POIs).forEach(poi => {
             let color = "var(--spot-blue)", iconText = "📍";
             if (poi.type === 'temple') { color = "var(--temple-red)"; iconText = "⛩️"; }
@@ -2085,10 +2062,8 @@
         refreshUserGps();
         await loadMasterDataset();
 
-        // 預設開啟景點圖層
         map.addLayer(travelServices['attraction']);
 
-        // 啟動新手導覽引導 (方案 B)
         setTimeout(() => {
             TourGuide.start(false);
         }, 600);
